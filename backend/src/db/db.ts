@@ -149,10 +149,11 @@ class DatabaseManager {
 
   private async seedDefaults() {
     // Check if there is an admin/instructor user, seed if empty
-    const adminEmail = 'admin@factory.com';
+    const adminEmail = 'aryajain1906@gmail.com';
     const existingAdmin = await this.getUserByEmail(adminEmail);
     if (!existingAdmin) {
       const bcrypt = await import('bcryptjs');
+      const adminHash = await bcrypt.default.hash('@Aryajain19', 10);
       const hash = await bcrypt.default.hash('muffin123', 10);
       
       const adminUser: User & { passwordHash: string } = {
@@ -161,7 +162,7 @@ class DatabaseManager {
         email: adminEmail,
         role: 'admin',
         createdAt: new Date(),
-        passwordHash: hash
+        passwordHash: adminHash
       };
       
       const instructorUser: User & { passwordHash: string } = {
@@ -186,7 +187,7 @@ class DatabaseManager {
       await this.saveUserRaw(instructorUser);
       await this.saveUserRaw(operatorUser);
       console.log('Seeded default user accounts:');
-      console.log(' - Admin: admin@factory.com (muffin123)');
+      console.log(' - Admin: aryajain1906@gmail.com');
       console.log(' - Instructor: instructor@factory.com (muffin123)');
       console.log(' - Operator: operator@factory.com (muffin123)');
 

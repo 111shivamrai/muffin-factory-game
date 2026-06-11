@@ -116,17 +116,7 @@ export default function InstructorLoginPage({ navigate }: InstructorLoginPagePro
         </form>
 
         <div className="flex flex-col gap-3 pt-4 border-t border-[#e8e8e3]">
-          <button
-            type="button"
-            onClick={() => {
-              setEmail('instructor@factory.com');
-              setPassword('muffin123');
-            }}
-            className="w-full bg-[#fdfaf5] hover:bg-[#f5ebd6] text-[10px] text-[#6b4e30] border border-[#d8c39e] rounded-xl py-2 font-sans font-bold cursor-pointer transition-all"
-          >
-            Fill Instructor Credentials (muffin123)
-          </button>
-          
+
           <button
             type="button"
             onClick={() => navigate('/')}

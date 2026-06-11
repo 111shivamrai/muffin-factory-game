@@ -1513,45 +1513,6 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                     </button>
                   </form>
                 </div>
-
-                <div className="mt-8 pt-4 border-t border-[#f0ede4]">
-                  <div className="text-[9px] text-[#78716c] font-mono mb-2 uppercase text-center tracking-wider font-bold">
-                    Quick Test Seeding Accounts
-                  </div>
-                  <div className="flex justify-center space-x-2">
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setJoinName('Shivam');
-                        setTeamName('Cupcake Crew');
-                        setRoomCode('ROOM01');
-                      }}
-                      className="px-2.5 py-1.5 bg-[#f5ebd6] hover:bg-[#ebdcc0] text-[9px] rounded border border-[#d8c39e] text-[#6b4e30] font-sans font-bold cursor-pointer"
-                    >
-                      Fill Student
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setAuthEmail('instructor@factory.com');
-                        setAuthPassword('muffin123');
-                      }}
-                      className="px-2.5 py-1.5 bg-[#f5ebd6] hover:bg-[#ebdcc0] text-[9px] rounded border border-[#d8c39e] text-[#6b4e30] font-sans font-bold cursor-pointer"
-                    >
-                      Fill Instructor
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setAuthEmail('admin@factory.com');
-                        setAuthPassword('muffin123');
-                      }}
-                      className="px-2.5 py-1.5 bg-[#f5ebd6] hover:bg-[#ebdcc0] text-[9px] rounded border border-[#d8c39e] text-[#6b4e30] font-sans font-bold cursor-pointer"
-                    >
-                      Fill Admin
-                    </button>
-                  </div>
-                </div>
             </div>
           </div>
         </div>
