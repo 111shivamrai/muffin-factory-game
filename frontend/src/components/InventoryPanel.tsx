@@ -16,20 +16,52 @@ export default function InventoryPanel() {
 
   const isController = role === 'controller';
 
+  const prevConfigRef = React.useRef<{
+    mix: { q: number; r: number; s: number };
+    pack: { q: number; r: number; s: number };
+  } | null>(null);
+
   useEffect(() => {
     if (teamState) {
       const mix = teamState.inventory.base_mix;
       const pack = teamState.inventory.packaging_material;
-      if (mix) {
+      
+      if (!mix || !pack) return;
+
+      const currentConfig = {
+        mix: { q: mix.orderQty, r: mix.reorderPoint, s: mix.safetyStock },
+        pack: { q: pack.orderQty, r: pack.reorderPoint, s: pack.safetyStock }
+      };
+
+      const prevConfig = prevConfigRef.current;
+
+      let shouldUpdateMix = false;
+      let shouldUpdatePack = false;
+
+      if (!prevConfig) {
+        shouldUpdateMix = true;
+        shouldUpdatePack = true;
+      } else {
+        if (prevConfig.mix.q !== currentConfig.mix.q || prevConfig.mix.r !== currentConfig.mix.r || prevConfig.mix.s !== currentConfig.mix.s) {
+          shouldUpdateMix = true;
+        }
+        if (prevConfig.pack.q !== currentConfig.pack.q || prevConfig.pack.r !== currentConfig.pack.r || prevConfig.pack.s !== currentConfig.pack.s) {
+          shouldUpdatePack = true;
+        }
+      }
+
+      if (shouldUpdateMix) {
         setMixQty(mix.orderQty);
         setMixROP(mix.reorderPoint);
         setMixSafety(mix.safetyStock);
       }
-      if (pack) {
+      if (shouldUpdatePack) {
         setPackQty(pack.orderQty);
         setPackROP(pack.reorderPoint);
         setPackSafety(pack.safetyStock);
       }
+
+      prevConfigRef.current = currentConfig;
     }
   }, [teamState?.inventory]);
 

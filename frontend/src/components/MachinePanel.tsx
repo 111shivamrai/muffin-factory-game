@@ -13,12 +13,40 @@ export default function MachinePanel() {
 
   const isController = role === 'controller';
 
+  const prevConfigRef = React.useRef<{
+    mix: number; bake: number; ice: number; pack: number;
+    mixC: number; bakeC: number; iceC: number; packC: number;
+  } | null>(null);
+
   useEffect(() => {
     if (teamState) {
-      setMixActive(teamState.machines.mixing.active);
-      setBakeActive(teamState.machines.baking.active);
-      setIceActive(teamState.machines.icing.active);
-      setPackActive(teamState.machines.packaging.active);
+      const { mixing, baking, icing, packaging } = teamState.machines;
+      
+      const currentConfig = {
+        mix: mixing.active, bake: baking.active, ice: icing.active, pack: packaging.active,
+        mixC: mixing.count, bakeC: baking.count, iceC: icing.count, packC: packaging.count
+      };
+
+      const prevConfig = prevConfigRef.current;
+      
+      let shouldUpdate = false;
+      if (!prevConfig) {
+        shouldUpdate = true;
+      } else {
+        if (prevConfig.mix !== currentConfig.mix || prevConfig.bake !== currentConfig.bake || prevConfig.ice !== currentConfig.ice || prevConfig.pack !== currentConfig.pack ||
+            prevConfig.mixC !== currentConfig.mixC || prevConfig.bakeC !== currentConfig.bakeC || prevConfig.iceC !== currentConfig.iceC || prevConfig.packC !== currentConfig.packC) {
+          shouldUpdate = true;
+        }
+      }
+
+      if (shouldUpdate) {
+        setMixActive(mixing.active);
+        setBakeActive(baking.active);
+        setIceActive(icing.active);
+        setPackActive(packaging.active);
+      }
+
+      prevConfigRef.current = currentConfig;
     }
   }, [teamState?.machines]);
 
