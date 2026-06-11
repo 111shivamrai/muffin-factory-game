@@ -1,0 +1,87 @@
+Keyword 'room': 13 matches
+  Match 1 at 4304:
+edger.csv`),u.click()};function YU(){const{user:n,joinSession:e,resumeSession:t,logout:s,isAdmin:a}=au(),[c,u]=T.useState("Scanning for assigned classrooms..."),[h,m]=T.useState(""),[g,x]=T.useState(!1),[b,w]=T.useState(""),[k,P]=T.useState(null);T.useEffect(()=>{if(!n)return;(async()=>{try{if(n.isMock){const se=n,C=se.mockSessionCode;if(!C||se.uid==="pending-login")return;u("Checking classroom co
+------------------------------------------------------------
+  Match 2 at 4547:
+ll);T.useEffect(()=>{if(!n)return;(async()=>{try{if(n.isMock){const se=n,C=se.mockSessionCode;if(!C||se.uid==="pending-login")return;u("Checking classroom code...");const N=await Di(fo(Fs($e,"sessions"),cd("code","==",C)));let I=null;if(N.empty?I=(await Di(fo(Fs($e,"sessions")))).docs.find(E=>E.id===C||E.data().code===C):I=N.docs[0],!I){se.mockRole==="student"?m(`The instructor hasn't opened class
+------------------------------------------------------------
+  Match 3 at 4797:
+ait Di(fo(Fs($e,"sessions")))).docs.find(E=>E.id===C||E.data().code===C):I=N.docs[0],!I){se.mockRole==="student"?m(`The instructor hasn't opened classroom "${C}" yet. Please wait for them to start the session, then refresh.`):m(`Assigned classroom "${C}" could not be found.`);return}const L=I.data();if(P({id:I.id,...L}),se.mockRole==="instructor")u("Instructor ID validated! Opening dashboard..."),
+------------------------------------------------------------
+Keyword 'team': 30 matches
+  Match 1 at 5131:
+=="instructor")u("Instructor ID validated! Opening dashboard..."),await t(I.id);else{const z=n.uid.split(/[-_]/)[0];(await Di(Fs($e,`sessions/${I.id}/teams`))).docs.some(ze=>ze.id===z)?(u("Reconnecting to your student dashboard..."),await t(I.id)):(u("Classroom found! Enter a team name to begin."),x(!0),w(z.toUpperCase()))}return}if(!n.email)return;const H=n.email.toLowerCase(),W=fo(Fs($e,"session
+------------------------------------------------------------
+  Match 2 at 5258:
+s($e,`sessions/${I.id}/teams`))).docs.some(ze=>ze.id===z)?(u("Reconnecting to your student dashboard..."),await t(I.id)):(u("Classroom found! Enter a team name to begin."),x(!0),w(z.toUpperCase()))}return}if(!n.email)return;const H=n.email.toLowerCase(),W=fo(Fs($e,"sessions"),cd("allowedInstructors","array-contains",H)),Y=await Di(W);if(!Y.empty){const se=Y.docs[0];u("Instructor assignment found! 
+------------------------------------------------------------
+  Match 3 at 5718:
+e,"sessions"),cd("allowedStudents","array-contains",H)),le=await Di(ae);if(!le.empty){const se=le.docs[0];P(se),(await Di(fo(Fs($e,`sessions/${se.id}/teams`),cd("id","==",n.uid)))).empty?(u("Classroom found! Please enter a team name to join."),x(!0),w(H.split("@")[0])):(u("Reconnecting to your classroom..."),await t(se.id));return}if(a){u("No active session. Please use the Admin Panel to provision
+------------------------------------------------------------
+Keyword 'code': 14 matches
+  Match 1 at 4486:
+[g,x]=T.useState(!1),[b,w]=T.useState(""),[k,P]=T.useState(null);T.useEffect(()=>{if(!n)return;(async()=>{try{if(n.isMock){const se=n,C=se.mockSessionCode;if(!C||se.uid==="pending-login")return;u("Checking classroom code...");const N=await Di(fo(Fs($e,"sessions"),cd("code","==",C)));let I=null;if(N.empty?I=(await Di(fo(Fs($e,"sessions")))).docs.find(E=>E.id===C||E.data().code===C):I=N.docs[0],!I){
+------------------------------------------------------------
+  Match 2 at 4552:
+.useEffect(()=>{if(!n)return;(async()=>{try{if(n.isMock){const se=n,C=se.mockSessionCode;if(!C||se.uid==="pending-login")return;u("Checking classroom code...");const N=await Di(fo(Fs($e,"sessions"),cd("code","==",C)));let I=null;if(N.empty?I=(await Di(fo(Fs($e,"sessions")))).docs.find(E=>E.id===C||E.data().code===C):I=N.docs[0],!I){se.mockRole==="student"?m(`The instructor hasn't opened classroom 
+------------------------------------------------------------
+  Match 3 at 4604:
+ock){const se=n,C=se.mockSessionCode;if(!C||se.uid==="pending-login")return;u("Checking classroom code...");const N=await Di(fo(Fs($e,"sessions"),cd("code","==",C)));let I=null;if(N.empty?I=(await Di(fo(Fs($e,"sessions")))).docs.find(E=>E.id===C||E.data().code===C):I=N.docs[0],!I){se.mockRole==="student"?m(`The instructor hasn't opened classroom "${C}" yet. Please wait for them to start the sessio
+------------------------------------------------------------
+Keyword 'join': 7 matches
+  Match 1 at 3974:
+fter
+`,s=n.map(h=>`${h.round},${h.revenue},${h.profit},${h.rawMaterialCost},${h.productionCost},${h.inventoryCost},${h.penalties},${h.balanceAfter}`).join(`
+`),a=new Blob([t+s],{type:"text/csv"}),c=window.URL.createObjectURL(a),u=document.createElement("a");u.setAttribute("href",c),u.setAttribute("download",`${e}_MuffinFactory_Ledger.csv`),u.click()};function YU(){const{user:n,joinSession:e,resume
+------------------------------------------------------------
+  Match 2 at 4204:
+document.createElement("a");u.setAttribute("href",c),u.setAttribute("download",`${e}_MuffinFactory_Ledger.csv`),u.click()};function YU(){const{user:n,joinSession:e,resumeSession:t,logout:s,isAdmin:a}=au(),[c,u]=T.useState("Scanning for assigned classrooms..."),[h,m]=T.useState(""),[g,x]=T.useState(!1),[b,w]=T.useState(""),[k,P]=T.useState(null);T.useEffect(()=>{if(!n)return;(async()=>{try{if(n.isM
+------------------------------------------------------------
+  Match 3 at 5804:
+const se=le.docs[0];P(se),(await Di(fo(Fs($e,`sessions/${se.id}/teams`),cd("id","==",n.uid)))).empty?(u("Classroom found! Please enter a team name to join."),x(!0),w(H.split("@")[0])):(u("Reconnecting to your classroom..."),await t(se.id));return}if(a){u("No active session. Please use the Admin Panel to provision one."),m("admin_no_session");return}m("No active classroom assigned to your email add
+------------------------------------------------------------
+Keyword 'operator': 0 matches
+Keyword 'password': 29 matches
+  Match 1 at 84324:
+{marginBottom:20},children:[o.jsx("label",{style:{fontFamily:D.sans,fontSize:12,fontWeight:600,color:D.ink2,display:"block",marginBottom:6},children:"Password"}),o.jsxs("div",{style:{position:"relative"},children:[o.jsx(Sj,{size:16,color:D.ink4,style:{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)"}}),o.jsx("input",{type:ae?"text":"password",value:V,onChange:U=>H(U.target.value)
+------------------------------------------------------------
+  Match 2 at 84527:
+,children:[o.jsx(Sj,{size:16,color:D.ink4,style:{position:"absolute",left:14,top:"50%",transform:"translateY(-50%)"}}),o.jsx("input",{type:ae?"text":"password",value:V,onChange:U=>H(U.target.value),placeholder:"••••••••",style:{fontFamily:D.sans,fontSize:14,padding:"11px 44px 11px 40px",border:`1.5px solid ${D.border2}`,borderRadius:D.radiusSm,width:"100%",outline:"none",boxSizing:"border-box",col
+------------------------------------------------------------
+  Match 3 at 107961:
+);M?(De(ge=>ge||M+"-INST"),fe(ge=>ge||Math.random().toString(36).substring(2,8).toUpperCase()),we(ge=>ge.length>0?ge:[{studentId:`${M}-STUD-A`,studentPassword:Math.random().toString(36).substring(2,8).toUpperCase()},{studentId:`${M}-STUD-B`,studentPassword:Math.random().toString(36).substring(2,8).toUpperCase()},{studentId:`${M}-STUD-C`,studentPassword:Math.random().toString(36).substring(2,8).toU
+------------------------------------------------------------
+Keyword 'email': 18 matches
+  Match 1 at 5319:
+"Reconnecting to your student dashboard..."),await t(I.id)):(u("Classroom found! Enter a team name to begin."),x(!0),w(z.toUpperCase()))}return}if(!n.email)return;const H=n.email.toLowerCase(),W=fo(Fs($e,"sessions"),cd("allowedInstructors","array-contains",H)),Y=await Di(W);if(!Y.empty){const se=Y.docs[0];u("Instructor assignment found! Resuming session..."),await t(se.id);return}const ae=fo(Fs($e
+------------------------------------------------------------
+  Match 2 at 5342:
+tudent dashboard..."),await t(I.id)):(u("Classroom found! Enter a team name to begin."),x(!0),w(z.toUpperCase()))}return}if(!n.email)return;const H=n.email.toLowerCase(),W=fo(Fs($e,"sessions"),cd("allowedInstructors","array-contains",H)),Y=await Di(W);if(!Y.empty){const se=Y.docs[0];u("Instructor assignment found! Resuming session..."),await t(se.id);return}const ae=fo(Fs($e,"sessions"),cd("allowe
+------------------------------------------------------------
+  Match 3 at 6045:
+eturn}if(a){u("No active session. Please use the Admin Panel to provision one."),m("admin_no_session");return}m("No active classroom assigned to your email address.")}catch(H){console.error(H),m("Failed to scan for assignments. Please check connection.")}})()},[n,a]);const F=async V=>{if(V.preventDefault(),!(!b||!k)){u("Joining classroom..."),x(!1);try{await e(k.id,b.trim())}catch(H){m(H.message)}
+------------------------------------------------------------
+Keyword 'sign in': 4 matches
+  Match 1 at 61415:
+:"pointer",transition:"all 0.2s"},onMouseEnter:U=>{U.target.style.borderColor=D.ink},onMouseLeave:U=>{U.target.style.borderColor=D.border2},children:"Sign in"}),o.jsxs("button",{onClick:()=>{e(!0),Ae("Launching free demo…")},style:{fontFamily:D.sans,fontSize:13,fontWeight:600,color:D.white,background:D.ink,border:"none",borderRadius:D.radiusPill,padding:"8px 22px",cursor:"pointer",display:"flex",a
+------------------------------------------------------------
+  Match 2 at 62688:
+ink,background:"transparent",border:`1.5px solid ${D.border2}`,borderRadius:D.radiusPill,padding:"10px 24px",cursor:"pointer",width:"100%"},children:"Sign in"})})]})]}),o.jsx("section",{style:{...vc,paddingTop:80,paddingBottom:80},children:o.jsxs("div",{style:{display:"grid",gridTemplateColumns:a?"1fr":"1fr 1fr",gap:a?48:64,alignItems:"center"},children:[o.jsxs(Le.div,{...al,children:[o.jsxs("div"
+------------------------------------------------------------
+  Match 3 at 85912:
+r:"pointer",transition:"all 0.15s"},children:U.label},U.val)})})]}),o.jsx("button",{onClick:async()=>{try{Ae("Signing in..."),await b(P.trim(),V),Ae("Sign in successful!"),k(!1)}catch(U){Ae("Error: "+U.message)}},style:{fontFamily:D.sans,fontSize:14,fontWeight:600,color:D.white,background:D.ink,border:"none",borderRadius:D.radiusPill,padding:"12px 0",cursor:"pointer",width:"100%",marginBottom:14,t
+------------------------------------------------------------
+Keyword 'login': 8 matches
+  Match 1 at 4516:
+seState(""),[k,P]=T.useState(null);T.useEffect(()=>{if(!n)return;(async()=>{try{if(n.isMock){const se=n,C=se.mockSessionCode;if(!C||se.uid==="pending-login")return;u("Checking classroom code...");const N=await Di(fo(Fs($e,"sessions"),cd("code","==",C)));let I=null;if(N.empty?I=(await Di(fo(Fs($e,"sessions")))).docs.find(E=>E.id===C||E.data().code===C):I=N.docs[0],!I){se.mockRole==="student"?m(`The
+------------------------------------------------------------
+  Match 2 at 57711:
+pport. Premium plans add dedicated account management, custom scenario development, and live technical support during class sessions."}];function tB({login:n,setIsDirectPlay:e}){const t=ZU(),s=t<768,a=t<1024,[c,u]=T.useState(0),[h,m]=T.useState(0),[g,x]=T.useState({}),{loginWithMockCredentials:b}=au(),[w,k]=T.useState(!1),[P,F]=T.useState(""),[V,H]=T.useState(""),[W,Y]=T.useState("1"),[ae,le]=T.us
+------------------------------------------------------------
+  Match 3 at 57831:
+ass sessions."}];function tB({login:n,setIsDirectPlay:e}){const t=ZU(),s=t<768,a=t<1024,[c,u]=T.useState(0),[h,m]=T.useState(0),[g,x]=T.useState({}),{loginWithMockCredentials:b}=au(),[w,k]=T.useState(!1),[P,F]=T.useState(""),[V,H]=T.useState(""),[W,Y]=T.useState("1"),[ae,le]=T.useState(!1),[se,C]=T.useState(null),[N,I]=T.useState(!1),[L,z]=T.useState(!1),[E,O]=T.useState(""),[ze,tt]=T.useState("")
+------------------------------------------------------------
+Keyword 'register': 1 matches
+  Match 1 at 125792:
+ssName:"w-5 h-5"}),color:"violet",trend:Tt>0?`${Math.round(ii/Tt*100)}% seats occupied`:"—"},{label:"Active Licenses",value:fi,suffix:`/ ${le.length} Registered`,icon:o.jsx(lk,{className:"w-5 h-5"}),color:"emerald",trend:`${Tt} total seats`},{label:"System Issues",value:Xn,suffix:"Errors in buffer",icon:o.jsx(Ed,{className:"w-5 h-5"}),color:Xn>0?"red":"emerald",trend:Xn===0?"Diagnostic healthy":"A
+------------------------------------------------------------

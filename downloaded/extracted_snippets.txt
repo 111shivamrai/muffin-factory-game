@@ -1,0 +1,13 @@
+Keyword 'Simulation Laboratory': 0 matches
+Keyword 'Operations & Supply Chain': 0 matches
+Keyword 'Enter Room': 0 matches
+Keyword 'Operator Console': 0 matches
+Keyword 'Instructor Console': 0 matches
+Keyword 'Join Team': 0 matches
+Keyword 'Create Room': 0 matches
+Keyword 'Enter Factory': 0 matches
+Keyword 'Console Access': 0 matches
+Keyword 'Muffin Factory Pro': 1 matches
+  Match 1 at 1192620:
+percase"},children:"Rate"}),o.jsx("th",{style:{textAlign:"right",paddingBottom:6,fontSize:10,textTransform:"uppercase"},children:"Amount"})]})}),o.jsxs("tbody",{children:[o.jsxs("tr",{style:{borderBottom:"1px dashed #e6ccb2"},children:[o.jsxs("td",{style:{padding:"10px 0",fontWeight:800},children:["Muffin Factory Pro SaaS License",o.jsx("br",{}),o.jsxs("span",{style:{fontSize:11,fontWeight:500,color:"#8a7360"},children:["Duration: ",on==="semester"?"Semester License (16 weeks)":on==="quarter"?"Quarter License (10 weeks)":on==="workshop"?"Workshop License (1-2 days)":"Annual Enterprise License"]})]}),o.jsxs("td",{style:{textAlign:"center"},children:[Mt," students"]}),o.jsxs("td",{style:{textAlign:"right"},children:["$",Ve,"/stud"]}),o.jsxs("td",{style:{textAlign:"right",fontWeight:800},chil
+--------------------------------------------------------------------------------
