@@ -42,6 +42,9 @@ router.get('/active-demo', async (req, res) => {
       await db.createRoom(newRoom);
       demoRoom = newRoom;
     }
+    if (!demoRoom) {
+      throw new Error('Failed to find or create demo room');
+    }
     res.json({ code: demoRoom.code });
   } catch (err) {
     console.error('Error finding or creating active demo room:', err);

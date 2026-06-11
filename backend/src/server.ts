@@ -16,9 +16,28 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-// CORS configuration
+// CORS configuration — allow Netlify frontend + localhost dev
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  process.env.FRONTEND_URL || '',
+].filter(Boolean);
+
 const corsOptions = {
-  origin: '*', // For development, allow any origin. In production, configure explicitly.
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow any netlify.app subdomain or configured frontend URL
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.netlify.app') ||
+      origin.endsWith('.railway.app') ||
+      process.env.NODE_ENV !== 'production'
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true); // Permissive for now — lock down in prod
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };

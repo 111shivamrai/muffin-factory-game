@@ -135,6 +135,10 @@ router.post('/student-login', async (req, res) => {
       } as any;
     }
 
+    if (!user) {
+      throw new Error('User creation failed');
+    }
+
     // Sign JWT
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email, role: user.role },
