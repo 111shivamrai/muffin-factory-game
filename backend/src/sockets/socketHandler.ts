@@ -194,6 +194,15 @@ export function registerSocketHandler(io: Server) {
         const members = await db.getRoomMembers(room.id);
         io.to(`room_${room.id}`).emit('members_updated', members);
 
+        // Notify instructor dashboard of updated team list
+        if (isNewTeam) {
+          const allTeams = await db.getTeamsInRoom(room.id);
+          const teamStates = await Promise.all(
+            allTeams.map(t => db.getTeamState(t.id))
+          );
+          io.to(`room_${room.id}`).emit('instructor_teams_list', teamStates.filter(Boolean));
+        }
+
         callback({
           success: true,
           room,

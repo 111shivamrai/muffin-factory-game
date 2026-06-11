@@ -159,13 +159,22 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
     }
 
     try {
-      // First, get student authentication token dynamically
-      const res = await fetch(`${API_URL}/api/auth/student-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: joinName, roomCode: roomCode.toUpperCase() })
-      });
-      const data = await res.json();
+      // First, get student authentication token dynamically (with retry for rolling deployments)
+      let res;
+      let data;
+      for (let i = 0; i < 3; i++) {
+        res = await fetch(`${API_URL}/api/auth/student-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: joinName, roomCode: roomCode.toUpperCase() })
+        });
+        data = await res.json();
+        if (!data.error) break; // Success!
+        if (data.error && i < 2) {
+          // Wait 1.5 seconds before retrying to hit the other container
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      }
 
       if (data.error) {
         setError(data.error);
