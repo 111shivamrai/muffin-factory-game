@@ -39,7 +39,7 @@ export default function AdminDashboard() {
 
   // Licenses state (Mock persisted client-side to localStorage)
   const [licenses, setLicenses] = useState<any[]>([]);
-  const [newLicCode, setNewLicCode] = useState('');
+
   const [newLicCustomer, setNewLicCustomer] = useState('');
   const [newLicEmail, setNewLicEmail] = useState('');
   const [newLicSeats, setNewLicSeats] = useState(40);
@@ -159,11 +159,11 @@ export default function AdminDashboard() {
     setLicSuccessMsg('');
     setLicErrorMsg('');
 
-    const code = newLicCode.trim().toUpperCase();
+    const code = 'LIC-' + Math.random().toString(36).substr(2, 6).toUpperCase();
     const instEmail = newLicInstructorEmail.trim().toLowerCase();
     const instPass = newLicInstructorPassword.trim();
 
-    if (!code || !newLicCustomer.trim() || !newLicEmail.trim() || !instEmail || !instPass) {
+    if (!newLicCustomer.trim() || !newLicEmail.trim() || !instEmail || !instPass) {
       setLicErrorMsg('All fields are required.');
       return;
     }
@@ -209,8 +209,7 @@ export default function AdminDashboard() {
     setLicenses(updated);
     localStorage.setItem('admin_licenses', JSON.stringify(updated));
 
-    setLicSuccessMsg(`License "${code}" created! Instructor credentials ready. Share the join code "${code}" with students.`);
-    setNewLicCode('');
+    setLicSuccessMsg(`License "${code}" created! Instructor credentials ready. The instructor can now log in to create a room and generate the student join code.`);
     setNewLicCustomer('');
     setNewLicEmail('');
     setNewLicSeats(40);
@@ -686,21 +685,10 @@ export default function AdminDashboard() {
                   {/* Workflow info box */}
                   <div className="p-3 bg-amber-500/8 border border-amber-500/20 rounded-xl">
                     <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-relaxed font-medium">
-                      <strong>How it works:</strong> You set the instructor login + student limit. The <em>License Code</em> doubles as the student join code — share it with the instructor who distributes it to students.
+                      <strong>How it works:</strong> You set the instructor login + student limit. The instructor uses these credentials to log in and create a Room. That Room will generate the actual Student Join Code.
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">License Code *</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="NYU-STERN-2026"
-                        value={newLicCode}
-                        onChange={e => setNewLicCode(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 font-mono text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white uppercase transition-all"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 gap-3">
                     <div className="space-y-1">
                       <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Customer / University *</label>
                       <input
@@ -1125,35 +1113,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Student Join Code */}
-            <div className="space-y-2">
-              <h4 className="text-[10px] font-black uppercase text-emerald-500 tracking-wider flex items-center gap-1.5">
-                <Activity className="w-3 h-3" /> Student Join Code
-              </h4>
-              <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 space-y-3">
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Share this join code with students. They enter it in the <strong>"Enter Factory"</strong> form to access the simulation. No individual passwords required — the instructor controls room access.
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 bg-white dark:bg-slate-950 border-2 border-emerald-500/30 rounded-xl p-3 text-center">
-                    <span className="text-[9px] font-bold uppercase text-slate-400 block mb-1">Student Join Code</span>
-                    <span className="text-2xl font-mono font-black text-emerald-600 dark:text-emerald-400 tracking-widest select-all">{selectedLicenseForCreds.id}</span>
-                    <div className="mt-1.5 text-[9px] text-slate-400 font-mono">
-                      Max {selectedLicenseForCreds.maxSeats === 999 ? 'unlimited' : selectedLicenseForCreds.maxSeats} concurrent student logins
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(selectedLicenseForCreds.id);
-                    alert(`Join code "${selectedLicenseForCreds.id}" copied! Share this with your students.`);
-                  }}
-                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase rounded-lg border-none cursor-pointer transition-all shadow-sm tracking-wider"
-                >
-                  Copy Student Join Code
-                </button>
-              </div>
-            </div>
+
 
           </div>
 
