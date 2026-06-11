@@ -68,6 +68,13 @@ export default function DashboardTopBar() {
           value={`Day ${room.currentDay}`} 
         />
 
+        {/* Today's Demand */}
+        <StatCard 
+          icon="📈" 
+          title="TODAY'S DEMAND" 
+          value={`${teamState.history?.demand?.length ? teamState.history.demand[teamState.history.demand.length - 1] : 0} Muffins`} 
+        />
+
         {/* Total Cash */}
         <StatCard 
           icon="💰" 
