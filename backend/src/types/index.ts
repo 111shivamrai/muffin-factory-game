@@ -130,6 +130,7 @@ export interface HistoryData {
   contractFulfillment: number[];
   bottlenecks: string[];
   bottleneckCapacity: number[];
+  production: number[];
 }
 
 export interface LeaderboardEntry {

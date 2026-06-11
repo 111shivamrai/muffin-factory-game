@@ -512,7 +512,8 @@ export function runSimDay(
       days: [], cash: [], revenue: [], demand: [],
       inventory: { base_mix: [], packaging_material: [], finished_muffin: [] },
       utilization: { mixing: [], baking: [], icing: [], packaging: [] },
-      contractFulfillment: [], bottlenecks: [], bottleneckCapacity: []
+      contractFulfillment: [], bottlenecks: [], bottleneckCapacity: [],
+      production: []
     };
   }
 
@@ -523,6 +524,7 @@ export function runSimDay(
   nextState.history.inventory.base_mix.push(nextState.inventory.base_mix.onHand);
   nextState.history.inventory.packaging_material.push(nextState.inventory.packaging_material.onHand);
   nextState.history.inventory.finished_muffin.push(nextState.inventory.finished_muffin.onHand);
+  nextState.history.production.push(actualProduction);
 
   // Machine utilizations: Actual Production / Available Capacity
   const activeMixerCap = runningMixers * mConfigs.mixing.capacityPerMachine;

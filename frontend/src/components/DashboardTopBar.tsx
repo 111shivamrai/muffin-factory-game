@@ -42,7 +42,7 @@ export default function DashboardTopBar() {
 
   return (
     <div className="bg-[#ffe7df] border border-[#ffd5c6] rounded-2xl p-3 shadow-sm select-none relative z-30">
-      <div className="grid grid-cols-8 gap-2 items-center">
+      <div className="grid grid-cols-9 gap-2 items-center">
 
         {/* Logo block */}
         <div className="bg-white rounded-xl p-2.5 border border-[#ffd5c6] flex items-center gap-2 col-span-2">
@@ -73,6 +73,13 @@ export default function DashboardTopBar() {
           icon="💰" 
           title="TOTAL CASH" 
           value={`₹${teamState.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
+        />
+
+        {/* Daily Production */}
+        <StatCard 
+          icon="🏭" 
+          title="DAILY PRODUCTION" 
+          value={`${teamState.history?.production?.length ? teamState.history.production[teamState.history.production.length - 1] : 0} Muffins`} 
         />
 
         {/* Lead Time */}

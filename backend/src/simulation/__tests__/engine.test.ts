@@ -80,7 +80,8 @@ const createMockTeamState = (): TeamState => {
       days: [], cash: [], revenue: [], demand: [],
       inventory: { base_mix: [], packaging_material: [], finished_muffin: [] },
       utilization: { mixing: [], baking: [], icing: [], packaging: [] },
-      contractFulfillment: [], bottlenecks: [], bottleneckCapacity: []
+      contractFulfillment: [], bottlenecks: [], bottleneckCapacity: [],
+      production: []
     },
     report: {
       revenue: 0, costs: 0, profit: 0, fillRate: 100, lostSales: 0,
