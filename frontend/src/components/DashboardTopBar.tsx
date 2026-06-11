@@ -14,15 +14,17 @@ export default function DashboardTopBar() {
   const rank = rankEntry ? rankEntry.rank : 'N/A';
   const totalTeams = leaderboard.length || 1;
 
-  // Resolve live lead time based on active events
-  let leadTimeDays = 3.0; // Default
-  let leadTimeMod = 0;
-  teamState.activeEvents.forEach(e => {
-    if (e.active && e.targetVariable === 'lead_time') {
-      leadTimeMod += e.modifier;
-    }
-  });
-  leadTimeDays = Math.max(1, 3.0 + leadTimeMod);
+  // Resolve RM deliveries in transit
+  const rmOrders = teamState.purchaseOrders.filter(o => o.status === 'transit');
+  const rmDaysLeft = rmOrders.length > 0 
+    ? Math.min(...rmOrders.map(o => o.arrivalDay - room.currentDay))
+    : null;
+
+  // Resolve Machine deliveries in transit
+  const machineOrders = teamState.machineOrders.filter(o => o.status === 'procuring');
+  const machineDaysLeft = machineOrders.length > 0
+    ? Math.min(...machineOrders.map(o => o.arrivalDay - room.currentDay))
+    : null;
 
   // Active contracts count
   const activeContracts = teamState.contracts.filter(c => c.active);
@@ -89,12 +91,23 @@ export default function DashboardTopBar() {
           value={`${teamState.history?.production?.length ? teamState.history.production[teamState.history.production.length - 1] : 0} Muffins`} 
         />
 
-        {/* Lead Time */}
-        <StatCard 
-          icon="⏱️" 
-          title="LIVE LEAD TIME" 
-          value={`${leadTimeDays.toFixed(1)} Days`} 
-        />
+        {/* RM Delivery (Only visible if in transit) */}
+        {rmDaysLeft !== null && rmDaysLeft >= 0 && (
+          <StatCard 
+            icon="🚚" 
+            title="RM DELIVERY" 
+            value={`${rmDaysLeft} Days Left`} 
+          />
+        )}
+
+        {/* Machine Delivery (Only visible if in transit) */}
+        {machineDaysLeft !== null && machineDaysLeft >= 0 && (
+          <StatCard 
+            icon="🏗️" 
+            title="MACHINE DELIVERY" 
+            value={`${machineDaysLeft} Days Left`} 
+          />
+        )}
 
         {/* Contracts button/stat */}
         <div 
