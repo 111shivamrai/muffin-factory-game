@@ -12,12 +12,13 @@ const getApiUrl = () => {
 export const API_URL = getApiUrl();
 
 interface GameStore {
-  // Auth State
-  user: User | null;
+  // Auth & Connection
   token: string | null;
+  user: User | null;
   isAuthenticated: boolean;
   login: (token: string, user: User) => void;
   logout: () => void;
+  exitRoom: () => void;
 
   // Real-time State
   socket: Socket | null;
@@ -83,6 +84,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     localStorage.removeItem('muffin_user');
     get().disconnectSocket();
     set({ token: null, user: null, isAuthenticated: false, room: null, teamState: null, role: null });
+  },
+
+  exitRoom: () => {
+    // Clear room and related state, without logging out
+    set({ room: null, teamState: null, instructorTeams: [], leaderboard: [], members: [] });
   },
 
   // Sockets & Real-time State

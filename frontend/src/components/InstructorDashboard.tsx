@@ -10,7 +10,7 @@ import { SavedScenario, Room, TeamState } from '../../../backend/src/types/index
 
 export default function InstructorDashboard() {
   const { 
-    logout, scenarios, loadScenarios, roomsList, loadRooms, createRoom, deleteRoom,
+    logout, exitRoom, scenarios, loadScenarios, roomsList, loadRooms, createRoom, deleteRoom,
     room, role, joinRoom, socket, instructorTeams, instructorControl, user
   } = useGameStore();
 
@@ -644,12 +644,12 @@ export default function InstructorDashboard() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { playTone(200, 'sine', 0.05); logout(); }}
+            onClick={() => { playTone(200, 'sine', 0.05); room ? exitRoom() : logout(); }}
             className="flex items-center gap-1.5 bg-white/5 hover:bg-red-950/20 hover:text-red-400 border border-white/10 hover:border-red-500/25 px-3 py-1.5 rounded-lg text-[9px] uppercase font-black text-gray-300 transition-all cursor-pointer select-none active:scale-95 animate-fade-in"
-            title="Exit Instructor Portal"
+            title={room ? "Return to Lobby" : "Exit Instructor Portal"}
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>Exit Dashboard</span>
+            <span>{room ? "Exit Room" : "Exit Dashboard"}</span>
           </button>
           {room && (
             <button
@@ -876,6 +876,7 @@ export default function InstructorDashboard() {
                           playTone(220, 'sawtooth', 0.2);
                           if (confirm('Are you sure you want to terminate this simulation session? All student controls will lock.')) {
                             instructorControl('end');
+                            exitRoom();
                           }
                         }}
                         className="py-2 px-3 bg-red-650 hover:bg-red-700 text-white border border-red-750 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95"
