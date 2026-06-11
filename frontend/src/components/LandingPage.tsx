@@ -749,8 +749,8 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                 {/* Browser Window Image */}
                 <div className="relative overflow-hidden bg-white border-t border-[#f0ede4]">
                   <img 
-                    src="/hero_woman_baking.jpg" 
-                    alt="The Golden Crumb Bakery - Muffin Factory Simulation" 
+                    src="/hero_dashboard.png" 
+                    alt="Muffin Factory Simulation Dashboard" 
                     className="w-full h-auto object-cover block"
                   />
                 </div>
