@@ -42,10 +42,10 @@ export default function DashboardTopBar() {
 
   return (
     <div className="bg-[#ffe7df] border border-[#ffd5c6] rounded-2xl p-3 shadow-sm select-none relative z-30">
-      <div className="grid grid-cols-9 gap-2 items-center">
+      <div className="flex flex-wrap xl:flex-nowrap gap-2 items-center justify-between">
 
         {/* Logo block */}
-        <div className="bg-white rounded-xl p-2.5 border border-[#ffd5c6] flex items-center gap-2 col-span-2">
+        <div className="bg-white rounded-xl p-2.5 border border-[#ffd5c6] flex items-center gap-2 shrink-0">
           <div className="text-2xl animate-bounce">🧁</div>
           <div>
             <h1 className="font-bold font-pixel text-[11px] tracking-wider text-pink-600">MUFFIN FACTORY</h1>
@@ -111,7 +111,7 @@ export default function DashboardTopBar() {
         />
 
         {/* Workspace and Settings */}
-        <div className="bg-white rounded-xl p-2.5 border border-[#ffd5c6] shadow-sm flex items-center justify-between col-span-1">
+        <div className="bg-white rounded-xl p-2.5 border border-[#ffd5c6] shadow-sm flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 overflow-hidden">
             <div className="text-xl">🧁</div>
             <div className="overflow-hidden">

@@ -31,6 +31,30 @@ export default function App() {
     setPath(to);
   };
 
+  // Auto-scale to fit any monitor exactly
+  const [zoomScale, setZoomScale] = useState(1);
+  useEffect(() => {
+    const calculateScale = () => {
+      // Base design dimensions that fit perfectly without scroll
+      const designWidth = 1366;
+      const designHeight = 768;
+      
+      const scaleX = window.innerWidth / designWidth;
+      const scaleY = window.innerHeight / designHeight;
+      
+      // Use the smaller scale to ensure it fits both width and height
+      const scale = Math.min(scaleX, scaleY);
+      
+      // We can cap it at a reasonable max size (e.g., 1.5x on very large screens)
+      // and down to whatever fits small laptops.
+      setZoomScale(Math.min(scale, 1.2));
+    };
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
+  }, []);
+
   // Route 1: Admin Panel Dashboard or Login
   if (path === '/saas-admin') {
     if (isAuthenticated && user) {
@@ -132,13 +156,22 @@ export default function App() {
 
   // 5. Operator is in a running room -> Render full Operations Dashboard
   return (
-    <div className="h-screen flex flex-col bg-[#fff3ee] text-slate-800 p-3 overflow-hidden font-sans select-none relative gap-3">
-      
-      {/* Top Status Bar HUD */}
-      <DashboardTopBar />
+    <div className="flex items-center justify-center bg-[#2d2d2d] w-screen h-screen overflow-hidden">
+      <div 
+        className="flex flex-col bg-[#fff3ee] text-slate-800 p-3 overflow-hidden font-sans select-none relative gap-3 shadow-2xl"
+        style={{ 
+          width: '1366px', 
+          height: '768px', 
+          transform: `scale(${zoomScale})`, 
+          transformOrigin: 'center center'
+        }}
+      >
+        
+        {/* Top Status Bar HUD */}
+        <DashboardTopBar />
 
-      {/* Main Dashboard Workspace Grid */}
-      <div className="flex-1 grid grid-cols-12 gap-3 overflow-hidden min-h-0">
+        {/* Main Dashboard Workspace Grid */}
+        <div className="flex-1 grid grid-cols-12 gap-3 overflow-hidden min-h-0">
         
         {/* LEFT SIDEBAR: Inventory & Machine Operations Controls */}
         <div className="col-span-4 flex flex-col gap-2.5 overflow-y-auto pr-1 h-full min-h-0">
@@ -227,6 +260,7 @@ export default function App() {
         </div>
       )}
 
+      </div>
     </div>
   );
 }
