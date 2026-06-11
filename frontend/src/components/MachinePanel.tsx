@@ -136,9 +136,18 @@ export default function MachinePanel() {
                     -
                   </button>
                 )}
-                <span className="w-10 text-center font-bold text-slate-700 bg-white border border-slate-300 px-0.5 py-0.5 rounded text-[11px] font-mono">
-                  {state}/{mData.count}
-                </span>
+                <div className="flex items-center bg-white border border-slate-300 rounded overflow-hidden">
+                  <input
+                    type="number"
+                    value={state}
+                    onChange={(e) => setter(e.target.value === '' ? 0 : parseInt(e.target.value))}
+                    onBlur={() => setter((prev: any) => Math.max(0, Math.min(mData.count, parseInt(prev) || 0)))}
+                    disabled={!isController}
+                    className="w-6 text-center font-bold text-slate-700 bg-transparent px-0 py-0.5 text-[11px] font-mono focus:outline-none border-none hide-arrows"
+                    style={{ MozAppearance: 'textfield' }}
+                  />
+                  <span className="text-[11px] font-mono text-slate-400 pr-1 bg-slate-50 border-l border-slate-200 pl-1 py-0.5">/{mData.count}</span>
+                </div>
                 {isController && (
                   <button 
                     type="button"
