@@ -31,11 +31,10 @@ export default function App() {
     setPath(to);
   };
 
-  // Auto-scale to fit any monitor exactly
-  const [zoomScale, setZoomScale] = useState(1);
+  // Auto-scale UI by adjusting root font-size (REM)
   useEffect(() => {
     const calculateScale = () => {
-      // Base design dimensions that fit perfectly without scroll
+      // Base design dimensions
       const designWidth = 1366;
       const designHeight = 768;
       
@@ -45,14 +44,17 @@ export default function App() {
       // Use the smaller scale to ensure it fits both width and height
       const scale = Math.min(scaleX, scaleY);
       
-      // We can cap it at a reasonable max size (e.g., 1.5x on very large screens)
-      // and down to whatever fits small laptops.
-      setZoomScale(Math.min(scale, 1.2));
+      // Cap scale between 0.6 and 1.5
+      const clampedScale = Math.max(0.6, Math.min(scale, 1.5));
+      document.documentElement.style.fontSize = `${16 * clampedScale}px`;
     };
 
     calculateScale();
     window.addEventListener('resize', calculateScale);
-    return () => window.removeEventListener('resize', calculateScale);
+    return () => {
+      window.removeEventListener('resize', calculateScale);
+      document.documentElement.style.fontSize = '16px'; // reset on unmount
+    };
   }, []);
 
   // Route 1: Admin Panel Dashboard or Login
@@ -156,18 +158,9 @@ export default function App() {
 
   // 5. Operator is in a running room -> Render full Operations Dashboard
   return (
-    <div className="flex items-center justify-center bg-[#2d2d2d] w-screen h-screen overflow-hidden">
-      <div 
-        className="flex flex-col bg-[#fff3ee] text-slate-800 p-3 overflow-hidden font-sans select-none relative gap-3 shadow-2xl"
-        style={{ 
-          width: '1366px', 
-          height: '768px', 
-          transform: `scale(${zoomScale})`, 
-          transformOrigin: 'center center'
-        }}
-      >
-        
-        {/* Top Status Bar HUD */}
+    <div className="h-screen w-screen flex flex-col bg-[#fff3ee] text-slate-800 p-3 overflow-hidden font-sans select-none relative gap-3">
+      
+      {/* Top Status Bar HUD */}
         <DashboardTopBar />
 
         {/* Main Dashboard Workspace Grid */}
@@ -260,7 +253,6 @@ export default function App() {
         </div>
       )}
 
-      </div>
     </div>
   );
 }
