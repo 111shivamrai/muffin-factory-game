@@ -1457,7 +1457,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>JOIN TEAM WORKFLOOR</span>
                     </button>
-                    {error && !error.includes('Access denied') && !error.includes('Connection failed') && (
+                    {error && !error.includes('email') && !error.includes('password') && !error.includes('Access denied') && !error.includes('Connection failed') && (
                       <div className="text-[11px] text-[#c0392b] font-semibold text-center mt-2">
                         ⚠️ {error}
                       </div>
