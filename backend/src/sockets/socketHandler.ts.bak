@@ -99,7 +99,7 @@ export function registerSocketHandler(io: Server) {
       currentUser = decoded;
 
       try {
-        const room = await db.getRoomByCode((payload.roomCode || "").replace(/[^A-Za-z0-9]/g, '').toUpperCase());
+        const room = await db.getRoomByCode(payload.roomCode);
         if (!room) {
           return callback({ error: 'Room not found' });
         }

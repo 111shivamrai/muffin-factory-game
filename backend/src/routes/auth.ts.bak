@@ -97,7 +97,7 @@ router.post('/student-login', async (req, res) => {
   }
 
   try {
-    const cleanRoomCode = roomCode.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    const cleanRoomCode = roomCode.trim().toUpperCase();
     const room = await db.getRoomByCode(cleanRoomCode);
     if (!room) {
       res.status(404).json({ error: `Room code "${cleanRoomCode}" not found or room inactive` });
