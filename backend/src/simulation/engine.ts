@@ -113,7 +113,15 @@ export function runSimDay(
   let breakdownsMultiplier = 1.0;
 
   nextState.contracts.forEach((c: Contract) => {
-    c.active = (day >= c.startDay && day <= c.endDay);
+    if (c.status === 'accepted') {
+      c.active = (day >= c.startDay && day <= c.endDay);
+      if (day > c.endDay) {
+        c.status = 'completed';
+        c.active = false;
+      }
+    } else {
+      c.active = false;
+    }
   });
 
   nextState.activeEvents.forEach((ev: GameEvent) => {

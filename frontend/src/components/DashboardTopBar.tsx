@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore.js';
 import { Settings, LogOut, ClipboardList } from 'lucide-react';
 
 export default function DashboardTopBar() {
-  const { room, teamState, role, leaderboard, logout } = useGameStore();
+  const { room, teamState, role, leaderboard, logout, updateContractStatus } = useGameStore();
   const [showContractsModal, setShowContractsModal] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
@@ -167,6 +167,8 @@ export default function DashboardTopBar() {
                   <div 
                     key={c.id}
                     className={`p-3 rounded-xl border ${
+                      c.status === 'offered' ? 'bg-blue-50/50 border-blue-300' :
+                      c.status === 'declined' ? 'bg-red-50/50 border-red-200 text-slate-400 opacity-75' :
                       c.active 
                         ? 'bg-pink-50/50 border-pink-300 text-slate-700' 
                         : 'bg-slate-50 border-slate-200 text-slate-400'
@@ -175,9 +177,15 @@ export default function DashboardTopBar() {
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-bold font-mono">{c.name}</span>
                       <span className={`px-1.5 py-0.5 rounded text-[8px] font-pixel ${
+                        c.status === 'offered' ? 'bg-blue-100 text-blue-700' :
+                        c.status === 'declined' ? 'bg-red-100 text-red-700' :
+                        c.status === 'completed' ? 'bg-green-100 text-green-700' :
                         c.active ? 'bg-pink-100 text-pink-700' : 'bg-slate-200 text-slate-500'
                       }`}>
-                        {c.active ? 'ACTIVE' : 'INACTIVE'}
+                        {c.status === 'offered' ? 'NEW OFFER' :
+                         c.status === 'declined' ? 'DECLINED' :
+                         c.status === 'completed' ? 'COMPLETED' :
+                         c.active ? 'ACTIVE' : 'UPCOMING'}
                       </span>
                     </div>
                     
@@ -188,12 +196,33 @@ export default function DashboardTopBar() {
                       <div className="text-red-500 font-bold">Penalty: ₹{c.penalty}/missed</div>
                     </div>
 
-                    {c.active && (
+                    {c.status === 'offered' ? (
+                      <div className="mt-3 pt-2 border-t border-blue-200 flex justify-end gap-2">
+                        {role === 'controller' ? (
+                          <>
+                            <button
+                              onClick={() => updateContractStatus(c.id, 'declined')}
+                              className="px-3 py-1 bg-white hover:bg-red-50 text-red-600 rounded text-[9px] font-bold border border-red-200 cursor-pointer shadow-sm transition-colors"
+                            >
+                              DECLINE
+                            </button>
+                            <button
+                              onClick={() => updateContractStatus(c.id, 'accepted')}
+                              className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-[9px] font-bold border-none cursor-pointer shadow-sm transition-colors"
+                            >
+                              ACCEPT DEAL
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-[9px] text-blue-500 font-bold uppercase tracking-wider">Waiting for Controller</span>
+                        )}
+                      </div>
+                    ) : c.status === 'declined' ? null : (c.active || c.status === 'completed' || c.status === 'accepted') ? (
                       <div className="mt-2 pt-2 border-t border-pink-200 flex justify-between text-[10px] text-pink-600 font-bold font-mono">
                         <span>Fulfilled Today: {c.fulfilledToday} / {c.dailyQuantity}</span>
                         <span>Total Fulfilled: {c.totalFulfilled} / {c.totalTarget}</span>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 ))
               )}

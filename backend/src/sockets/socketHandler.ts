@@ -49,14 +49,21 @@ function createInitialTeamState(teamId: string, teamName: string, controllerId: 
     inventory: defaultInventory,
     purchaseOrders: [],
     machineOrders: [],
-    contracts: scenario.contracts.map((c, i) => ({
-      ...c,
-      id: `contract_${i}_${Date.now()}`,
-      active: false,
-      fulfilledToday: 0,
-      totalFulfilled: 0,
-      totalTarget: 0
-    })),
+    contracts: scenario.contracts.map((c, i) => {
+      const randomFactor = 0.8 + (Math.random() * 0.4); // 0.8 to 1.2
+      return {
+        ...c,
+        id: `contract_${i}_${Date.now()}`,
+        dailyQuantity: Math.round(c.dailyQuantity * randomFactor),
+        priceMultiplier: Number((c.priceMultiplier * randomFactor).toFixed(1)),
+        penalty: Number((c.penalty * randomFactor).toFixed(1)),
+        active: false,
+        status: 'offered',
+        fulfilledToday: 0,
+        totalFulfilled: 0,
+        totalTarget: 0
+      };
+    }),
     activeEvents: scenario.events.map((e, i) => ({
       ...e,
       id: `event_${i}_${Date.now()}`,
@@ -317,6 +324,22 @@ export function registerSocketHandler(io: Server) {
               return callback({ error: 'Invalid allocation strategy' });
             }
             (team as any).allocationStrategy = strategy;
+            break;
+          }
+
+          case 'update_contract_status': {
+            const { contractId, status } = payload.details;
+            if (!contractId || !status || !['accepted', 'declined'].includes(status)) {
+              return callback({ error: 'Invalid contract arguments' });
+            }
+            const contract = team.contracts.find((c: any) => c.id === contractId);
+            if (!contract) {
+              return callback({ error: 'Contract not found' });
+            }
+            if (contract.status !== 'offered') {
+              return callback({ error: 'Contract already processed' });
+            }
+            contract.status = status;
             break;
           }
 
