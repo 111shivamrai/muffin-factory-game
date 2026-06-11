@@ -2,7 +2,14 @@ import { create } from 'zustand';
 import { io, Socket } from 'socket.io-client';
 import { User, Room, TeamState, LeaderboardEntry, SavedScenario } from '../../../backend/src/types/index.js';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+    return window.location.origin;
+  }
+  return 'http://localhost:5001';
+};
+export const API_URL = getApiUrl();
 
 interface GameStore {
   // Auth State

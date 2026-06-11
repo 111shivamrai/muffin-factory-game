@@ -7,7 +7,14 @@ import {
   Users, BarChart2
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+    return window.location.origin;
+  }
+  return 'http://localhost:5001';
+};
+const API_URL = getApiUrl();
 
 interface FeatureItem {
   label: string;
@@ -1441,6 +1448,11 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>JOIN TEAM WORKFLOOR</span>
                     </button>
+                    {error && !error.includes('Access denied') && !error.includes('Connection failed') && (
+                      <div className="text-[11px] text-[#c0392b] font-semibold text-center mt-2">
+                        ⚠️ {error}
+                      </div>
+                    )}
                   </form>
                 </div>
                 <div className="border-t border-[#f0ede4] mt-8 pt-4 text-center">
