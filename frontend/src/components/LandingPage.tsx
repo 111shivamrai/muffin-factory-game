@@ -310,7 +310,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
   ];
 
   // If user is already authenticated as operator, but has no active session room yet
-  if (isAuthenticated && user && user.role === 'operator' && (!room || !teamState) && user.email !== 'operator@factory.com') {
+  if (isAuthenticated && user && user.role === 'operator' && (!room || !teamState) && user.email !== 'operator@factory.com' && !isDemoLoading) {
     return (
       <div className="muffin-landing min-h-screen flex flex-col items-center justify-between p-4 md:p-8">
         <style dangerouslySetInnerHTML={{ __html: `
