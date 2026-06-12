@@ -36,6 +36,7 @@ interface GameStore {
   updateInventorySettings: (materialType: string, orderQty: number, reorderPoint: number, safetyStock: number) => Promise<void>;
   buyMachine: (machineType: string) => Promise<void>;
   toggleMachineStatus: (machineType: string, activeCount: number) => Promise<void>;
+  updateAllMachineStatuses: (statuses: Record<string, number>) => Promise<void>;
   updateAllocationStrategy: (strategy: 'contracts_first' | 'market_first' | 'split') => Promise<void>;
   updateContractStatus: (contractId: string, status: 'accepted' | 'declined') => Promise<void>;
 
@@ -223,6 +224,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     s.emit('operator_action', {
       actionType: 'toggle_machine_status',
       details: { machineType, activeCount }
+    }, (res: any) => {
+      if (res && res.error) {
+        alert(res.error);
+      }
+    });
+  },
+
+  updateAllMachineStatuses: async (statuses) => {
+    const s = get().socket;
+    if (!s) return;
+    s.emit('operator_action', {
+      actionType: 'update_all_machine_statuses',
+      details: { statuses }
     }, (res: any) => {
       if (res && res.error) {
         alert(res.error);

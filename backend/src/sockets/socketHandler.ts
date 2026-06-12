@@ -319,6 +319,20 @@ export function registerSocketHandler(io: Server) {
             break;
           }
 
+          case 'update_all_machine_statuses': {
+            const { statuses } = payload.details;
+            if (!statuses) {
+              return callback({ error: 'Invalid arguments' });
+            }
+            for (const [machineType, activeCount] of Object.entries(statuses)) {
+              const m = team.machines[machineType as MachineType];
+              if (m) {
+                m.active = Math.max(0, Math.min(m.count, parseInt(activeCount as string)));
+              }
+            }
+            break;
+          }
+
           case 'update_allocation_strategy': {
             const { strategy } = payload.details; // 'contracts_first' | 'market_first' | 'split'
             if (!['contracts_first', 'market_first', 'split'].includes(strategy)) {

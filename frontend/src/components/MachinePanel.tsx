@@ -4,7 +4,7 @@ import { Info } from 'lucide-react';
 import { MachineType } from '../../../backend/src/types/index.js';
 
 export default function MachinePanel() {
-  const { teamState, role, buyMachine, toggleMachineStatus, updateAllocationStrategy } = useGameStore();
+  const { teamState, role, buyMachine, toggleMachineStatus, updateAllMachineStatuses, updateAllocationStrategy } = useGameStore();
 
   const [mixActive, setMixActive] = useState(1);
   const [bakeActive, setBakeActive] = useState(1);
@@ -52,10 +52,12 @@ export default function MachinePanel() {
 
   const handleApplyOperations = () => {
     if (!isController) return;
-    toggleMachineStatus('mixing', mixActive);
-    toggleMachineStatus('baking', bakeActive);
-    toggleMachineStatus('icing', iceActive);
-    toggleMachineStatus('packaging', packActive);
+    updateAllMachineStatuses({
+      mixing: mixActive,
+      baking: bakeActive,
+      icing: iceActive,
+      packaging: packActive
+    });
     alert('Workfloor machine operation parameters updated!');
   };
 
@@ -65,10 +67,12 @@ export default function MachinePanel() {
     setBakeActive(0);
     setIceActive(0);
     setPackActive(0);
-    toggleMachineStatus('mixing', 0);
-    toggleMachineStatus('baking', 0);
-    toggleMachineStatus('icing', 0);
-    toggleMachineStatus('packaging', 0);
+    updateAllMachineStatuses({
+      mixing: 0,
+      baking: 0,
+      icing: 0,
+      packaging: 0
+    });
     alert('All machines stopped!');
   };
 
