@@ -42,7 +42,7 @@ export default function AdminDashboard() {
 
   const [newLicCustomer, setNewLicCustomer] = useState('');
   const [newLicEmail, setNewLicEmail] = useState('');
-  const [newLicSeats, setNewLicSeats] = useState(40);
+  const [newLicSeats, setNewLicSeats] = useState<number | ''>('');
   const [newLicInstructorEmail, setNewLicInstructorEmail] = useState('');
   const [newLicInstructorPassword, setNewLicInstructorPassword] = useState('');
   const [selectedLicenseForCreds, setSelectedLicenseForCreds] = useState<any | null>(null);
@@ -721,7 +721,7 @@ export default function AdminDashboard() {
                         min="1"
                         required
                         value={newLicSeats}
-                        onChange={e => setNewLicSeats(Number(e.target.value))}
+                        onChange={e => setNewLicSeats(e.target.value === '' ? '' : Number(e.target.value))}
                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
                       />
                     </div>
