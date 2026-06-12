@@ -639,11 +639,11 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
 
             {/* Hero image frame */}
             <div className="lg:col-span-5 relative">
-              <div className="rounded-[28px] overflow-hidden border-[6px] border-[#f0ede4] shadow-2xl bg-white aspect-[4/3] md:aspect-square relative z-10 transition-transform duration-500 hover:scale-[1.01]">
+              <div className="rounded-[28px] overflow-hidden border-[6px] border-[#f0ede4] shadow-2xl bg-white relative z-10 transition-transform duration-500 hover:scale-[1.01]">
                 <img 
-                  src="/simulator_mockup_v2.jpg" 
+                  src="/factory_floor.png" 
                   alt="Muffin Factory Simulation Dashboard Preview" 
-                  className="w-full h-full object-cover" 
+                  className="w-full h-auto object-cover block" 
                 />
               </div>
               {/* Decorative background blur blobs */}
