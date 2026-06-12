@@ -54,15 +54,15 @@ interface GameStore {
   deleteRoom: (id: string) => Promise<void>;
 }
 
-// Read initial auth state from sessionStorage
-const storedToken = sessionStorage.getItem('muffin_token');
-const storedUser = sessionStorage.getItem('muffin_user');
+// Read initial auth state from localStorage
+const storedToken = localStorage.getItem('muffin_token');
+const storedUser = localStorage.getItem('muffin_user');
 let parsedUser: User | null = null;
 if (storedUser) {
   try {
     parsedUser = JSON.parse(storedUser);
-  } catch {
-    sessionStorage.removeItem('muffin_user');
+  } catch (e) {
+    localStorage.removeItem('muffin_user');
   }
 }
 
@@ -73,15 +73,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   isAuthenticated: !!storedToken && !!parsedUser,
 
   login: (token, user) => {
-    sessionStorage.setItem('muffin_token', token);
-    sessionStorage.setItem('muffin_user', JSON.stringify(user));
+    localStorage.setItem('muffin_token', token);
+    localStorage.setItem('muffin_user', JSON.stringify(user));
     set({ token, user, isAuthenticated: true });
     get().initSocket(token);
   },
 
   logout: () => {
-    sessionStorage.removeItem('muffin_token');
-    sessionStorage.removeItem('muffin_user');
+    localStorage.removeItem('muffin_token');
+    localStorage.removeItem('muffin_user');
     get().disconnectSocket();
     set({ token: null, user: null, isAuthenticated: false, room: null, teamState: null, role: null });
   },

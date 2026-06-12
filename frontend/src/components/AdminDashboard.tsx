@@ -716,17 +716,14 @@ export default function AdminDashboard() {
                     </div>
                     <div className="space-y-1">
                       <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Max Student Logins *</label>
-                      <select
+                      <input
+                        type="number"
+                        min="1"
+                        required
                         value={newLicSeats}
                         onChange={e => setNewLicSeats(Number(e.target.value))}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none"
-                      >
-                        <option value={10}>Up to 10 students</option>
-                        <option value={20}>Up to 20 students</option>
-                        <option value={40}>Up to 40 students</option>
-                        <option value={100}>Up to 100 students</option>
-                        <option value={999}>Unlimited students</option>
-                      </select>
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
+                      />
                     </div>
                   </div>
 

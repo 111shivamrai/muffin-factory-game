@@ -42,7 +42,7 @@ router.post('/signup', async (req, res) => {
     await db.saveUserRaw(user);
 
     // Sign JWT
-    const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '365d' });
 
     res.status(201).json({
       token,
@@ -76,7 +76,7 @@ router.post('/login', async (req, res) => {
     }
 
     // Sign JWT
-    const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '365d' });
 
     res.json({
       token,
@@ -143,7 +143,7 @@ router.post('/student-login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, name: user.name, email: user.email, role: user.role },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '365d' }
     );
 
     res.json({
