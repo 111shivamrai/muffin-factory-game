@@ -446,12 +446,12 @@ export default function FactoryVisualization() {
   }, [teamState]);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
+    <div className="bg-[#fdf7ea] rounded-[20px] border-2 border-[#f5ead5] shadow-sm overflow-hidden flex flex-col h-full">
       {/* Header matching the image exactly */}
-      <div className="bg-[#ffe7df] p-3 border-b border-slate-100 font-bold text-green-700 font-pixel text-[10px] tracking-wider uppercase flex items-center space-x-2.5">
+      <div className="bg-[#ffd24f] p-3 border-b-2 border-[#f5ead5] font-bold text-[#714f00] font-pixel text-[10px] tracking-wider uppercase flex items-center space-x-2.5">
         <span className="relative flex h-3 w-3 shrink-0">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border border-green-700 shadow-sm"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-red-700 shadow-sm"></span>
         </span>
         <span>Factory Floor Live Feed</span>
       </div>

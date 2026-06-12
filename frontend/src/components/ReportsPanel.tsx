@@ -39,39 +39,39 @@ export default function ReportsPanel() {
     return 'text-pink-600 border-pink-200 bg-pink-50/50';
   };
 
-  function ReportCard({ icon, title, value, colorClass = 'text-slate-800' }: any) {
+  function ReportCard({ icon, title, value, colorClass = 'text-[#4a2e2a]' }: any) {
     return (
-      <div className="border border-slate-150 rounded-xl p-2.5 bg-slate-50 text-center flex flex-col justify-between h-full">
-        <div className="flex items-center justify-center space-x-1">
+      <div className="border-2 border-[#b5e0d8] rounded-[16px] p-2.5 bg-[#f0f9f7] text-center flex flex-col justify-between h-full shadow-sm">
+        <div className="flex items-center justify-center space-x-1.5">
           {icon}
-          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">{title}</span>
+          <span className="text-[8px] font-bold text-[#6b5855] uppercase tracking-wider">{title}</span>
         </div>
-        <div className={`font-bold text-sm mt-1 ${colorClass}`}>{value}</div>
+        <div className={`font-bold text-[14px] mt-1 ${colorClass}`}>{value}</div>
       </div>
     );
   }
 
   function AcademicReportCard({ title, value }: any) {
     return (
-      <div className="border border-[#ffd5c6] rounded-xl p-2 bg-white text-center flex flex-col justify-between h-full shadow-sm">
-        <div className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">{title}</div>
+      <div className="border-2 border-[#fcd0c5] rounded-[16px] p-2 bg-[#fffdf9] text-center flex flex-col justify-between h-full shadow-sm">
+        <div className="text-[8px] font-bold text-[#6b5855] uppercase tracking-wider">{title}</div>
         <div className="flex items-center justify-center space-x-1.5 mt-1.5">
           <span className="text-sm">🧁</span>
-          <span className="font-bold text-slate-800 text-xs">{value}</span>
+          <span className="font-bold text-[#4a2e2a] text-xs">{value}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       
       {/* Reports & Analytics Panel */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-[#e6f4f1] rounded-[20px] border-2 border-[#b5e0d8] shadow-sm overflow-hidden">
         {/* Header */}
-        <div className="p-3 border-b border-slate-100 flex items-center space-x-2">
-          <TrendingUp className="w-5 h-5 text-pink-600" />
-          <h2 className="font-bold text-pink-600 font-pixel text-[10px] tracking-wider uppercase">
+        <div className="bg-[#4fb8a5] text-white p-3 border-b-2 border-[#b5e0d8] flex items-center space-x-2">
+          <TrendingUp className="w-5 h-5 text-white" />
+          <h2 className="font-bold text-white font-pixel text-[10px] tracking-wider uppercase">
             Reports & Analytics
           </h2>
         </div>
@@ -79,7 +79,7 @@ export default function ReportsPanel() {
         {/* Financial Metrics Grid */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2 p-3">
           <ReportCard 
-            icon={<span className="text-pink-500">📈</span>}
+            icon={<span className="text-[#e0506e]">📈</span>}
             title="NET REVENUE" 
             value={`₹${report.revenue.toLocaleString()}`} 
           />
@@ -92,10 +92,10 @@ export default function ReportsPanel() {
             icon={<span className="text-green-500">💰</span>}
             title="NET PROFIT" 
             value={`₹${report.profit.toLocaleString()}`} 
-            colorClass={report.profit >= 0 ? 'text-green-600' : 'text-pink-600'}
+            colorClass={report.profit >= 0 ? 'text-[#447a46]' : 'text-[#e0506e]'}
           />
           <ReportCard 
-            icon={<span className="text-blue-500">📊</span>}
+            icon={<span className="text-[#5589c3]">📊</span>}
             title="FILL RATE" 
             value={`${report.fillRate}%`} 
           />
@@ -103,13 +103,13 @@ export default function ReportsPanel() {
             icon={<span className="text-red-400">📅</span>}
             title="STOCKOUT DAYS" 
             value={`${report.stockoutDays} Days`} 
-            colorClass={report.stockoutDays > 3 ? 'text-pink-600 animate-pulse' : 'text-slate-800'}
+            colorClass={report.stockoutDays > 3 ? 'text-[#e0506e] animate-pulse' : 'text-[#4a2e2a]'}
           />
         </div>
 
         {/* Chart Selector and Recharts Container */}
         <div className="px-3 pb-3 space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div className="flex items-center justify-between border-b-2 border-[#b5e0d8] pb-3">
             <div className="flex items-center space-x-1.5">
               {[
                 { id: 'cash', label: 'Cash & Revenue' },
@@ -121,17 +121,17 @@ export default function ReportsPanel() {
                   key={tab.id}
                   type="button"
                   onClick={() => setSelectedChart(tab.id as any)}
-                  className={`px-3 py-1.5 text-[8px] font-pixel border rounded-xl transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 text-[9px] font-pixel border-2 rounded-[12px] transition-all cursor-pointer shadow-sm ${
                     selectedChart === tab.id
-                      ? 'bg-pink-500 border-pink-600 text-white shadow-sm'
-                      : 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-600'
+                      ? 'bg-[#4fb8a5] border-[#3fa392] text-white'
+                      : 'bg-[#f0f9f7] border-[#b5e0d8] text-[#5b968a] hover:bg-[#b5e0d8]'
                   }`}
                 >
                   {tab.label}
                 </button>
               ))}
             </div>
-            <span className="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-wider">SIMULATION PROGRESS: DAY {history.days.length}</span>
+            <span className="text-[9px] text-[#447a46] font-mono font-bold uppercase tracking-wider">SIMULATION PROGRESS: DAY {history.days.length}</span>
           </div>
 
           <div className="h-48 w-full">
@@ -192,14 +192,14 @@ export default function ReportsPanel() {
       </div>
 
       {/* Academic Score Card */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 space-y-3">
+      <div className="bg-[#ffe8ea] rounded-[20px] border-2 border-[#fcd0c5] shadow-sm p-4 space-y-3">
         {/* Header */}
-        <div className="flex items-center space-x-2 text-green-700">
-          <span className="text-lg">🧁</span>
-          <h4 className="font-pixel text-[9px] uppercase tracking-wider font-bold">Academic Performance Score</h4>
+        <div className="flex items-center space-x-2 text-[#e0506e]">
+          <span className="text-xl">🧁</span>
+          <h4 className="font-pixel text-[10px] uppercase tracking-wider font-bold">Academic Performance Score</h4>
         </div>
         
-        <p className="text-[9px] text-slate-400 font-sans leading-relaxed">
+        <p className="text-[10px] text-[#b67d86] font-sans leading-relaxed">
           Indicators evaluate operational analysis based on a weighted academic rubric. This score strengthens leaderboard cash balance.
         </p>
 
@@ -211,11 +211,11 @@ export default function ReportsPanel() {
           <AcademicReportCard title="Capacity (10%)" value={`${academicScore.capacityScore}%`} />
 
           {/* Score display block styled exactly like the user's mockup */}
-          <div className="border border-purple-200 bg-purple-50/50 rounded-xl p-2.5 flex items-center justify-between h-full col-span-2 shadow-sm">
-            <div className="text-left space-y-0.5">
-              <div className="text-[8px] uppercase tracking-wider font-bold text-slate-400">WEIGHTED ACADEMIC GRADE</div>
-              <div className="text-[10px] font-bold text-pink-600">SCORE :</div>
-              <div className="text-lg font-bold text-pink-600 tracking-wider">
+          <div className="border-2 border-[#ba8cd3] bg-[#f6effa] rounded-[16px] p-3 flex items-center justify-between h-full col-span-2 shadow-sm">
+            <div className="text-left space-y-1">
+              <div className="text-[8px] uppercase tracking-wider font-bold text-[#a078c5]">WEIGHTED ACADEMIC GRADE</div>
+              <div className="text-[10px] font-bold text-[#ba8cd3]">SCORE :</div>
+              <div className="text-xl font-bold text-[#ba8cd3] tracking-wider">
                 {academicScore.totalScore >= 1 ? academicScore.totalScore : `.${Math.round(academicScore.totalScore * 100)}`} / 100
               </div>
             </div>

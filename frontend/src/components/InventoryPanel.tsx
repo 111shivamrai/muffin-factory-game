@@ -80,10 +80,10 @@ export default function InventoryPanel() {
 
   function SmallCard({ title, value, sub }: any) {
     return (
-      <div className="border border-[#ffd5c6] rounded-lg p-1.5 text-center bg-white shadow-sm">
-        <div className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{title}</div>
-        <div className="font-bold text-slate-800 text-[13px] leading-tight">{value}</div>
-        <div className="text-[7px] text-slate-400 font-mono">{sub}</div>
+      <div className="border-2 border-[#f5ead5] rounded-[16px] p-2 text-center bg-[#fffdf9] shadow-sm">
+        <div className="text-[8px] font-bold text-[#6b5855] uppercase tracking-wider">{title}</div>
+        <div className="font-bold text-[#4a2e2a] text-[14px] leading-tight mt-0.5">{value}</div>
+        <div className="text-[8px] text-[#8e7a77] font-mono mt-0.5">{sub}</div>
       </div>
     );
   }
@@ -91,15 +91,15 @@ export default function InventoryPanel() {
   function InputRow({ label, value, onChange, onIncrement, onDecrement }: any) {
     return (
       <div className="mb-0.5">
-        <label className="text-[7px] block text-slate-500 font-bold uppercase tracking-wide mb-px">
+        <label className="text-[8px] block text-[#6b5855] font-bold uppercase tracking-wide mb-1">
           {label}
         </label>
-        <div className="flex gap-1 items-center">
+        <div className="flex gap-1.5 items-center">
           {isController && (
             <button 
               type="button"
               onClick={onDecrement}
-              className="w-6 h-5 flex items-center justify-center bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-500 font-bold cursor-pointer text-[10px]"
+              className="w-7 h-6 flex items-center justify-center bg-[#544d47] hover:bg-[#3d3834] rounded-lg text-white font-bold cursor-pointer text-[12px] shadow-sm"
             >
               -
             </button>
@@ -109,13 +109,13 @@ export default function InventoryPanel() {
             value={value}
             onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
             disabled={!isController}
-            className="border border-slate-300 rounded w-full text-center text-[11px] font-mono font-bold py-0.5 bg-white focus:outline-none focus:border-green-500 h-5"
+            className="border-2 border-[#f5ead5] rounded-lg w-full text-center text-[12px] font-mono font-bold py-0.5 bg-white focus:outline-none focus:border-[#5ea861] h-6 text-[#4a2e2a]"
           />
           {isController && (
             <button 
               type="button"
               onClick={onIncrement}
-              className="w-6 h-5 flex items-center justify-center bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded text-slate-500 font-bold cursor-pointer text-[10px]"
+              className="w-7 h-6 flex items-center justify-center bg-[#544d47] hover:bg-[#3d3834] rounded-lg text-white font-bold cursor-pointer text-[12px] shadow-sm"
             >
               +
             </button>
@@ -126,10 +126,10 @@ export default function InventoryPanel() {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
+    <div className="bg-[#fdf7ea] rounded-[20px] border-2 border-[#f5ead5] shadow-sm flex flex-col overflow-hidden shrink-0 pb-1">
       {/* Header */}
-      <div className="bg-[#7aba8a] text-white font-bold py-2 px-3 rounded-t-2xl font-pixel text-[9px] tracking-wider uppercase flex items-center space-x-2">
-        <span className="text-xs">🧁</span>
+      <div className="bg-[#5ea861] text-white font-bold py-2.5 px-4 rounded-t-[16px] font-pixel text-[10px] tracking-wider uppercase flex items-center space-x-2">
+        <span className="text-sm">🧁</span>
         <span>Raw Material Management</span>
       </div>
 
@@ -141,10 +141,10 @@ export default function InventoryPanel() {
       </div>
 
       {/* Inputs */}
-      <div className="grid grid-cols-2 gap-1.5 px-2 pb-1.5">
+      <div className="grid grid-cols-2 gap-2 px-2.5 pb-2">
         {/* Mix Ingredients column */}
-        <div className="border border-[#ffd5c6] rounded-lg p-2 bg-white shadow-sm">
-          <h3 className="font-bold text-green-700 text-[8px] font-pixel mb-1 tracking-wide uppercase leading-tight">
+        <div className="border-2 border-[#f5ead5] rounded-[16px] p-2.5 bg-[#fffaf0] shadow-sm">
+          <h3 className="font-bold text-[#447a46] text-[9px] font-pixel mb-2 tracking-wide uppercase leading-tight text-center">
             MUFFIN MIX INTEGRANTS
           </h3>
           <InputRow label="ORDER QTY (BOX)" value={mixQty} onChange={setMixQty}
@@ -156,8 +156,8 @@ export default function InventoryPanel() {
         </div>
 
         {/* Packaging column */}
-        <div className="border border-[#ffd5c6] rounded-lg p-2 bg-white shadow-sm">
-          <h3 className="font-bold text-green-700 text-[8px] font-pixel mb-1 tracking-wide uppercase leading-tight">
+        <div className="border-2 border-[#f5ead5] rounded-[16px] p-2.5 bg-[#fffaf0] shadow-sm">
+          <h3 className="font-bold text-[#447a46] text-[9px] font-pixel mb-2 tracking-wide uppercase leading-tight text-center">
             MUFFIN PACKAGING MATERIAL
           </h3>
           <InputRow label="ORDER QTY (BOX)" value={packQty} onChange={setPackQty}
@@ -169,11 +169,11 @@ export default function InventoryPanel() {
         </div>
       </div>
 
-      <div className="px-2 pb-2">
+      <div className="px-2.5 pb-1.5">
         {isController ? (
           <button 
             onClick={handleApplyChanges}
-            className="w-full bg-[#7aba8a] hover:bg-[#6ba87a] text-white py-2 rounded-lg font-bold font-pixel text-[8px] tracking-wider uppercase border-none cursor-pointer shadow-sm transition-all"
+            className="w-full bg-[#5ea861] hover:bg-[#4d8c50] text-white py-2.5 rounded-xl font-bold font-pixel text-[10px] tracking-wider uppercase border-none cursor-pointer shadow-sm transition-all"
           >
             🧁 APPLY ORDER CHANGES
           </button>

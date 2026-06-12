@@ -158,7 +158,7 @@ export default function App() {
 
   // 5. Operator is in a running room -> Render full Operations Dashboard
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#fff3ee] text-slate-800 p-3 overflow-hidden font-sans select-none relative gap-3">
+    <div className="h-screen w-screen flex flex-col bg-[#fcf5eb] text-slate-800 p-3 overflow-hidden font-sans select-none relative gap-3">
       
       {/* Top Status Bar HUD */}
         <DashboardTopBar />

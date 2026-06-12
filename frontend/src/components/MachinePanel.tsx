@@ -79,10 +79,10 @@ export default function MachinePanel() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden shrink-0">
+    <div className="bg-[#f6effa] rounded-[20px] border-2 border-[#e7dbf1] shadow-sm flex flex-col overflow-hidden shrink-0 pb-1">
       {/* Header */}
-      <div className="bg-[#b57ae6] text-white font-bold py-2 px-3 rounded-t-2xl font-pixel text-[9px] tracking-wider uppercase flex items-center space-x-2">
-        <span className="text-xs">🧁</span>
+      <div className="bg-[#a078c5] text-white font-bold py-2.5 px-4 rounded-t-[16px] font-pixel text-[10px] tracking-wider uppercase flex items-center space-x-2">
+        <span className="text-sm">🧁</span>
         <span>Workfloor Activity</span>
       </div>
 
@@ -131,12 +131,12 @@ export default function MachinePanel() {
                   <button 
                     type="button"
                     onClick={() => setter((prev: number) => Math.max(0, prev - 1))}
-                    className="w-5 h-5 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-300 rounded cursor-pointer font-bold text-[10px]"
+                    className="w-6 h-6 flex items-center justify-center bg-[#544d47] hover:bg-[#3d3834] text-white border border-[#4a443f] rounded-lg cursor-pointer font-bold text-[12px]"
                   >
                     -
                   </button>
                 )}
-                <div className="flex items-center bg-white border border-slate-300 rounded overflow-hidden">
+                <div className="flex items-center bg-white border border-[#e7dbf1] rounded-lg overflow-hidden h-6 mx-1">
                   <input
                     type="number"
                     value={state}
@@ -146,13 +146,13 @@ export default function MachinePanel() {
                     className="w-6 text-center font-bold text-slate-700 bg-transparent px-0 py-0.5 text-[11px] font-mono focus:outline-none border-none hide-arrows"
                     style={{ MozAppearance: 'textfield' }}
                   />
-                  <span className="text-[11px] font-mono text-slate-400 pr-1 bg-slate-50 border-l border-slate-200 pl-1 py-0.5">/{mData.count}</span>
+                  <span className="text-[12px] font-mono text-[#a078c5] pr-1.5 bg-[#fcfafc] border-l border-[#e7dbf1] pl-1.5 py-0.5 font-bold">/{mData.count}</span>
                 </div>
                 {isController && (
                   <button 
                     type="button"
                     onClick={() => setter((prev: number) => Math.min(mData.count, prev + 1))}
-                    className="w-5 h-5 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-500 border border-slate-300 rounded cursor-pointer font-bold text-[10px]"
+                    className="w-6 h-6 flex items-center justify-center bg-[#544d47] hover:bg-[#3d3834] text-white border border-[#4a443f] rounded-lg cursor-pointer font-bold text-[12px]"
                   >
                     +
                   </button>
@@ -187,10 +187,10 @@ export default function MachinePanel() {
                 key={strat.id}
                 type="button"
                 onClick={() => isController && updateAllocationStrategy(strat.id as any)}
-                className={`py-1 text-center rounded-lg border font-bold transition-all cursor-pointer font-pixel text-[7px] ${
+                className={`py-1.5 text-center rounded-xl border font-bold transition-all cursor-pointer font-pixel text-[8px] ${
                   currentStrategy === strat.id
-                    ? 'bg-purple-500 border-purple-600 text-white shadow-sm'
-                    : 'bg-slate-100 border-slate-200 text-slate-500 hover:bg-slate-200'
+                    ? 'bg-[#c89de0] border-[#ba8cd3] text-white shadow-sm'
+                    : 'bg-[#8ab0df] border-[#7a9fce] text-white hover:bg-[#7a9fce]'
                 }`}
                 disabled={!isController}
               >
@@ -205,7 +205,7 @@ export default function MachinePanel() {
         {isController ? (
           <button
             onClick={handleApplyOperations}
-            className="w-full bg-purple-500 hover:bg-purple-600 text-white rounded-lg py-2 font-bold font-pixel text-[8px] tracking-wider uppercase border-none cursor-pointer shadow-sm transition-all"
+            className="w-full bg-gradient-to-r from-[#ba78d1] to-[#955ab3] hover:from-[#c284d7] hover:to-[#9e63bc] text-white rounded-xl py-2.5 font-bold font-pixel text-[10px] tracking-wider uppercase border-none cursor-pointer shadow-sm transition-all"
           >
             🧁 Apply Operations
           </button>

@@ -84,22 +84,22 @@ export default function OperationsAdvisor() {
       {/* Compact advisor bar button */}
       <div 
         onClick={handleOpen}
-        className="bg-white hover:bg-[#faf6f0] border border-[#e8d9c4] rounded-xl py-2.5 px-3.5 shadow-sm flex items-center justify-between cursor-pointer transition-all select-none shrink-0"
+        className="bg-[#5c8fc2] hover:bg-[#4b7aab] border-2 border-[#4b7aab] rounded-full py-2 px-4 shadow-sm flex items-center justify-between cursor-pointer transition-all select-none shrink-0"
       >
-        <div className="flex items-center space-x-2">
-          <HelpCircle className="w-4 h-4 text-[#c8852a]" />
+        <div className="flex items-center space-x-3">
+          <div className="text-2xl drop-shadow-sm">👨‍🍳</div>
           <div>
-            <h2 className="font-bold font-serif text-[10px] uppercase tracking-wider text-[#1e1408]">Operations Advisor</h2>
-            <p className="text-[7.5px] text-[#9a7a52] font-mono">Retrospective factory insights</p>
+            <h2 className="font-bold font-pixel text-[11px] uppercase tracking-wider text-white drop-shadow-sm">Operations Advisor</h2>
+            <p className="text-[8px] text-[#d6e5f3] font-mono mt-0.5">Retrospective factory insights</p>
           </div>
         </div>
 
         {unreadCount > 0 ? (
-          <span className="px-1.5 py-0.5 bg-red-100 border border-red-200 text-red-700 rounded-md font-bold font-mono text-[8px] flex items-center justify-center animate-pulse shadow-sm">
-            {unreadCount} new
+          <span className="w-6 h-6 bg-[#ef5a68] border-2 border-[#d94856] text-white rounded-full font-bold font-mono text-[10px] flex items-center justify-center animate-pulse shadow-sm drop-shadow-sm">
+            {unreadCount}
           </span>
         ) : (
-          <span className="w-2 h-2 bg-[#e8d9c4] rounded-full"></span>
+          <span className="w-2 h-2 bg-[#8ab0df] rounded-full"></span>
         )}
       </div>
 
