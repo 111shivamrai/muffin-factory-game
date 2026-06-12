@@ -61,6 +61,16 @@ export default function MachinePanel() {
     alert('Workfloor machine operation parameters updated!');
   };
 
+  const updateSingle = (type: string, newValue: number) => {
+    if (!isController) return;
+    updateAllMachineStatuses({
+      mixing: type === 'mixing' ? newValue : mixActive,
+      baking: type === 'baking' ? newValue : bakeActive,
+      icing: type === 'icing' ? newValue : iceActive,
+      packaging: type === 'packaging' ? newValue : packActive
+    });
+  };
+
   const handleStopAll = () => {
     if (!isController) return;
     setMixActive(0);
@@ -147,7 +157,11 @@ export default function MachinePanel() {
                 {isController && (
                   <button 
                     type="button"
-                    onClick={() => setter((prev: number) => Math.max(0, prev - 1))}
+                    onClick={() => {
+                      const newVal = Math.max(0, state - 1);
+                      setter(newVal);
+                      updateSingle(type, newVal);
+                    }}
                     className="w-6 h-6 flex items-center justify-center bg-[#544d47] hover:bg-[#3d3834] text-white border border-[#4a443f] rounded-lg cursor-pointer font-bold text-[12px]"
                   >
                     -
@@ -158,7 +172,11 @@ export default function MachinePanel() {
                     type="number"
                     value={state}
                     onChange={(e) => setter(e.target.value === '' ? 0 : parseInt(e.target.value))}
-                    onBlur={() => setter((prev: any) => Math.max(0, Math.min(mData.count, parseInt(prev) || 0)))}
+                    onBlur={() => {
+                      const newVal = Math.max(0, Math.min(mData.count, state || 0));
+                      setter(newVal);
+                      updateSingle(type, newVal);
+                    }}
                     disabled={!isController}
                     className="w-6 text-center font-bold text-slate-700 bg-transparent px-0 py-0.5 text-[11px] font-mono focus:outline-none border-none hide-arrows"
                     style={{ MozAppearance: 'textfield' }}
@@ -168,7 +186,11 @@ export default function MachinePanel() {
                 {isController && (
                   <button 
                     type="button"
-                    onClick={() => setter((prev: number) => Math.min(mData.count, prev + 1))}
+                    onClick={() => {
+                      const newVal = Math.min(mData.count, state + 1);
+                      setter(newVal);
+                      updateSingle(type, newVal);
+                    }}
                     className="w-6 h-6 flex items-center justify-center bg-[#544d47] hover:bg-[#3d3834] text-white border border-[#4a443f] rounded-lg cursor-pointer font-bold text-[12px]"
                   >
                     +
