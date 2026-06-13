@@ -60,6 +60,7 @@ app.get('/health', (req, res) => {
 const io = new Server(server, {
   cors: corsOptions
 });
+app.set('io', io);
 
 // Register Sockets Manager
 registerSocketHandler(io);

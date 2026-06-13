@@ -109,8 +109,8 @@ export default function ReportsPanel() {
 
         {/* Chart Selector and Recharts Container */}
         <div className="px-3 pb-3 space-y-3">
-          <div className="flex items-center justify-between border-b-2 border-[#b5e0d8] pb-3">
-            <div className="flex items-center space-x-1.5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b-2 border-[#b5e0d8] pb-3 gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:space-x-1.5">
               {[
                 { id: 'cash', label: 'Cash & Revenue' },
                 { id: 'demand', label: 'Demand vs Sales' },
@@ -203,7 +203,7 @@ export default function ReportsPanel() {
           Indicators evaluate operational analysis based on a weighted academic rubric. This score strengthens leaderboard cash balance.
         </p>
 
-        <div className="grid grid-cols-7 gap-2 items-stretch">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 items-stretch">
           <AcademicReportCard title="Cash (40%)" value={`${academicScore.cashPerformance}%`} />
           <AcademicReportCard title="Fill Rate (20%)" value={`${academicScore.fillRateScore}%`} />
           <AcademicReportCard title="Contract (15%)" value={`${academicScore.contractScore}%`} />
@@ -211,7 +211,7 @@ export default function ReportsPanel() {
           <AcademicReportCard title="Capacity (10%)" value={`${academicScore.capacityScore}%`} />
 
           {/* Score display block styled exactly like the user's mockup */}
-          <div className="border-2 border-[#ba8cd3] bg-[#f6effa] rounded-[16px] p-3 flex items-center justify-between h-full col-span-2 shadow-sm">
+          <div className="border-2 border-[#ba8cd3] bg-[#f6effa] rounded-[16px] p-3 flex items-center justify-between h-full col-span-2 sm:col-span-4 lg:col-span-2 shadow-sm">
             <div className="text-left space-y-1">
               <div className="text-[8px] uppercase tracking-wider font-bold text-[#a078c5]">WEIGHTED ACADEMIC GRADE</div>
               <div className="text-[10px] font-bold text-[#ba8cd3]">SCORE :</div>

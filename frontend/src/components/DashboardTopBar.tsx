@@ -44,7 +44,7 @@ export default function DashboardTopBar() {
 
   return (
     <div className="bg-[#ffe8ea] border-2 border-[#fcd0c5] rounded-3xl p-3 shadow-sm select-none relative z-30">
-      <div className="flex flex-wrap xl:flex-nowrap gap-2 items-center justify-between">
+      <div className="flex flex-wrap xl:flex-nowrap gap-2 items-center justify-center xl:justify-between">
 
         {/* Logo block */}
         <div className="bg-[#fff0f2] rounded-2xl p-2 border-2 border-[#fcd0c5] flex items-center gap-2 shrink-0">

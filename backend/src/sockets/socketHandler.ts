@@ -240,8 +240,10 @@ export function registerSocketHandler(io: Server) {
 
         // Validate user is the team controller
         const teamMeta = await db.getTeamByRoomAndName(room.id, team.name);
-        if (!teamMeta || teamMeta.controllerId !== currentUser.id) {
-          return callback({ error: 'Only the team controller can modify factory settings' });
+        if (payload.actionType !== 'stop_all_machines') {
+          if (!teamMeta || teamMeta.controllerId !== currentUser.id) {
+            return callback({ error: 'Only the team controller can modify factory settings' });
+          }
         }
 
         if (team.status === 'bankrupt') {
@@ -358,6 +360,14 @@ export function registerSocketHandler(io: Server) {
             break;
           }
 
+          case 'stop_all_machines': {
+            team.machines.mixing.active = 0;
+            team.machines.baking.active = 0;
+            team.machines.icing.active = 0;
+            team.machines.packaging.active = 0;
+            break;
+          }
+
           default:
             return callback({ error: 'Unknown action type' });
         }
@@ -420,6 +430,22 @@ export function registerSocketHandler(io: Server) {
             // Step manually by 1 day
             await executeDayTick(io, room.id);
             break;
+
+          case 'stop_all_machines': {
+            const allTeams = await db.getTeamsInRoom(room.id);
+            for (const row of allTeams) {
+              const t = await db.getTeamState(row.id);
+              if (!t) continue;
+              t.machines.mixing.active = 0;
+              t.machines.baking.active = 0;
+              t.machines.icing.active = 0;
+              t.machines.packaging.active = 0;
+              await db.saveTeamState(t.id, t.cash, t.status, t);
+              io.to(`team_${t.id}`).emit('team_state_updated', t);
+              io.to(`room_${room.id}`).emit('instructor_team_updated', t);
+            }
+            break;
+          }
 
           case 'speed': {
             const { speed } = payload.details; // seconds per day

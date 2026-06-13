@@ -138,4 +138,31 @@ router.delete('/:id', authenticateJWT, authorizeRoles(['admin', 'instructor']), 
   }
 });
 
+router.post('/stop-all', authenticateJWT, authorizeRoles(['admin']), async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const io = req.app.get('io');
+    const rooms = await db.getRooms();
+    for (const room of rooms) {
+      const teams = await db.getTeamsInRoom(room.id);
+      for (const row of teams) {
+        const t = await db.getTeamState(row.id);
+        if (!t) continue;
+        t.machines.mixing.active = 0;
+        t.machines.baking.active = 0;
+        t.machines.icing.active = 0;
+        t.machines.packaging.active = 0;
+        await db.saveTeamState(t.id, t.cash, t.status, t);
+        if (io) {
+          io.to(`team_${t.id}`).emit('team_state_updated', t);
+          io.to(`room_${room.id}`).emit('instructor_team_updated', t);
+        }
+      }
+    }
+    res.json({ message: 'All machines across the system stopped.' });
+  } catch (err) {
+    console.error('Error stopping all machines:', err);
+    res.status(500).json({ error: 'Failed to stop all machines' });
+  }
+});
+
 export default router;

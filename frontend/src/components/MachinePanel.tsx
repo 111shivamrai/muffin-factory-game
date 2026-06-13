@@ -72,17 +72,11 @@ export default function MachinePanel() {
   };
 
   const handleStopAll = () => {
-    if (!isController) return;
     setMixActive(0);
     setBakeActive(0);
     setIceActive(0);
     setPackActive(0);
-    updateAllMachineStatuses({
-      mixing: 0,
-      baking: 0,
-      icing: 0,
-      packaging: 0
-    });
+    useGameStore.getState().stopAllMachines();
     alert('All machines stopped!');
   };
 
@@ -125,7 +119,7 @@ export default function MachinePanel() {
           const currentUtil = histUtil && histUtil.length > 0 ? histUtil[histUtil.length - 1] : 0;
 
           return (
-            <div key={type} className="flex items-center justify-between text-slate-700">
+            <div key={type} className="flex flex-wrap sm:flex-nowrap items-center justify-between text-slate-700 gap-1 sm:gap-0 pb-2 sm:pb-0">
               {/* Left Side: Label and Buy link */}
               <div className="flex flex-col justify-center w-20 shrink-0">
                 <div className="flex items-center space-x-1.5">
@@ -216,7 +210,7 @@ export default function MachinePanel() {
         {/* Output Strategy */}
         <div className="border-t border-slate-100 pt-2 space-y-1">
           <label className="block text-[8px] text-slate-400 uppercase tracking-widest font-pixel font-bold">Output Allocation Strategy</label>
-          <div className="grid grid-cols-3 gap-1 font-mono text-[8px]">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 font-mono text-[8px]">
             {[
               { id: 'contracts_first', label: 'CONTRACTS FIRST' },
               { id: 'market_first', label: 'MARKET FIRST' },
@@ -240,28 +234,28 @@ export default function MachinePanel() {
         </div>
       </div>
 
-      <div className="px-2.5 pb-2">
-        {isController ? (
-          <div className="flex gap-2">
-            <button
-              onClick={handleStopAll}
-              className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl py-2.5 font-bold font-pixel text-[9px] tracking-wider uppercase border-none cursor-pointer shadow-sm transition-all"
-            >
-              🛑 Stop All
-            </button>
+      <div className="px-2.5 pb-2 shrink-0">
+        <div className="flex gap-2">
+          <button
+            onClick={handleStopAll}
+            className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl py-2.5 font-bold font-pixel text-[9px] tracking-wider uppercase border-none cursor-pointer shadow-sm transition-all"
+          >
+            🛑 Stop All
+          </button>
+          {isController ? (
             <button
               onClick={handleApplyOperations}
               className="flex-[2] bg-gradient-to-r from-[#ba78d1] to-[#955ab3] hover:from-[#c284d7] hover:to-[#9e63bc] text-white rounded-xl py-2.5 font-bold font-pixel text-[10px] tracking-wider uppercase border-none cursor-pointer shadow-sm transition-all"
             >
               🧁 Apply Operations
             </button>
-          </div>
-        ) : (
-          <div className="py-1.5 bg-slate-100 border border-slate-200 text-[9px] rounded-lg text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
-            <Info className="w-3 h-3" />
-            <span>OBSERVER MODE - READ ONLY</span>
-          </div>
-        )}
+          ) : (
+            <div className="flex-[2] py-1.5 bg-slate-100 border border-slate-200 text-[9px] rounded-lg text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
+              <Info className="w-3 h-3" />
+              <span>OBSERVER MODE - READ ONLY</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

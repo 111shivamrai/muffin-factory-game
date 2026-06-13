@@ -853,7 +853,7 @@ export default function InstructorDashboard() {
 
                   <div className="space-y-2 border-t border-muffin-brown/10 pt-4 text-left">
                     <span className="text-[9.5px] font-mono uppercase font-bold text-gray-400 block">Supervisor override console</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {room.status === 'paused' ? (
                         <button
                           onClick={() => { playTone(260, 'sine', 0.05); instructorControl('resume'); }}
@@ -883,6 +883,17 @@ export default function InstructorDashboard() {
                       >
                         <X className="w-3.5 h-3.5" />
                         <span>End Session</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          playTone(220, 'sawtooth', 0.2);
+                          if (confirm('EMERGENCY STOP: This will instantly stop all machines for all teams in the room. Proceed?')) {
+                            instructorControl('stop_all_machines');
+                          }
+                        }}
+                        className="py-2 px-3 bg-red-650 hover:bg-red-700 text-white border border-red-750 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95"
+                      >
+                        <span>🛑 Force Stop</span>
                       </button>
                     </div>
                   </div>

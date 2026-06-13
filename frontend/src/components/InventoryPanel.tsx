@@ -134,14 +134,14 @@ export default function InventoryPanel() {
       </div>
 
       {/* Live inventory stats */}
-      <div className="grid grid-cols-3 gap-1.5 p-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 p-2">
         <SmallCard title="MIX ON HAND" value={mix.onHand} sub={`Transits: ${mix.inTransit}`} />
         <SmallCard title="PACK ON HAND" value={pack.onHand} sub={`Transits: ${pack.inTransit}`} />
         <SmallCard title="FINISHED GOODS" value={muffin.onHand} sub="Muffins" />
       </div>
 
       {/* Inputs */}
-      <div className="grid grid-cols-2 gap-2 px-2.5 pb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 px-2.5 pb-2">
         {/* Mix Ingredients column */}
         <div className="border-2 border-[#f5ead5] rounded-[16px] p-2.5 bg-[#fffaf0] shadow-sm">
           <h3 className="font-bold text-[#447a46] text-[9px] font-pixel mb-2 tracking-wide uppercase leading-tight text-center">

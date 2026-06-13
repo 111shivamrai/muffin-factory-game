@@ -38,6 +38,12 @@ export default function App() {
       const designWidth = 1366;
       const designHeight = 768;
       
+      // Disable artificial scaling for mobile/tablet to allow native responsive CSS to handle layout
+      if (window.innerWidth < 1024) {
+        document.documentElement.style.fontSize = '16px';
+        return;
+      }
+
       const scaleX = window.innerWidth / designWidth;
       const scaleY = window.innerHeight / designHeight;
       
@@ -158,23 +164,23 @@ export default function App() {
 
   // 5. Operator is in a running room -> Render full Operations Dashboard
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#fcf5eb] text-slate-800 p-3 overflow-hidden font-sans select-none relative gap-3">
+    <div className="min-h-screen lg:h-screen w-full flex flex-col bg-[#fcf5eb] text-slate-800 p-3 lg:overflow-hidden overflow-y-auto overflow-x-hidden font-sans select-none relative gap-3">
       
       {/* Top Status Bar HUD */}
         <DashboardTopBar />
 
         {/* Main Dashboard Workspace Grid */}
-        <div className="flex-1 grid grid-cols-12 gap-3 overflow-hidden min-h-0">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:overflow-hidden min-h-0">
         
         {/* LEFT SIDEBAR: Inventory & Machine Operations Controls */}
-        <div className="col-span-4 flex flex-col gap-2.5 overflow-y-auto pr-1 h-full min-h-0">
+        <div className="col-span-1 lg:col-span-4 flex flex-col gap-2.5 lg:overflow-y-auto pr-1 h-auto lg:h-full min-h-0">
           <InventoryPanel />
           <OperationsAdvisor />
           <MachinePanel />
         </div>
 
         {/* FACTORY AREA: Factory View & Reports */}
-        <div className="col-span-8 flex flex-col gap-3 overflow-hidden h-full min-h-0">
+        <div className="col-span-1 lg:col-span-8 flex flex-col gap-3 lg:overflow-hidden h-auto lg:h-full min-h-0">
           
           {/* Factory Floor Live Feed */}
           <div className="flex-[3] min-h-[180px] overflow-hidden">
@@ -182,7 +188,7 @@ export default function App() {
           </div>
 
           {/* Reports, Analytics & Score */}
-          <div className="flex-[5] overflow-y-auto pr-1 min-h-0">
+          <div className="flex-[5] lg:overflow-y-auto pr-1 min-h-0">
             <ReportsPanel />
           </div>
 

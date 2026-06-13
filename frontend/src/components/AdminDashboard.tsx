@@ -457,6 +457,31 @@ export default function AdminDashboard() {
               <span>{currentTime.toLocaleTimeString()}</span>
             </div>
 
+            {/* Global Force Stop Button */}
+            <button
+              onClick={async () => {
+                if (confirm("EMERGENCY GLOBAL STOP: This will forcefully stop all machines in ALL active lobbies across the entire platform. Are you absolutely sure?")) {
+                  try {
+                    const tkn = localStorage.getItem('muffin_token');
+                    const res = await fetch(`${API_URL}/api/rooms/stop-all`, {
+                      method: 'POST',
+                      headers: { 'Authorization': `Bearer ${tkn}` }
+                    });
+                    if (res.ok) {
+                      alert("All machines stopped globally.");
+                    } else {
+                      alert("Failed to execute global stop.");
+                    }
+                  } catch (err) {
+                    alert("Failed to execute global stop.");
+                  }
+                }
+              }}
+              className="h-8 px-3 bg-red-600 hover:bg-red-700 text-white border border-red-700 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer mr-1"
+            >
+              <span>🛑 Global Force Stop</span>
+            </button>
+
             {/* Dark Mode toggle */}
             <button
               onClick={toggleTheme}
@@ -599,6 +624,25 @@ export default function AdminDashboard() {
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                   {filteredRooms.length} active simulation lobbies matching filter
                 </p>
+                <button
+                  onClick={async () => {
+                    if (confirm("EMERGENCY GLOBAL STOP: This will forcefully stop all machines in ALL active lobbies across the entire platform. Are you absolutely sure?")) {
+                      try {
+                        const tkn = localStorage.getItem('muffin_token');
+                        const res = await fetch(`${API_URL}/api/rooms/stop-all`, {
+                          method: 'POST',
+                          headers: { 'Authorization': `Bearer ${tkn}` }
+                        });
+                        if (res.ok) alert("All machines stopped globally.");
+                      } catch (err) {
+                        alert("Failed to execute global stop.");
+                      }
+                    }
+                  }}
+                  className="py-1.5 px-3 bg-red-650 hover:bg-red-700 text-white rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                >
+                  <span>🛑 Global Force Stop</span>
+                </button>
               </div>
 
               {filteredRooms.length === 0 ? (
