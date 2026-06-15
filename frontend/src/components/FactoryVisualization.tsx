@@ -1041,20 +1041,8 @@ export default function FactoryVisualization() {
   }, [room?.status, teamState]);
 
   return (
-    <div className="bg-[#fefaf4] rounded-[24px] border-2 border-[#f0e4d0] shadow-sm overflow-hidden flex flex-col h-full select-none">
-      {/* Title Header bar */}
-      <div className="bg-[#ffebe3] px-4 py-2 border-b-2 border-[#f5ded4] font-bold text-green-700 font-pixel text-[9px] tracking-widest uppercase flex items-center space-x-2">
-        <span className="relative flex h-2.5 w-2.5 shrink-0">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500 shadow-sm border border-green-700"></span>
-        </span>
-        <span>Factory Floor Live Feed</span>
-      </div>
-
-      {/* Canvas view box container */}
-      <div ref={containerRef} className="flex-1 bg-[#fff8ef] p-1.5 relative min-h-[180px]">
-        <canvas ref={canvasRef} className="block w-full h-full rounded-2xl" />
-      </div>
+    <div className="w-full h-full rounded-[20px] shadow-sm overflow-hidden flex flex-col">
+      <canvas ref={canvasRef} className="w-full h-full block" />
     </div>
   );
 }
