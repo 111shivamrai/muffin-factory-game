@@ -1,216 +1,246 @@
-// v2 - card-selector layout
+// v4 – card-selector design (full rewrite to bust cache)
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore.js';
-import { MaterialType } from '../../../backend/src/types/index.js';
 import { Info } from 'lucide-react';
 
 export default function InventoryPanel() {
   const { teamState, role, updateInventorySettings } = useGameStore();
 
-  const [mixQty, setMixQty] = useState(1000);
-  const [mixROP, setMixROP] = useState(300);
-  const [mixSafety, setMixSafety] = useState(200);
-
-  const [packQty, setPackQty] = useState(1000);
-  const [packROP, setPackROP] = useState(200);
+  const [mixQty,     setMixQty]     = useState(1000);
+  const [mixROP,     setMixROP]     = useState(300);
+  const [mixSafety,  setMixSafety]  = useState(200);
+  const [packQty,    setPackQty]    = useState(1000);
+  const [packROP,    setPackROP]    = useState(200);
   const [packSafety, setPackSafety] = useState(100);
 
   const isController = role === 'controller';
-  const [selectedMaterial, setSelectedMaterial] = useState<'mix' | 'pack'>('mix');
 
-  const prevConfigRef = React.useRef<{
-    mix: { q: number; r: number; s: number };
+  // Which material card is active
+  const [sel, setSel] = useState<'mix' | 'pack'>('mix');
+
+  // Sync server values into local state (only on real changes)
+  const prevRef = React.useRef<{
+    mix:  { q: number; r: number; s: number };
     pack: { q: number; r: number; s: number };
   } | null>(null);
 
   useEffect(() => {
-    if (teamState) {
-      const mix = teamState.inventory.base_mix;
-      const pack = teamState.inventory.packaging_material;
-      
-      if (!mix || !pack) return;
+    if (!teamState) return;
+    const m = teamState.inventory.base_mix;
+    const p = teamState.inventory.packaging_material;
+    if (!m || !p) return;
 
-      const currentConfig = {
-        mix: { q: mix.orderQty, r: mix.reorderPoint, s: mix.safetyStock },
-        pack: { q: pack.orderQty, r: pack.reorderPoint, s: pack.safetyStock }
-      };
+    const cur = {
+      mix:  { q: m.orderQty, r: m.reorderPoint, s: m.safetyStock },
+      pack: { q: p.orderQty, r: p.reorderPoint, s: p.safetyStock },
+    };
+    const prev = prevRef.current;
 
-      const prevConfig = prevConfigRef.current;
-
-      let shouldUpdateMix = false;
-      let shouldUpdatePack = false;
-
-      if (!prevConfig) {
-        shouldUpdateMix = true;
-        shouldUpdatePack = true;
-      } else {
-        if (prevConfig.mix.q !== currentConfig.mix.q || prevConfig.mix.r !== currentConfig.mix.r || prevConfig.mix.s !== currentConfig.mix.s) {
-          shouldUpdateMix = true;
-        }
-        if (prevConfig.pack.q !== currentConfig.pack.q || prevConfig.pack.r !== currentConfig.pack.r || prevConfig.pack.s !== currentConfig.pack.s) {
-          shouldUpdatePack = true;
-        }
-      }
-
-      if (shouldUpdateMix) {
-        setMixQty(mix.orderQty);
-        setMixROP(mix.reorderPoint);
-        setMixSafety(mix.safetyStock);
-      }
-      if (shouldUpdatePack) {
-        setPackQty(pack.orderQty);
-        setPackROP(pack.reorderPoint);
-        setPackSafety(pack.safetyStock);
-      }
-
-      prevConfigRef.current = currentConfig;
+    if (!prev || prev.mix.q !== cur.mix.q || prev.mix.r !== cur.mix.r || prev.mix.s !== cur.mix.s) {
+      setMixQty(m.orderQty);
+      setMixROP(m.reorderPoint);
+      setMixSafety(m.safetyStock);
     }
+    if (!prev || prev.pack.q !== cur.pack.q || prev.pack.r !== cur.pack.r || prev.pack.s !== cur.pack.s) {
+      setPackQty(p.orderQty);
+      setPackROP(p.reorderPoint);
+      setPackSafety(p.safetyStock);
+    }
+    prevRef.current = cur;
   }, [teamState?.inventory]);
 
   const handleApplyChanges = () => {
     if (!isController) return;
-    updateInventorySettings('base_mix', mixQty, mixROP, mixSafety);
+    updateInventorySettings('base_mix',           mixQty,  mixROP,  mixSafety);
     updateInventorySettings('packaging_material', packQty, packROP, packSafety);
     alert('Inventory target levels successfully updated!');
   };
 
   if (!teamState) return null;
 
-  function InputRow({ label, value, onChange, onIncrement, onDecrement }: any) {
+  // Active values / setters based on selected card
+  const qty     = sel === 'mix' ? mixQty     : packQty;
+  const rop     = sel === 'mix' ? mixROP     : packROP;
+  const safety  = sel === 'mix' ? mixSafety  : packSafety;
+  const setQty    = sel === 'mix' ? setMixQty    : setPackQty;
+  const setRop    = sel === 'mix' ? setMixROP    : setPackROP;
+  const setSafety = sel === 'mix' ? setMixSafety : setPackSafety;
+
+  // ─── Sub-components ──────────────────────────────────────────────────────────
+
+  /** One of the two top material-selector cards */
+  function MatCard({
+    id, icon, label, line2,
+    activeBorder, activeBg, activeText, inactiveBorder, inactiveBg, inactiveText,
+    activeCircleBg,
+  }: {
+    id: 'mix' | 'pack';
+    icon: string;
+    label: string; line2?: string;
+    activeBorder: string; activeBg: string; activeText: string;
+    inactiveBorder: string; inactiveBg: string; inactiveText: string;
+    activeCircleBg: string;
+  }) {
+    const active = sel === id;
     return (
-      <div className="mb-0.5">
-        <label className="text-[8px] block text-[#6b5855] font-bold uppercase tracking-wide mb-1">
-          {label}
-        </label>
-        <div className="flex gap-1.5 items-center">
-          {isController && (
-            <button 
-              type="button"
-              onClick={onDecrement}
-              className="w-7 h-6 flex items-center justify-center bg-[#544d47] hover:bg-[#3d3834] rounded-lg text-white font-bold cursor-pointer text-[12px] shadow-sm"
-            >
-              -
-            </button>
-          )}
+      <button
+        type="button"
+        onClick={() => setSel(id)}
+        className={`relative flex items-center gap-2.5 p-3 rounded-2xl border-2 text-left cursor-pointer transition-all w-full ${
+          active
+            ? `${activeBorder} ${activeBg}`
+            : `${inactiveBorder} ${inactiveBg}`
+        }`}
+      >
+        {/* Radio indicator */}
+        <span
+          className={`absolute top-2 right-2 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
+            active
+              ? `${activeCircleBg} text-white`
+              : 'bg-white border-2 border-[#c8c0b8]'
+          }`}
+        >
+          {active ? '✓' : ''}
+        </span>
+
+        {/* Icon */}
+        <span className="text-[28px] leading-none flex-shrink-0">{icon}</span>
+
+        {/* Text */}
+        <span className={`font-bold text-[9px] font-pixel leading-tight pr-4 ${active ? activeText : inactiveText}`}>
+          {label}{line2 ? <><br />{line2}</> : null}
+        </span>
+      </button>
+    );
+  }
+
+  /** One input row with a coloured icon badge */
+  function InputRow({
+    iconBg, icon, label,
+    value, onChange, onDec, onInc,
+  }: {
+    iconBg: string; icon: string; label: string;
+    value: number;
+    onChange: (v: number) => void;
+    onDec: () => void;
+    onInc: () => void;
+  }) {
+    return (
+      <div className="bg-white border border-[#ede5d8] rounded-xl px-3 py-2 flex items-center gap-2.5">
+        {/* Coloured icon square */}
+        <div className={`w-8 h-8 ${iconBg} rounded-xl flex items-center justify-center text-[17px] flex-shrink-0`}>
+          {icon}
+        </div>
+
+        {/* Label + value */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[7.5px] font-bold text-[#7a6a5a] uppercase tracking-wide leading-none mb-0.5">
+            {label}
+          </p>
           <input
             type="number"
             value={value}
             onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
             disabled={!isController}
-            className="border-2 border-[#f5ead5] rounded-lg w-full text-center text-[12px] font-mono font-bold py-0.5 bg-white focus:outline-none focus:border-[#5ea861] h-6 text-[#4a2e2a]"
+            className="w-full text-[13px] font-bold font-mono text-[#1e1408] bg-transparent border-none outline-none p-0"
           />
-          {isController && (
-            <button 
+        </div>
+
+        {/* +/− buttons */}
+        {isController && (
+          <div className="flex gap-1 flex-shrink-0">
+            <button
               type="button"
-              onClick={onIncrement}
-              className="w-7 h-6 flex items-center justify-center bg-[#544d47] hover:bg-[#3d3834] rounded-lg text-white font-bold cursor-pointer text-[12px] shadow-sm"
+              onClick={onDec}
+              className="w-7 h-7 bg-[#f3ede3] hover:bg-[#e8ddd0] border border-[#d8ccbb] rounded-lg text-[#4a3d30] font-bold text-[15px] flex items-center justify-center cursor-pointer transition-colors leading-none"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              onClick={onInc}
+              className="w-7 h-7 bg-[#f3ede3] hover:bg-[#e8ddd0] border border-[#d8ccbb] rounded-lg text-[#4a3d30] font-bold text-[15px] flex items-center justify-center cursor-pointer transition-colors leading-none"
             >
               +
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  const qty    = selectedMaterial === 'mix' ? mixQty    : packQty;
-  const rop    = selectedMaterial === 'mix' ? mixROP    : packROP;
-  const safety = selectedMaterial === 'mix' ? mixSafety : packSafety;
-
-  const setQty    = selectedMaterial === 'mix' ? setMixQty    : setPackQty;
-  const setRop    = selectedMaterial === 'mix' ? setMixROP    : setPackROP;
-  const setSafety = selectedMaterial === 'mix' ? setMixSafety : setPackSafety;
-
+  // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="bg-[#fdf7ea] rounded-[20px] border-2 border-[#f5ead5] shadow-sm flex flex-col overflow-hidden shrink-0 pb-1">
-      {/* Header */}
+
+      {/* ── Header ── */}
       <div className="bg-[#5ea861] text-white font-bold py-2.5 px-4 rounded-t-[16px] font-pixel text-[10px] tracking-wider uppercase flex items-center space-x-2">
         <span className="text-sm">🧁</span>
         <span>Raw Material Management</span>
       </div>
 
-      {/* Material Selector Cards */}
-      <div className="grid grid-cols-2 gap-3 p-3">
-        {/* Muffin Mix Card */}
-        <button
-          type="button"
-          onClick={() => setSelectedMaterial('mix')}
-          className={`relative flex flex-col items-center justify-center gap-2 rounded-[16px] border-2 py-4 px-2 cursor-pointer transition-all ${
-            selectedMaterial === 'mix'
-              ? 'border-[#e05ea0] bg-white shadow-md'
-              : 'border-[#f5ead5] bg-[#fffdf9] shadow-sm hover:border-[#f0c0d8]'
-          }`}
-        >
-          {selectedMaterial === 'mix' && (
-            <span className="absolute top-2 right-2 w-5 h-5 bg-[#e05ea0] rounded-full flex items-center justify-center text-white text-[10px] font-bold">✓</span>
-          )}
-          {selectedMaterial !== 'mix' && (
-            <span className="absolute top-2 right-2 w-5 h-5 border-2 border-[#d0c8c0] rounded-full" />
-          )}
-          <span className="text-4xl">🧁</span>
-          <span className="font-bold text-[#e05ea0] text-[10px] font-pixel tracking-wide text-center leading-tight">
-            MUFFIN MIX<br />INGREDIENTS
-          </span>
-        </button>
-
-        {/* Packaging Material Card */}
-        <button
-          type="button"
-          onClick={() => setSelectedMaterial('pack')}
-          className={`relative flex flex-col items-center justify-center gap-2 rounded-[16px] border-2 py-4 px-2 cursor-pointer transition-all ${
-            selectedMaterial === 'pack'
-              ? 'border-[#4a8fd4] bg-white shadow-md'
-              : 'border-[#f5ead5] bg-[#fffdf9] shadow-sm hover:border-[#b0d0f0]'
-          }`}
-        >
-          {selectedMaterial === 'pack' && (
-            <span className="absolute top-2 right-2 w-5 h-5 bg-[#4a8fd4] rounded-full flex items-center justify-center text-white text-[10px] font-bold">✓</span>
-          )}
-          {selectedMaterial !== 'pack' && (
-            <span className="absolute top-2 right-2 w-5 h-5 border-2 border-[#d0c8c0] rounded-full" />
-          )}
-          <span className="text-4xl">📦</span>
-          <span className="font-bold text-[#4a8fd4] text-[10px] font-pixel tracking-wide text-center leading-tight">
-            MUFFIN<br />PACKAGING<br />MATERIAL
-          </span>
-        </button>
+      {/* ── Material selector cards ── */}
+      <div className="grid grid-cols-2 gap-2.5 p-3 pb-2">
+        <MatCard
+          id="mix"
+          icon="🧁"
+          label="MUFFIN MIX"
+          line2="INGREDIENTS"
+          activeBorder="border-[#e879a0]"
+          activeBg="bg-[#fff0f6]"
+          activeText="text-[#e05ea0]"
+          activeCircleBg="bg-[#e879a0]"
+          inactiveBorder="border-[#f5c6d8]"
+          inactiveBg="bg-[#fff8fb]"
+          inactiveText="text-[#e05ea0]"
+        />
+        <MatCard
+          id="pack"
+          icon="📦"
+          label="MUFFIN"
+          line2="PACKAGING MATERIAL"
+          activeBorder="border-[#60a5fa]"
+          activeBg="bg-[#eff6ff]"
+          activeText="text-[#3b82f6]"
+          activeCircleBg="bg-[#60a5fa]"
+          inactiveBorder="border-[#bfdbfe]"
+          inactiveBg="bg-[#f0f7ff]"
+          inactiveText="text-[#3b82f6]"
+        />
       </div>
 
-      {/* Configure Inventory Settings label */}
-      <div className="px-3 pb-1">
-        <p className="text-center text-[8px] font-bold text-[#9a8a80] uppercase tracking-widest">
-          Configure Inventory Settings
-        </p>
-      </div>
+      {/* ── "Configure Inventory Settings" divider ── */}
+      <div className="mx-3 mb-2 border-t border-dashed border-[#ddd0be]" />
+      <p className="text-center text-[8px] font-bold text-[#5ea861] uppercase tracking-widest mb-2">
+        Configure Inventory Settings
+      </p>
 
-      {/* Single set of inputs for selected material */}
+      {/* ── Input rows ── */}
       <div className="flex flex-col gap-2 px-3 pb-2">
         <InputRow
-          label="ORDER QUANTITY (BOX)"
-          value={qty}
-          onChange={setQty}
-          onIncrement={() => setQty(prev => prev + 100)}
-          onDecrement={() => setQty(prev => Math.max(0, prev - 100))}
+          iconBg="bg-[#fef3c7]"   icon="🧁"  label="ORDER QUANTITY (BOX)"
+          value={qty}   onChange={setQty}
+          onDec={() => setQty(v => Math.max(0, v - 100))}
+          onInc={() => setQty(v => v + 100)}
         />
         <InputRow
-          label="REORDER POINT (BOX)"
-          value={rop}
-          onChange={setRop}
-          onIncrement={() => setRop(prev => prev + 50)}
-          onDecrement={() => setRop(prev => Math.max(0, prev - 50))}
+          iconBg="bg-[#dbeafe]"   icon="🔄"  label="REORDER POINT (BOX)"
+          value={rop}   onChange={setRop}
+          onDec={() => setRop(v => Math.max(0, v - 50))}
+          onInc={() => setRop(v => v + 50)}
         />
         <InputRow
-          label="SAFETY STOCK (BOX)"
-          value={safety}
-          onChange={setSafety}
-          onIncrement={() => setSafety(prev => prev + 50)}
-          onDecrement={() => setSafety(prev => Math.max(0, prev - 50))}
+          iconBg="bg-[#dcfce7]"   icon="🛡️"  label="SAFETY STOCK (BOX)"
+          value={safety} onChange={setSafety}
+          onDec={() => setSafety(v => Math.max(0, v - 50))}
+          onInc={() => setSafety(v => v + 50)}
         />
       </div>
 
+      {/* ── Apply / Observer ── */}
       <div className="px-2.5 pb-1.5">
         {isController ? (
-          <button 
+          <button
             onClick={handleApplyChanges}
             className="w-full bg-[#5ea861] hover:bg-[#4d8c50] text-white py-2.5 rounded-xl font-bold font-pixel text-[10px] tracking-wider uppercase border-none cursor-pointer shadow-sm transition-all"
           >
@@ -219,7 +249,7 @@ export default function InventoryPanel() {
         ) : (
           <div className="py-1.5 bg-slate-100 border border-slate-200 text-[9px] rounded-lg text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
             <Info className="w-3 h-3" />
-            <span>OBSERVER MODE - READ ONLY</span>
+            <span>OBSERVER MODE – READ ONLY</span>
           </div>
         )}
       </div>
