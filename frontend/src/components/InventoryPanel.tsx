@@ -15,6 +15,7 @@ export default function InventoryPanel() {
   const [packSafety, setPackSafety] = useState(100);
 
   const isController = role === 'controller';
+  const [selectedMaterial, setSelectedMaterial] = useState<'mix' | 'pack'>('mix');
 
   const prevConfigRef = React.useRef<{
     mix: { q: number; r: number; s: number };
@@ -74,20 +75,6 @@ export default function InventoryPanel() {
 
   if (!teamState) return null;
 
-  const mix = teamState.inventory.base_mix;
-  const pack = teamState.inventory.packaging_material;
-  const muffin = teamState.inventory.finished_muffin;
-
-  function SmallCard({ title, value, sub }: any) {
-    return (
-      <div className="border-2 border-[#f5ead5] rounded-[16px] p-2 text-center bg-[#fffdf9] shadow-sm">
-        <div className="text-[8px] font-bold text-[#6b5855] uppercase tracking-wider">{title}</div>
-        <div className="font-bold text-[#4a2e2a] text-[14px] leading-tight mt-0.5">{value}</div>
-        <div className="text-[8px] text-[#8e7a77] font-mono mt-0.5">{sub}</div>
-      </div>
-    );
-  }
-
   function InputRow({ label, value, onChange, onIncrement, onDecrement }: any) {
     return (
       <div className="mb-0.5">
@@ -125,6 +112,14 @@ export default function InventoryPanel() {
     );
   }
 
+  const qty    = selectedMaterial === 'mix' ? mixQty    : packQty;
+  const rop    = selectedMaterial === 'mix' ? mixROP    : packROP;
+  const safety = selectedMaterial === 'mix' ? mixSafety : packSafety;
+
+  const setQty    = selectedMaterial === 'mix' ? setMixQty    : setPackQty;
+  const setRop    = selectedMaterial === 'mix' ? setMixROP    : setPackROP;
+  const setSafety = selectedMaterial === 'mix' ? setMixSafety : setPackSafety;
+
   return (
     <div className="bg-[#fdf7ea] rounded-[20px] border-2 border-[#f5ead5] shadow-sm flex flex-col overflow-hidden shrink-0 pb-1">
       {/* Header */}
@@ -133,40 +128,83 @@ export default function InventoryPanel() {
         <span>Raw Material Management</span>
       </div>
 
-      {/* Live inventory stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 p-2">
-        <SmallCard title="MIX ON HAND" value={mix.onHand} sub={`Transits: ${mix.inTransit}`} />
-        <SmallCard title="PACK ON HAND" value={pack.onHand} sub={`Transits: ${pack.inTransit}`} />
-        <SmallCard title="FINISHED GOODS" value={muffin.onHand} sub="Muffins" />
+      {/* Material Selector Cards */}
+      <div className="grid grid-cols-2 gap-3 p-3">
+        {/* Muffin Mix Card */}
+        <button
+          type="button"
+          onClick={() => setSelectedMaterial('mix')}
+          className={`relative flex flex-col items-center justify-center gap-2 rounded-[16px] border-2 py-4 px-2 cursor-pointer transition-all ${
+            selectedMaterial === 'mix'
+              ? 'border-[#e05ea0] bg-white shadow-md'
+              : 'border-[#f5ead5] bg-[#fffdf9] shadow-sm hover:border-[#f0c0d8]'
+          }`}
+        >
+          {selectedMaterial === 'mix' && (
+            <span className="absolute top-2 right-2 w-5 h-5 bg-[#e05ea0] rounded-full flex items-center justify-center text-white text-[10px] font-bold">✓</span>
+          )}
+          {selectedMaterial !== 'mix' && (
+            <span className="absolute top-2 right-2 w-5 h-5 border-2 border-[#d0c8c0] rounded-full" />
+          )}
+          <span className="text-4xl">🧁</span>
+          <span className="font-bold text-[#e05ea0] text-[10px] font-pixel tracking-wide text-center leading-tight">
+            MUFFIN MIX<br />INGREDIENTS
+          </span>
+        </button>
+
+        {/* Packaging Material Card */}
+        <button
+          type="button"
+          onClick={() => setSelectedMaterial('pack')}
+          className={`relative flex flex-col items-center justify-center gap-2 rounded-[16px] border-2 py-4 px-2 cursor-pointer transition-all ${
+            selectedMaterial === 'pack'
+              ? 'border-[#4a8fd4] bg-white shadow-md'
+              : 'border-[#f5ead5] bg-[#fffdf9] shadow-sm hover:border-[#b0d0f0]'
+          }`}
+        >
+          {selectedMaterial === 'pack' && (
+            <span className="absolute top-2 right-2 w-5 h-5 bg-[#4a8fd4] rounded-full flex items-center justify-center text-white text-[10px] font-bold">✓</span>
+          )}
+          {selectedMaterial !== 'pack' && (
+            <span className="absolute top-2 right-2 w-5 h-5 border-2 border-[#d0c8c0] rounded-full" />
+          )}
+          <span className="text-4xl">📦</span>
+          <span className="font-bold text-[#4a8fd4] text-[10px] font-pixel tracking-wide text-center leading-tight">
+            MUFFIN<br />PACKAGING<br />MATERIAL
+          </span>
+        </button>
       </div>
 
-      {/* Inputs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 px-2.5 pb-2">
-        {/* Mix Ingredients column */}
-        <div className="border-2 border-[#f5ead5] rounded-[16px] p-2.5 bg-[#fffaf0] shadow-sm">
-          <h3 className="font-bold text-[#447a46] text-[9px] font-pixel mb-2 tracking-wide uppercase leading-tight text-center">
-            MUFFIN MIX INTEGRANTS
-          </h3>
-          <InputRow label="ORDER QTY (BOX)" value={mixQty} onChange={setMixQty}
-            onIncrement={() => setMixQty(prev => prev + 100)} onDecrement={() => setMixQty(prev => Math.max(0, prev - 100))} />
-          <InputRow label="REORDER POINT (BOX)" value={mixROP} onChange={setMixROP}
-            onIncrement={() => setMixROP(prev => prev + 50)} onDecrement={() => setMixROP(prev => Math.max(0, prev - 50))} />
-          <InputRow label="SAFETY STOCK (BOX)" value={mixSafety} onChange={setMixSafety}
-            onIncrement={() => setMixSafety(prev => prev + 50)} onDecrement={() => setMixSafety(prev => Math.max(0, prev - 50))} />
-        </div>
+      {/* Configure Inventory Settings label */}
+      <div className="px-3 pb-1">
+        <p className="text-center text-[8px] font-bold text-[#9a8a80] uppercase tracking-widest">
+          Configure Inventory Settings
+        </p>
+      </div>
 
-        {/* Packaging column */}
-        <div className="border-2 border-[#f5ead5] rounded-[16px] p-2.5 bg-[#fffaf0] shadow-sm">
-          <h3 className="font-bold text-[#447a46] text-[9px] font-pixel mb-2 tracking-wide uppercase leading-tight text-center">
-            MUFFIN PACKAGING MATERIAL
-          </h3>
-          <InputRow label="ORDER QTY (BOX)" value={packQty} onChange={setPackQty}
-            onIncrement={() => setPackQty(prev => prev + 100)} onDecrement={() => setPackQty(prev => Math.max(0, prev - 100))} />
-          <InputRow label="REORDER POINT (BOX)" value={packROP} onChange={setPackROP}
-            onIncrement={() => setPackROP(prev => prev + 50)} onDecrement={() => setPackROP(prev => Math.max(0, prev - 50))} />
-          <InputRow label="SAFETY STOCK (BOX)" value={packSafety} onChange={setPackSafety}
-            onIncrement={() => setPackSafety(prev => prev + 50)} onDecrement={() => setPackSafety(prev => Math.max(0, prev - 50))} />
-        </div>
+      {/* Single set of inputs for selected material */}
+      <div className="flex flex-col gap-2 px-3 pb-2">
+        <InputRow
+          label="ORDER QUANTITY (BOX)"
+          value={qty}
+          onChange={setQty}
+          onIncrement={() => setQty(prev => prev + 100)}
+          onDecrement={() => setQty(prev => Math.max(0, prev - 100))}
+        />
+        <InputRow
+          label="REORDER POINT (BOX)"
+          value={rop}
+          onChange={setRop}
+          onIncrement={() => setRop(prev => prev + 50)}
+          onDecrement={() => setRop(prev => Math.max(0, prev - 50))}
+        />
+        <InputRow
+          label="SAFETY STOCK (BOX)"
+          value={safety}
+          onChange={setSafety}
+          onIncrement={() => setSafety(prev => prev + 50)}
+          onDecrement={() => setSafety(prev => Math.max(0, prev - 50))}
+        />
       </div>
 
       <div className="px-2.5 pb-1.5">
