@@ -153,34 +153,64 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   joinRoom: (roomCode, teamName) => {
     return new Promise((resolve, reject) => {
-      const s = get().socket;
       const t = get().token;
-      
-      // If socket not initialized yet, do it now
-      if (!s && t) {
+
+      // Initialize socket if not already done
+      if (!get().socket && t) {
         get().initSocket(t);
       }
 
-      // Re-fetch socket reference
-      const activeSocket = get().socket || io(API_URL, { auth: { token: t } });
-      if (!get().socket) {
-        set({ socket: activeSocket });
-      }
+      const activeSocket = get().socket || (() => {
+        const s = io(API_URL, { auth: { token: t } });
+        set({ socket: s });
+        return s;
+      })();
 
-      activeSocket.emit('join_room', { token: t, roomCode, teamName }, (response: any) => {
-        if (response.error) {
-          reject(response.error);
-        } else {
-          set({
-            room: response.room,
-            role: response.role,
-            teamState: response.teamState || null,
-            members: response.members || [],
-            instructorTeams: response.teamStates || []
-          });
-          resolve(response);
+      // Hard timeout: if nothing resolves within 15 seconds, reject
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject('Connection timed out. Please check your internet and try again.');
         }
-      });
+      }, 15000);
+
+      const doEmit = () => {
+        if (settled) return;
+        activeSocket.emit('join_room', { token: t, roomCode, teamName }, (response: any) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          if (response.error) {
+            reject(response.error);
+          } else {
+            set({
+              room: response.room,
+              role: response.role,
+              teamState: response.teamState || null,
+              members: response.members || [],
+              instructorTeams: response.teamStates || []
+            });
+            resolve(response);
+          }
+        });
+      };
+
+      // If socket is already connected, emit immediately
+      if (activeSocket.connected) {
+        doEmit();
+      } else {
+        // Wait for connection, then emit
+        activeSocket.once('connect', doEmit);
+        // Also handle connection error
+        activeSocket.once('connect_error', (err) => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            reject(`Socket connection failed: ${err.message}`);
+          }
+        });
+      }
     });
   },
 
