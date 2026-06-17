@@ -1,3 +1,4 @@
+// v2 - card-selector layout
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { MaterialType } from '../../../backend/src/types/index.js';
