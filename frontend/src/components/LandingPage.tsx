@@ -732,28 +732,12 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                 A complete factory operations environment — from raw materials to finished goods, with real-time analytics and competitive multiplayer.
               </p>
 
-              <div className="bg-[#fcfaf6] border border-[#f0ede4] rounded-[24px] p-2.5 shadow-xl max-w-4xl mx-auto overflow-hidden relative">
-                {/* Browser Header Bar */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-[#f0ede4] bg-white text-xs select-none">
-                  <div className="flex items-center space-x-1.5">
-                    <div className="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-                    <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-                    <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
-                  </div>
-                  <div className="bg-[#fcfaf6] px-12 md:px-24 py-1.5 rounded-lg text-[10px] text-[#78716c] font-mono flex items-center gap-1.5 shadow-inner border border-[#f0ede4]">
-                    <span>muffinfactory.vercel.app/room/uc29xv</span>
-                  </div>
-                  <div className="w-12"></div>
-                </div>
-                
-                {/* Browser Window Image */}
-                <div className="relative overflow-hidden bg-white border-t border-[#f0ede4]">
-                  <img 
-                    src="/hero_factory_3d.jpg" 
-                    alt="Muffin Factory Simulation Dashboard" 
-                    className="w-full h-auto object-cover block"
-                  />
-                </div>
+              <div className="rounded-[24px] shadow-2xl max-w-4xl mx-auto overflow-hidden relative border-8 border-white bg-white">
+                <img 
+                  src="/hero_factory_3d.jpg" 
+                  alt="Muffin Factory Simulation Scene" 
+                  className="w-full h-auto object-cover block"
+                />
               </div>
             </div>
           </section>
