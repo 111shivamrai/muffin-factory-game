@@ -641,7 +641,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
             <div className="lg:col-span-5 relative">
               <div className="rounded-[28px] overflow-hidden border-[6px] border-[#f0ede4] shadow-2xl bg-white relative z-10 transition-transform duration-500 hover:scale-[1.01]">
                 <img 
-                  src="/new_front_2.jpg" 
+                  src="/hero_factory_3d.jpg" 
                   alt="Muffin Factory Simulation Dashboard Preview" 
                   className="w-full h-auto object-cover block" 
                 />
@@ -749,7 +749,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                 {/* Browser Window Image */}
                 <div className="relative overflow-hidden bg-white border-t border-[#f0ede4]">
                   <img 
-                    src="/new_front_2.jpg" 
+                    src="/hero_factory_3d.jpg" 
                     alt="Muffin Factory Simulation Dashboard" 
                     className="w-full h-auto object-cover block"
                   />
