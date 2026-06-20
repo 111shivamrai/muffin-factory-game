@@ -1,4 +1,4 @@
-// v5 – dual-column layout matching Image 1 target design
+// v6 – exact match to Image 2 target design with vertical divider
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { Info } from 'lucide-react';
@@ -64,21 +64,21 @@ export default function InventoryPanel() {
 
   // ─── Sub-components ──────────────────────────────────────────────────────────
 
-  /** Stepper input with label */
+  /** Stepper input row matching Image 2 style */
   function StepperRow({
     label, value, onChange, step = 10,
   }: {
     label: string; value: number; onChange: (v: number) => void; step?: number;
   }) {
     return (
-      <div className="flex items-center justify-between">
-        <span className="text-[8px] font-bold text-[#5a4d3e] uppercase tracking-wide">{label}</span>
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
+        <span className="text-[7.5px] font-bold text-[#5a4d3e] uppercase tracking-wide flex-shrink-0 leading-tight">{label}</span>
+        <div className="flex items-center gap-1 ml-auto flex-shrink-0">
           {isController && (
             <button
               type="button"
               onClick={() => onChange(Math.max(0, value - step))}
-              className="w-6 h-6 bg-[#f3ede3] hover:bg-[#e8ddd0] border border-[#d8ccbb] rounded-md text-[#4a3d30] font-bold text-xs flex items-center justify-center cursor-pointer transition-colors"
+              className="w-5 h-5 bg-[#f3ede3] hover:bg-[#e8ddd0] border border-[#d8ccbb] rounded text-[#4a3d30] font-bold text-[10px] flex items-center justify-center cursor-pointer transition-colors leading-none"
             >−</button>
           )}
           <input
@@ -86,13 +86,13 @@ export default function InventoryPanel() {
             value={value}
             onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
             disabled={!isController}
-            className="w-12 text-center text-[12px] font-bold font-mono text-[#1e1408] bg-white border border-[#e5ddd0] rounded-md py-1 outline-none"
+            className="w-10 text-center text-[11px] font-bold font-mono text-[#1e1408] bg-white border border-[#e5ddd0] rounded py-0.5 outline-none"
           />
           {isController && (
             <button
               type="button"
               onClick={() => onChange(value + step)}
-              className="w-6 h-6 bg-[#f3ede3] hover:bg-[#e8ddd0] border border-[#d8ccbb] rounded-md text-[#4a3d30] font-bold text-xs flex items-center justify-center cursor-pointer transition-colors"
+              className="w-5 h-5 bg-[#f3ede3] hover:bg-[#e8ddd0] border border-[#d8ccbb] rounded text-[#4a3d30] font-bold text-[10px] flex items-center justify-center cursor-pointer transition-colors leading-none"
             >+</button>
           )}
         </div>
@@ -129,29 +129,29 @@ export default function InventoryPanel() {
         </div>
       </div>
 
-      {/* ── Divider ── */}
-      <div className="mx-3 mb-2 border-t border-dashed border-[#ddd0be]" />
-
-      {/* ── Two-column side-by-side: MIX INTEGRANTS | PACKAGING MATERIAL ── */}
-      <div className="grid grid-cols-2 gap-3 px-3 pb-2">
+      {/* ── Two-column with vertical divider: MIX INTEGRANTS | PACKAGING MATERIAL ── */}
+      <div className="flex px-3 pb-3">
         {/* LEFT: Muffin Mix Integrants */}
-        <div className="bg-[#fff8fb] border border-[#f5c6d8] rounded-xl p-2.5">
-          <p className="text-[8px] font-bold text-[#e05ea0] uppercase tracking-wide text-center mb-2.5 font-pixel">
+        <div className="flex-1 pr-3">
+          <p className="text-[8px] font-bold text-[#1e1408] uppercase tracking-wider text-center mb-2 font-pixel">
             MUFFIN MIX INTEGRANTS
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             <StepperRow label="ORDER QTY (BOX)" value={mixQty} onChange={setMixQty} />
             <StepperRow label="REORDER POINT (BOX)" value={mixROP} onChange={setMixROP} />
             <StepperRow label="SAFETY STOCK (BOX)" value={mixSafety} onChange={setMixSafety} />
           </div>
         </div>
 
+        {/* Vertical divider */}
+        <div className="w-px bg-[#d5c8b8] self-stretch mx-0.5" />
+
         {/* RIGHT: Muffin Packaging Material */}
-        <div className="bg-[#f0f7ff] border border-[#bfdbfe] rounded-xl p-2.5">
-          <p className="text-[8px] font-bold text-[#3b82f6] uppercase tracking-wide text-center mb-2.5 font-pixel">
+        <div className="flex-1 pl-3">
+          <p className="text-[8px] font-bold text-[#1e1408] uppercase tracking-wider text-center mb-2 font-pixel">
             MUFFIN PACKAGING MATERIAL
           </p>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             <StepperRow label="ORDER QTY (BOX)" value={packQty} onChange={setPackQty} />
             <StepperRow label="REORDER POINT (BOX)" value={packROP} onChange={setPackROP} />
             <StepperRow label="SAFETY STOCK (BOX)" value={packSafety} onChange={setPackSafety} />
