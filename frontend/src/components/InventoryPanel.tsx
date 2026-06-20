@@ -1,4 +1,4 @@
-// v4 – card-selector design (full rewrite to bust cache)
+// v5 – dual-column layout matching Image 1 target design
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { Info } from 'lucide-react';
@@ -6,17 +6,14 @@ import { Info } from 'lucide-react';
 export default function InventoryPanel() {
   const { teamState, role, updateInventorySettings } = useGameStore();
 
-  const [mixQty,     setMixQty]     = useState(1000);
-  const [mixROP,     setMixROP]     = useState(300);
-  const [mixSafety,  setMixSafety]  = useState(200);
-  const [packQty,    setPackQty]    = useState(1000);
-  const [packROP,    setPackROP]    = useState(200);
-  const [packSafety, setPackSafety] = useState(100);
+  const [mixQty,     setMixQty]     = useState(10);
+  const [mixROP,     setMixROP]     = useState(40);
+  const [mixSafety,  setMixSafety]  = useState(10);
+  const [packQty,    setPackQty]    = useState(10);
+  const [packROP,    setPackROP]    = useState(40);
+  const [packSafety, setPackSafety] = useState(10);
 
   const isController = role === 'controller';
-
-  // Which material card is active
-  const [sel, setSel] = useState<'mix' | 'pack'>('mix');
 
   // Sync server values into local state (only on real changes)
   const prevRef = React.useRef<{
@@ -58,113 +55,47 @@ export default function InventoryPanel() {
 
   if (!teamState) return null;
 
-  // Active values / setters based on selected card
-  const qty     = sel === 'mix' ? mixQty     : packQty;
-  const rop     = sel === 'mix' ? mixROP     : packROP;
-  const safety  = sel === 'mix' ? mixSafety  : packSafety;
-  const setQty    = sel === 'mix' ? setMixQty    : setPackQty;
-  const setRop    = sel === 'mix' ? setMixROP    : setPackROP;
-  const setSafety = sel === 'mix' ? setMixSafety : setPackSafety;
+  const inv = teamState.inventory;
+  const mixOnHand  = inv.base_mix?.onHand ?? 0;
+  const packOnHand = inv.packaging_material?.onHand ?? 0;
+  const finishedOnHand = inv.finished_muffin?.onHand ?? 0;
+  const mixTransit  = inv.base_mix?.inTransit ?? 0;
+  const packTransit = inv.packaging_material?.inTransit ?? 0;
 
   // ─── Sub-components ──────────────────────────────────────────────────────────
 
-  /** One of the two top material-selector cards */
-  function MatCard({
-    id, icon, label, line2,
-    activeBorder, activeBg, activeText, inactiveBorder, inactiveBg, inactiveText,
-    activeCircleBg,
+  /** Stepper input with label */
+  function StepperRow({
+    label, value, onChange, step = 10,
   }: {
-    id: 'mix' | 'pack';
-    icon: string;
-    label: string; line2?: string;
-    activeBorder: string; activeBg: string; activeText: string;
-    inactiveBorder: string; inactiveBg: string; inactiveText: string;
-    activeCircleBg: string;
-  }) {
-    const active = sel === id;
-    return (
-      <button
-        type="button"
-        onClick={() => setSel(id)}
-        className={`relative flex items-center gap-2.5 p-3 rounded-2xl border-2 text-left cursor-pointer transition-all w-full ${
-          active
-            ? `${activeBorder} ${activeBg}`
-            : `${inactiveBorder} ${inactiveBg}`
-        }`}
-      >
-        {/* Radio indicator */}
-        <span
-          className={`absolute top-2 right-2 w-[18px] h-[18px] rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 ${
-            active
-              ? `${activeCircleBg} text-white`
-              : 'bg-white border-2 border-[#c8c0b8]'
-          }`}
-        >
-          {active ? '✓' : ''}
-        </span>
-
-        {/* Icon */}
-        <span className="text-[28px] leading-none flex-shrink-0">{icon}</span>
-
-        {/* Text */}
-        <span className={`font-bold text-[9px] font-pixel leading-tight pr-4 ${active ? activeText : inactiveText}`}>
-          {label}{line2 ? <><br />{line2}</> : null}
-        </span>
-      </button>
-    );
-  }
-
-  /** One input row with a coloured icon badge */
-  function InputRow({
-    iconBg, icon, label,
-    value, onChange, onDec, onInc,
-  }: {
-    iconBg: string; icon: string; label: string;
-    value: number;
-    onChange: (v: number) => void;
-    onDec: () => void;
-    onInc: () => void;
+    label: string; value: number; onChange: (v: number) => void; step?: number;
   }) {
     return (
-      <div className="bg-white border border-[#ede5d8] rounded-xl px-3 py-2 flex items-center gap-2.5">
-        {/* Coloured icon square */}
-        <div className={`w-8 h-8 ${iconBg} rounded-xl flex items-center justify-center text-[17px] flex-shrink-0`}>
-          {icon}
-        </div>
-
-        {/* Label + value */}
-        <div className="flex-1 min-w-0">
-          <p className="text-[7.5px] font-bold text-[#7a6a5a] uppercase tracking-wide leading-none mb-0.5">
-            {label}
-          </p>
+      <div className="flex items-center justify-between">
+        <span className="text-[8px] font-bold text-[#5a4d3e] uppercase tracking-wide">{label}</span>
+        <div className="flex items-center gap-1">
+          {isController && (
+            <button
+              type="button"
+              onClick={() => onChange(Math.max(0, value - step))}
+              className="w-6 h-6 bg-[#f3ede3] hover:bg-[#e8ddd0] border border-[#d8ccbb] rounded-md text-[#4a3d30] font-bold text-xs flex items-center justify-center cursor-pointer transition-colors"
+            >−</button>
+          )}
           <input
             type="number"
             value={value}
             onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
             disabled={!isController}
-            className="w-full text-[13px] font-bold font-mono text-[#1e1408] bg-transparent border-none outline-none p-0"
+            className="w-12 text-center text-[12px] font-bold font-mono text-[#1e1408] bg-white border border-[#e5ddd0] rounded-md py-1 outline-none"
           />
+          {isController && (
+            <button
+              type="button"
+              onClick={() => onChange(value + step)}
+              className="w-6 h-6 bg-[#f3ede3] hover:bg-[#e8ddd0] border border-[#d8ccbb] rounded-md text-[#4a3d30] font-bold text-xs flex items-center justify-center cursor-pointer transition-colors"
+            >+</button>
+          )}
         </div>
-
-        {/* +/− buttons */}
-        {isController && (
-          <div className="flex gap-1 flex-shrink-0">
-            <button
-              type="button"
-              onClick={onDec}
-              className="w-7 h-7 bg-[#f3ede3] hover:bg-[#e8ddd0] border border-[#d8ccbb] rounded-lg text-[#4a3d30] font-bold text-[15px] flex items-center justify-center cursor-pointer transition-colors leading-none"
-            >
-              −
-            </button>
-            <button
-              type="button"
-              onClick={onInc}
-              className="w-7 h-7 bg-[#f3ede3] hover:bg-[#e8ddd0] border border-[#d8ccbb] rounded-lg text-[#4a3d30] font-bold text-[15px] flex items-center justify-center cursor-pointer transition-colors leading-none"
-            >
-              +
-            </button>
-          </div>
-        )}
       </div>
     );
   }
@@ -179,62 +110,53 @@ export default function InventoryPanel() {
         <span>Raw Material Management</span>
       </div>
 
-      {/* ── Material selector cards ── */}
-      <div className="grid grid-cols-2 gap-2.5 p-3 pb-2">
-        <MatCard
-          id="mix"
-          icon="🧁"
-          label="MUFFIN MIX"
-          line2="INGREDIENTS"
-          activeBorder="border-[#e879a0]"
-          activeBg="bg-[#fff0f6]"
-          activeText="text-[#e05ea0]"
-          activeCircleBg="bg-[#e879a0]"
-          inactiveBorder="border-[#f5c6d8]"
-          inactiveBg="bg-[#fff8fb]"
-          inactiveText="text-[#e05ea0]"
-        />
-        <MatCard
-          id="pack"
-          icon="📦"
-          label="MUFFIN"
-          line2="PACKAGING MATERIAL"
-          activeBorder="border-[#60a5fa]"
-          activeBg="bg-[#eff6ff]"
-          activeText="text-[#3b82f6]"
-          activeCircleBg="bg-[#60a5fa]"
-          inactiveBorder="border-[#bfdbfe]"
-          inactiveBg="bg-[#f0f7ff]"
-          inactiveText="text-[#3b82f6]"
-        />
+      {/* ── Top stat boxes: MIX ON HAND | PACK ON HAND | FINISHED GOODS ── */}
+      <div className="grid grid-cols-3 gap-2 p-3 pb-2">
+        <div className="bg-white border border-[#ede5d8] rounded-xl p-2 text-center">
+          <p className="text-[7px] font-bold text-[#7a6a5a] uppercase tracking-wide">MIX ON HAND</p>
+          <p className="text-[16px] font-bold font-mono text-[#1e1408]">{mixOnHand}</p>
+          <p className="text-[7px] text-[#a8977e]">Transits: {mixTransit}</p>
+        </div>
+        <div className="bg-white border border-[#ede5d8] rounded-xl p-2 text-center">
+          <p className="text-[7px] font-bold text-[#7a6a5a] uppercase tracking-wide">PACK ON HAND</p>
+          <p className="text-[16px] font-bold font-mono text-[#1e1408]">{packOnHand}</p>
+          <p className="text-[7px] text-[#a8977e]">Transits: {packTransit}</p>
+        </div>
+        <div className="bg-white border border-[#ede5d8] rounded-xl p-2 text-center">
+          <p className="text-[7px] font-bold text-[#7a6a5a] uppercase tracking-wide">FINISHED GOODS</p>
+          <p className="text-[16px] font-bold font-mono text-[#1e1408]">{finishedOnHand}</p>
+          <p className="text-[7px] text-[#a8977e]">Muffins</p>
+        </div>
       </div>
 
-      {/* ── "Configure Inventory Settings" divider ── */}
+      {/* ── Divider ── */}
       <div className="mx-3 mb-2 border-t border-dashed border-[#ddd0be]" />
-      <p className="text-center text-[8px] font-bold text-[#5ea861] uppercase tracking-widest mb-2">
-        Configure Inventory Settings
-      </p>
 
-      {/* ── Input rows ── */}
-      <div className="flex flex-col gap-2 px-3 pb-2">
-        <InputRow
-          iconBg="bg-[#fef3c7]"   icon="🧁"  label="ORDER QUANTITY (BOX)"
-          value={qty}   onChange={setQty}
-          onDec={() => setQty(v => Math.max(0, v - 100))}
-          onInc={() => setQty(v => v + 100)}
-        />
-        <InputRow
-          iconBg="bg-[#dbeafe]"   icon="🔄"  label="REORDER POINT (BOX)"
-          value={rop}   onChange={setRop}
-          onDec={() => setRop(v => Math.max(0, v - 50))}
-          onInc={() => setRop(v => v + 50)}
-        />
-        <InputRow
-          iconBg="bg-[#dcfce7]"   icon="🛡️"  label="SAFETY STOCK (BOX)"
-          value={safety} onChange={setSafety}
-          onDec={() => setSafety(v => Math.max(0, v - 50))}
-          onInc={() => setSafety(v => v + 50)}
-        />
+      {/* ── Two-column side-by-side: MIX INTEGRANTS | PACKAGING MATERIAL ── */}
+      <div className="grid grid-cols-2 gap-3 px-3 pb-2">
+        {/* LEFT: Muffin Mix Integrants */}
+        <div className="bg-[#fff8fb] border border-[#f5c6d8] rounded-xl p-2.5">
+          <p className="text-[8px] font-bold text-[#e05ea0] uppercase tracking-wide text-center mb-2.5 font-pixel">
+            MUFFIN MIX INTEGRANTS
+          </p>
+          <div className="flex flex-col gap-2">
+            <StepperRow label="ORDER QTY (BOX)" value={mixQty} onChange={setMixQty} />
+            <StepperRow label="REORDER POINT (BOX)" value={mixROP} onChange={setMixROP} />
+            <StepperRow label="SAFETY STOCK (BOX)" value={mixSafety} onChange={setMixSafety} />
+          </div>
+        </div>
+
+        {/* RIGHT: Muffin Packaging Material */}
+        <div className="bg-[#f0f7ff] border border-[#bfdbfe] rounded-xl p-2.5">
+          <p className="text-[8px] font-bold text-[#3b82f6] uppercase tracking-wide text-center mb-2.5 font-pixel">
+            MUFFIN PACKAGING MATERIAL
+          </p>
+          <div className="flex flex-col gap-2">
+            <StepperRow label="ORDER QTY (BOX)" value={packQty} onChange={setPackQty} />
+            <StepperRow label="REORDER POINT (BOX)" value={packROP} onChange={setPackROP} />
+            <StepperRow label="SAFETY STOCK (BOX)" value={packSafety} onChange={setPackSafety} />
+          </div>
+        </div>
       </div>
 
       {/* ── Apply / Observer ── */}
