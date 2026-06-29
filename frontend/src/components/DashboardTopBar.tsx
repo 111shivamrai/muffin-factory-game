@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore.js';
-import { Settings, LogOut, ClipboardList } from 'lucide-react';
+import { Settings, LogOut, ClipboardList, Menu, X } from 'lucide-react';
 
 export default function DashboardTopBar() {
   const { room, teamState, role, leaderboard, logout, updateContractStatus } = useGameStore();
   const [showContractsModal, setShowContractsModal] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   if (!room || !teamState) return null;
 
@@ -21,7 +22,7 @@ export default function DashboardTopBar() {
   const leadTime = '3.0 Days';
 
   return (
-    <div className="flex items-stretch gap-2.5 select-none relative z-30 w-full">
+    <div className="flex items-center justify-between gap-2.5 select-none relative z-30 w-full">
       
       {/* Logo block */}
       <div className="rounded-2xl bg-white border border-rose-200 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-3 shrink-0">
@@ -43,8 +44,8 @@ export default function DashboardTopBar() {
         </div>
       </div>
 
-      {/* Stat Cards Grid */}
-      <div className="flex-1 grid grid-cols-5 gap-2">
+      {/* DESKTOP Stat Cards Grid (Hidden on mobile) */}
+      <div className="hidden lg:grid flex-1 grid-cols-5 gap-2 mx-2">
         {/* TOTAL CASH */}
         <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
           <div className="text-2xl">🪙</div>
@@ -114,8 +115,8 @@ export default function DashboardTopBar() {
         </div>
       </div>
 
-      {/* Settings block */}
-      <div className="relative shrink-0 flex items-center justify-center">
+      {/* DESKTOP Settings block (Hidden on mobile) */}
+      <div className="hidden lg:block relative shrink-0">
         <button 
           onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
           className="size-12 rounded-xl bg-stone-100 border border-stone-200 grid place-items-center text-xl hover:bg-stone-200 cursor-pointer shadow-sm active:scale-95 transition-all"
@@ -135,6 +136,92 @@ export default function DashboardTopBar() {
           </div>
         )}
       </div>
+
+      {/* MOBILE Hamburger Menu Button (Visible only on mobile/tablet) */}
+      <button 
+        onClick={() => setShowMobileMenu(!showMobileMenu)}
+        className="block lg:hidden size-12 rounded-xl bg-white border border-rose-200 flex items-center justify-center text-rose-500 hover:bg-rose-50 cursor-pointer shadow-[0_2px_0_#f5d4dc] transition-all"
+      >
+        {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+      </button>
+
+      {/* MOBILE Menu Overlay Drawer */}
+      {showMobileMenu && (
+        <div className="absolute top-16 left-0 right-0 bg-white border border-rose-100 rounded-2xl shadow-2xl p-4 z-50 flex flex-col gap-3 block lg:hidden animate-in slide-in-from-top-3 duration-200">
+          <h3 className="font-[Fredoka] text-sm text-stone-500 tracking-wider font-semibold border-b border-rose-50/50 pb-1.5 px-1 uppercase">
+            Simulation Metrics
+          </h3>
+          
+          <div className="grid grid-cols-2 gap-2">
+            {/* Cash */}
+            <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
+              <div className="text-xl">🪙</div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Cash</div>
+                <div className="text-xs font-extrabold truncate text-emerald-600 font-mono">
+                  ₹{teamState.cash.toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Lead Time */}
+            <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
+              <div className="text-xl">⏱️</div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Lead Time</div>
+                <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
+                  {leadTime}
+                </div>
+              </div>
+            </div>
+
+            {/* Contracts */}
+            <div 
+              onClick={() => { setShowContractsModal(true); setShowMobileMenu(false); }}
+              className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20 cursor-pointer"
+            >
+              <div className="text-xl">📋</div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Contracts</div>
+                <div className="text-xs font-extrabold truncate text-rose-500">
+                  {activeContracts.length} Active
+                </div>
+              </div>
+            </div>
+
+            {/* Rank */}
+            <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
+              <div className="text-xl">🏆</div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Rank</div>
+                <div className="text-xs font-extrabold truncate text-amber-600 font-mono">
+                  #{rank} / {totalTeams}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Workspace & Settings */}
+          <div className="rounded-xl border border-rose-100 p-3 bg-rose-50/10 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="text-xl">🧁</div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Workspace</div>
+                <div className="text-xs font-bold text-stone-800 truncate">
+                  {teamState.name}
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={logout}
+              className="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-bold border border-rose-200 cursor-pointer flex items-center justify-center gap-2 transition-all"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Exit Simulation</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Contracts Detail Modal */}
       {showContractsModal && (
