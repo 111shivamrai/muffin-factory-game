@@ -11,7 +11,7 @@ export default function FactoryVisualization() {
 
       {/* Video Content */}
       <div className="p-3">
-        <div className="rounded-xl overflow-hidden bg-rose-50" style={{ height: 320 }}>
+        <div className="rounded-xl overflow-hidden bg-rose-50" style={{ height: '20rem' }}>
           <video
             src="/factory-feed.mp4"
             autoPlay

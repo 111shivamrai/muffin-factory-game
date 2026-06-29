@@ -93,7 +93,7 @@ export default function MachinePanel() {
   };
 
   return (
-    <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col" style={{ height: 360 }}>
+    <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '22.5rem' }}>
       {/* Header */}
       <header className="px-4 py-2.5 bg-gradient-to-r from-fuchsia-400 to-pink-400 text-white font-extrabold tracking-wide text-sm flex items-center gap-2 shrink-0">
         <span className="size-6 rounded-md bg-white/25 grid place-items-center">🧁</span>
