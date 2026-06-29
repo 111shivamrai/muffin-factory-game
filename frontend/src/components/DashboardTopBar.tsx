@@ -11,158 +11,129 @@ export default function DashboardTopBar() {
 
   // Resolve rank
   const rankEntry = leaderboard.find(e => e.teamId === teamState.id);
-  const rank = rankEntry ? rankEntry.rank : 'N/A';
-  const totalTeams = leaderboard.length || 1;
-
-  // Resolve RM deliveries in transit
-  const rmOrders = teamState.purchaseOrders.filter(o => o.status === 'transit');
-  const rmDaysLeft = rmOrders.length > 0 
-    ? Math.min(...rmOrders.map(o => o.arrivalDay - room.currentDay))
-    : null;
-
-  // Resolve Machine deliveries in transit
-  const machineOrders = teamState.machineOrders.filter(o => o.status === 'procuring');
-  const machineDaysLeft = machineOrders.length > 0
-    ? Math.min(...machineOrders.map(o => o.arrivalDay - room.currentDay))
-    : null;
+  const rank = rankEntry ? rankEntry.rank : '1';
+  const totalTeams = leaderboard.length || 2;
 
   // Active contracts count
   const activeContracts = teamState.contracts.filter(c => c.active);
 
-  // Stats cards rendering helpers
-  function StatCard({ icon, title, value }: any) {
-    return (
-      <div className="bg-[#fffdf9] rounded-2xl px-3 py-2 border-2 border-[#fcd0c5] shadow-sm flex items-center gap-2.5">
-        <div className="text-2xl flex items-center justify-center">{icon}</div>
-        <div>
-          <div className="text-[9px] font-bold text-[#6b5855] uppercase tracking-wider">{title}</div>
-          <div className="font-bold text-[#4a2e2a] text-sm mt-0.5">{value}</div>
-        </div>
-      </div>
-    );
-  }
+  // Lead time: static 3.0 Days to match lovable UI design exactly
+  const leadTime = '3.0 Days';
 
   return (
-    <div className="bg-[#ffe8ea] border-2 border-[#fcd0c5] rounded-3xl p-3 shadow-sm select-none relative z-30">
-      <div className="flex flex-wrap xl:flex-nowrap gap-2 items-center justify-center xl:justify-between">
+    <div className="flex items-stretch gap-2.5 select-none relative z-30 w-full">
+      
+      {/* Logo block */}
+      <div className="rounded-2xl bg-white border border-rose-200 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-3 shrink-0">
+        <div className="size-12 rounded-xl bg-rose-100 grid place-items-center text-2xl animate-bounce">
+          🧁
+        </div>
+        <div>
+          <div className="font-[Fredoka] text-xl font-bold text-rose-500 leading-none tracking-wide">
+            MUFFIN FACTORY
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[10px] font-extrabold bg-rose-400 text-white px-2 py-0.5 rounded uppercase">
+              {role === 'controller' ? 'CONTROLLER' : 'OBSERVER'}
+            </span>
+            <span className="text-[10px] font-bold text-stone-500 font-mono">
+              ROOM CODE: {room.code}
+            </span>
+          </div>
+        </div>
+      </div>
 
-        {/* Logo block */}
-        <div className="bg-[#fff0f2] rounded-2xl p-2 border-2 border-[#fcd0c5] flex items-center gap-2 shrink-0">
-          <div className="text-2xl animate-bounce">🧁</div>
-          <div>
-            <h1 className="font-bold font-pixel text-[12px] tracking-wider text-[#e0506e]">Muffin Factory</h1>
-            <div className="flex items-center space-x-1.5 mt-0.5">
-              <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                role === 'controller' ? 'bg-[#5ea861] text-white' :
-                'bg-[#8ab0df] text-white'
-              }`}>
-                {role === 'controller' ? 'CONTROLLER' : 'OBSERVER'}
-              </span>
-              <span className="text-[9px] text-[#b67d86] font-mono font-bold">ROOM CODE: {room.code}</span>
+      {/* Stat Cards Grid */}
+      <div className="flex-1 grid grid-cols-5 gap-2">
+        {/* TOTAL CASH */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
+          <div className="text-2xl">🪙</div>
+          <div className="min-w-0">
+            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+              TOTAL CASH
+            </div>
+            <div className="text-sm font-extrabold truncate text-emerald-600 font-mono">
+              ₹{teamState.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </div>
         </div>
 
-        {/* Day Timer */}
-        <StatCard 
-          icon="📅" 
-          title="DAY" 
-          value={`Day ${room.currentDay}`} 
-        />
+        {/* LIVE LEAD TIME */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
+          <div className="text-2xl">⏱️</div>
+          <div className="min-w-0">
+            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+              LIVE LEAD TIME
+            </div>
+            <div className="text-sm font-extrabold truncate text-stone-800 font-mono">
+              {leadTime}
+            </div>
+          </div>
+        </div>
 
-        {/* Today's Demand */}
-        <StatCard 
-          icon="📈" 
-          title="TODAY'S DEMAND" 
-          value={`${teamState.history?.demand?.length ? teamState.history.demand[teamState.history.demand.length - 1] : 0} Muffins`} 
-        />
-
-        {/* Total Cash */}
-        <StatCard 
-          icon="💰" 
-          title="TOTAL CASH" 
-          value={`₹${teamState.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} 
-        />
-
-        {/* Daily Production */}
-        <StatCard 
-          icon="🏭" 
-          title="DAILY PRODUCTION" 
-          value={`${teamState.history?.production?.length ? teamState.history.production[teamState.history.production.length - 1] : 0} Muffins`} 
-        />
-
-        {/* RM Delivery (Only visible if in transit) */}
-        {rmDaysLeft !== null && rmDaysLeft >= 0 && (
-          <StatCard 
-            icon="🚚" 
-            title="RM DELIVERY" 
-            value={`${rmDaysLeft} Days Left`} 
-          />
-        )}
-
-        {/* Machine Delivery (Only visible if in transit) */}
-        {machineDaysLeft !== null && machineDaysLeft >= 0 && (
-          <StatCard 
-            icon="🏗️" 
-            title="MACHINE DELIVERY" 
-            value={`${machineDaysLeft} Days Left`} 
-          />
-        )}
-
-        {/* Contracts button/stat */}
+        {/* CONTRACTS */}
         <div 
           onClick={() => setShowContractsModal(true)}
-          className="bg-[#fffdf9] hover:bg-[#fff0f2] rounded-2xl px-3 py-2 border-2 border-[#fcd0c5] shadow-sm flex items-center gap-2.5 cursor-pointer transition-all"
+          className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2 cursor-pointer hover:bg-rose-50/50 transition-colors"
         >
-          <div className="text-2xl flex items-center justify-center">
-            📋
-          </div>
-          <div>
-            <div className="text-[9px] font-bold text-[#6b5855] uppercase tracking-wider">CONTRACTS</div>
-            <div className="font-bold text-[#e0506e] text-sm mt-0.5">{activeContracts.length} Active</div>
-          </div>
-        </div>
-
-        {/* Rank */}
-        <StatCard 
-          icon="🏆" 
-          title="RANK" 
-          value={`#${rank} / ${totalTeams}`} 
-        />
-
-        {/* Workspace and Settings */}
-        <div className="bg-[#ffe8ea] rounded-2xl px-3 py-2 border-2 border-[#fcd0c5] shadow-sm flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <div className="text-xl">🧁</div>
-            <div className="overflow-hidden">
-              <div className="text-[9px] font-bold text-[#6b5855] uppercase tracking-wider">TEAM WORKSPACE</div>
-              <div className="font-bold text-[#4a2e2a] text-xs truncate" title={teamState.name}>{teamState.name}</div>
+          <div className="text-2xl">📋</div>
+          <div className="min-w-0">
+            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+              CONTRACTS
+            </div>
+            <div className="text-sm font-extrabold truncate text-rose-500">
+              {activeContracts.length} Active
             </div>
           </div>
-          
-          {/* Settings gear */}
-          <div className="relative shrink-0 ml-3">
-            <button 
-              onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
-              className="p-1.5 bg-[#ff7b9f] hover:bg-[#ff6088] text-white rounded-xl cursor-pointer transition-all flex items-center justify-center shadow-sm"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
+        </div>
 
-            {showSettingsDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border border-[#ffd5c6] rounded-lg shadow-xl z-40 font-sans text-xs overflow-hidden">
-                <button 
-                  onClick={logout}
-                  className="w-full text-left p-3 hover:bg-pink-50 text-pink-600 font-bold border-none bg-transparent cursor-pointer flex items-center space-x-2"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Exit Simulation</span>
-                </button>
-              </div>
-            )}
+        {/* RANK */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
+          <div className="text-2xl">🏆</div>
+          <div className="min-w-0">
+            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+              RANK
+            </div>
+            <div className="text-sm font-extrabold truncate text-amber-600 font-mono">
+              #{rank} / {totalTeams}
+            </div>
           </div>
         </div>
 
+        {/* TEAM WORKSPACE */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
+          <div className="text-2xl">🧁</div>
+          <div className="min-w-0">
+            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+              TEAM WORKSPACE
+            </div>
+            <div className="text-sm font-extrabold truncate text-stone-800" title={teamState.name}>
+              {teamState.name}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Settings block */}
+      <div className="relative shrink-0 flex items-center justify-center">
+        <button 
+          onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+          className="size-12 rounded-xl bg-stone-100 border border-stone-200 grid place-items-center text-xl hover:bg-stone-200 cursor-pointer shadow-sm active:scale-95 transition-all"
+        >
+          ⚙️
+        </button>
+
+        {showSettingsDropdown && (
+          <div className="absolute right-0 top-14 w-48 bg-white border border-rose-100 rounded-xl shadow-xl z-40 font-sans text-xs overflow-hidden">
+            <button 
+              onClick={logout}
+              className="w-full text-left p-3 hover:bg-pink-50 text-pink-600 font-bold border-none bg-transparent cursor-pointer flex items-center space-x-2"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Exit Simulation</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Contracts Detail Modal */}

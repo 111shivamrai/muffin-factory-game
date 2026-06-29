@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore.js';
-import { HelpCircle, Activity, AlertTriangle, X } from 'lucide-react';
+import { HelpCircle, Activity, AlertTriangle } from 'lucide-react';
 
 export default function OperationsAdvisor() {
   const { teamState, room } = useGameStore();
@@ -84,28 +84,26 @@ export default function OperationsAdvisor() {
       {/* Compact advisor bar button */}
       <div 
         onClick={handleOpen}
-        className="bg-[#5c8fc2] hover:bg-[#4b7aab] border-2 border-[#4b7aab] rounded-full py-2 px-4 shadow-sm flex items-center justify-between cursor-pointer transition-all select-none shrink-0"
+        className="bg-gradient-to-r from-sky-400 to-blue-500 text-white p-3 flex items-center gap-3 shadow-[0_2px_0_#1d4ed8] rounded-2xl cursor-pointer hover:from-sky-500 hover:to-blue-600 transition-all select-none shrink-0"
       >
-        <div className="flex items-center space-x-3">
-          <div className="text-2xl drop-shadow-sm">👨‍🍳</div>
-          <div>
-            <h2 className="font-bold font-pixel text-[11px] uppercase tracking-wider text-white drop-shadow-sm">Operations Advisor</h2>
-            <p className="text-[8px] text-[#d6e5f3] font-mono mt-0.5">Retrospective factory insights</p>
-          </div>
+        <span className="size-9 rounded-lg bg-white/20 grid place-items-center text-xl shrink-0">
+          👨‍🍳
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="font-extrabold text-sm tracking-wide">OPERATIONS ADVISOR</div>
+          <div className="text-[11px] text-white/85 truncate">Retrospective factory insights</div>
         </div>
 
-        {unreadCount > 0 ? (
-          <span className="w-6 h-6 bg-[#ef5a68] border-2 border-[#d94856] text-white rounded-full font-bold font-mono text-[10px] flex items-center justify-center animate-pulse shadow-sm drop-shadow-sm">
+        {unreadCount > 0 && (
+          <span className="size-6 rounded-full bg-rose-500 text-white text-xs font-extrabold grid place-items-center animate-bounce">
             {unreadCount}
           </span>
-        ) : (
-          <span className="w-2 h-2 bg-[#8ab0df] rounded-full"></span>
         )}
       </div>
 
       {/* Modal pop-up */}
       {isOpen && (
-        <div className="fixed inset-0 bg-[#1e1408]/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans text-xs">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 font-sans text-xs">
           <div className="bg-[#fffdfb] border border-[#e8d9c4] rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative text-[#1e1408]">
             <div className="flex justify-between items-center border-b border-[#f0e6d6] pb-3">
               <span className="font-serif font-bold text-sm uppercase tracking-wider text-[#c8852a] flex items-center space-x-2">

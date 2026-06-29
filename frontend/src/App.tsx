@@ -164,36 +164,36 @@ export default function App() {
 
   // 5. Operator is in a running room -> Render full Operations Dashboard
   return (
-    <div className="min-h-screen lg:h-screen w-full flex flex-col bg-[#fcf5eb] text-slate-800 p-3 lg:overflow-hidden overflow-y-auto overflow-x-hidden font-sans select-none relative gap-3">
+    <div className="min-h-screen p-3" style={{ fontFamily: 'Nunito, system-ui, sans-serif', background: 'linear-gradient(135deg, #fff1f3 0%, #fde7ef 40%, #fce7f3 100%)' }}>
+      <div className="max-w-[1600px] mx-auto space-y-3">
       
       {/* Top Status Bar HUD */}
         <DashboardTopBar />
 
         {/* Main Dashboard Workspace Grid */}
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:overflow-hidden min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-3 h-[calc(100vh-120px)]">
         
         {/* LEFT SIDEBAR: Inventory & Machine Operations Controls */}
-        <div className="col-span-1 lg:col-span-4 flex flex-col gap-2.5 lg:overflow-y-auto pr-1 h-auto lg:h-full min-h-0">
+        <div className="flex flex-col gap-3">
           <InventoryPanel />
           <OperationsAdvisor />
           <MachinePanel />
         </div>
 
         {/* FACTORY AREA: Factory View & Reports */}
-        <div className="col-span-1 lg:col-span-8 flex flex-col gap-3 lg:overflow-hidden h-auto lg:h-full min-h-0">
+        <div className="flex flex-col gap-3 min-h-0">
           
           {/* Factory Floor Live Feed */}
-          <div className="flex-[3] min-h-[180px] overflow-hidden">
-            <FactoryVisualization />
-          </div>
+          <FactoryVisualization />
 
           {/* Reports, Analytics & Score */}
-          <div className="flex-[5] lg:overflow-y-auto pr-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3">
             <ReportsPanel />
           </div>
 
         </div>
 
+      </div>
       </div>
 
       {/* Bankruptcy Overlay Screen */}
