@@ -162,101 +162,146 @@ export default function App() {
     return <LandingPage navigate={navigate} />;
   }
 
-  // 5. Operator is in a running room -> Render full Operations Dashboard
+  // 5. Operator is in a running room -> Render full Operations Dashboard with Aspect Ratio Scale Wrapper
   return (
-    <div className="h-screen w-screen lg:overflow-hidden overflow-y-auto p-3 flex flex-col gap-3 font-sans select-none relative" style={{ fontFamily: 'Nunito, system-ui, sans-serif', background: 'linear-gradient(135deg, #fff1f3 0%, #fde7ef 40%, #fce7f3 100%)' }}>
-      
-      {/* Top Status Bar HUD */}
-      <DashboardTopBar />
+    <ScaleWrapper>
+      <div className="w-full h-full p-3 flex flex-col gap-3 font-sans select-none relative" style={{ fontFamily: 'Nunito, system-ui, sans-serif', background: 'linear-gradient(135deg, #fff1f3 0%, #fde7ef 40%, #fce7f3 100%)' }}>
+        
+        {/* Top Status Bar HUD */}
+        <DashboardTopBar />
 
-      {/* Main Dashboard Workspace Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-3 min-h-0 lg:overflow-hidden">
-      
-        {/* LEFT SIDEBAR: Inventory & Machine Operations Controls */}
-        <div className="flex flex-col gap-3 overflow-y-auto max-h-full pr-1 min-h-0">
-          <InventoryPanel />
-          <OperationsAdvisor />
-          <MachinePanel />
-        </div>
+        {/* Main Dashboard Workspace Grid */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-3 min-h-0 lg:overflow-hidden">
+        
+          {/* LEFT SIDEBAR: Inventory & Machine Operations Controls */}
+          <div className="flex flex-col gap-3 overflow-y-auto max-h-full pr-1 min-h-0">
+            <InventoryPanel />
+            <OperationsAdvisor />
+            <MachinePanel />
+          </div>
 
-        {/* FACTORY AREA: Factory View & Reports */}
-        <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
-          
-          {/* Factory Floor Live Feed */}
-          <FactoryVisualization />
+          {/* FACTORY AREA: Factory View & Reports */}
+          <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
+            
+            {/* Factory Floor Live Feed */}
+            <FactoryVisualization />
 
-          {/* Reports, Analytics & Score */}
-          <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3">
-            <ReportsPanel />
+            {/* Reports, Analytics & Score */}
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3">
+              <ReportsPanel />
+            </div>
+
           </div>
 
         </div>
 
-      </div>
-
-      {/* Bankruptcy Overlay Screen */}
-      {teamState?.status === 'bankrupt' && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-6">
-          <div className="max-w-md w-full bg-red-950 border-2 border-red-500 rounded-lg p-8 text-center space-y-6 shadow-2xl animate-pulse">
-            <div className="text-6xl">💀</div>
-            <h2 className="font-pixel text-lg text-red-400 tracking-wider">FACTORY BANKRUPT</h2>
-            <p className="text-xs text-red-200 leading-relaxed font-mono">
-              Cash balance has dropped below ₹0. Operations are locked.
-              You have been disqualified from the active simulation competition.
-            </p>
-            <div className="p-3 bg-red-900 border border-red-700 text-[10px] text-red-300 rounded font-mono">
-              Instructor review parameters are preserved. Reports remain active.
+        {/* Bankruptcy Overlay Screen */}
+        {teamState?.status === 'bankrupt' && (
+          <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50 p-6">
+            <div className="max-w-md w-full bg-red-950 border-2 border-red-500 rounded-lg p-8 text-center space-y-6 shadow-2xl animate-pulse">
+              <div className="text-6xl">💀</div>
+              <h2 className="font-pixel text-lg text-red-400 tracking-wider">FACTORY BANKRUPT</h2>
+              <p className="text-xs text-red-200 leading-relaxed font-mono">
+                Cash balance has dropped below ₹0. Operations are locked.
+                You have been disqualified from the active simulation competition.
+              </p>
+              <div className="p-3 bg-red-900 border border-red-700 text-[10px] text-red-300 rounded font-mono">
+                Instructor review parameters are preserved. Reports remain active.
+              </div>
+              <div className="flex justify-center">
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="bg-red-800 hover:bg-red-700 text-red-100 border border-red-500 px-6 py-2.5 rounded font-pixel text-[10px] cursor-pointer"
+                >
+                  RETURN TO LOGOUT
+                </button>
+              </div>
             </div>
-            <div className="flex justify-center">
-              <button 
+          </div>
+        )}
+
+        {/* Simulator Paused Overlay screen */}
+        {room.status === 'paused' && (
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40 pointer-events-auto">
+            <div className="bg-slate-950 border border-retro-orange-accent/60 p-6 rounded-lg text-center space-y-3 shadow-2xl max-w-sm">
+              <Lock className="w-8 h-8 mx-auto text-retro-orange-accent animate-bounce" />
+              <h3 className="font-pixel text-xs text-retro-orange-text">SIMULATION PAUSED</h3>
+              <p className="text-[10px] text-slate-400 font-mono">
+                The instructor has paused the clock. Calculations are suspended until simulation is resumed.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Simulator Finished Overlay screen */}
+        {room.status === 'finished' && (
+          <div className="absolute inset-0 bg-black/75 flex items-center justify-center z-40 pointer-events-auto">
+            <div className="bg-slate-950 border border-retro-purple-accent/60 p-8 rounded-lg text-center space-y-4 shadow-2xl max-w-md">
+              <span className="text-5xl">🏆</span>
+              <h3 className="font-pixel text-xs text-retro-purple-text">SIMULATION COMPLETE</h3>
+              <p className="text-[10px] text-slate-400 font-mono leading-relaxed">
+                The simulation has ended. Analyze your final academic scores and checkout the leaderboard rankings.
+              </p>
+              <div className="border border-slate-800 bg-slate-900/50 p-4 rounded text-left space-y-1 font-mono text-[10px]">
+                <div className="text-slate-500 text-[8px]">FINAL METRICS:</div>
+                <div>Final Cash: <strong className="text-retro-green-text">₹{teamState?.cash.toLocaleString()}</strong></div>
+                <div>Fill Rate: <strong>{teamState?.report.fillRate}%</strong></div>
+                <div>Academic Grade: <strong className="text-retro-purple-text">{teamState?.academicScore.totalScore}/100</strong></div>
+              </div>
+              <button
                 onClick={() => window.location.reload()}
-                className="bg-red-800 hover:bg-red-700 text-red-100 border border-red-500 px-6 py-2.5 rounded font-pixel text-[10px] cursor-pointer"
+                className="bg-retro-purple-bg hover:bg-purple-900 text-retro-purple-text border border-retro-purple-accent px-5 py-2 rounded font-pixel text-[9px] cursor-pointer"
               >
-                RETURN TO LOGOUT
+                CLOSE REPORT
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Simulator Paused Overlay screen */}
-      {room.status === 'paused' && (
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-40 pointer-events-auto">
-          <div className="bg-slate-950 border border-retro-orange-accent/60 p-6 rounded-lg text-center space-y-3 shadow-2xl max-w-sm">
-            <Lock className="w-8 h-8 mx-auto text-retro-orange-accent animate-bounce" />
-            <h3 className="font-pixel text-xs text-retro-orange-text">SIMULATION PAUSED</h3>
-            <p className="text-[10px] text-slate-400 font-mono">
-              The instructor has paused the clock. Calculations are suspended until simulation is resumed.
-            </p>
-          </div>
-        </div>
-      )}
+      </div>
+    </ScaleWrapper>
+  );
+}
 
-      {/* Simulator Finished Overlay screen */}
-      {room.status === 'finished' && (
-        <div className="absolute inset-0 bg-black/75 flex items-center justify-center z-40 pointer-events-auto">
-          <div className="bg-slate-950 border border-retro-purple-accent/60 p-8 rounded-lg text-center space-y-4 shadow-2xl max-w-md">
-            <span className="text-5xl">🏆</span>
-            <h3 className="font-pixel text-xs text-retro-purple-text">SIMULATION COMPLETE</h3>
-            <p className="text-[10px] text-slate-400 font-mono leading-relaxed">
-              The simulation has ended. Analyze your final academic scores and checkout the leaderboard rankings.
-            </p>
-            <div className="border border-slate-800 bg-slate-900/50 p-4 rounded text-left space-y-1 font-mono text-[10px]">
-              <div className="text-slate-500 text-[8px]">FINAL METRICS:</div>
-              <div>Final Cash: <strong className="text-retro-green-text">₹{teamState?.cash.toLocaleString()}</strong></div>
-              <div>Fill Rate: <strong>{teamState?.report.fillRate}%</strong></div>
-              <div>Academic Grade: <strong className="text-retro-purple-text">{teamState?.academicScore.totalScore}/100</strong></div>
-            </div>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-retro-purple-bg hover:bg-purple-900 text-retro-purple-text border border-retro-purple-accent px-5 py-2 rounded font-pixel text-[9px] cursor-pointer"
-            >
-              CLOSE REPORT
-            </button>
-          </div>
-        </div>
-      )}
+// ─── Scale Wrapper Viewport Manager Component ─────────────────────────────────
+function ScaleWrapper({ children }: { children: React.ReactNode }) {
+  const [scale, setScale] = useState(1);
 
+  useEffect(() => {
+    const handleResize = () => {
+      const targetWidth = 1440;
+      const targetHeight = 960;
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+
+      // Calculate scale factors
+      const scaleX = windowWidth / targetWidth;
+      const scaleY = windowHeight / targetHeight;
+      
+      // Preserve aspect ratio by using the minimum scale factor (letterboxing / pillarboxing)
+      const s = Math.min(scaleX, scaleY);
+      setScale(s);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return (
+    <div className="w-screen h-screen overflow-hidden flex items-center justify-center bg-black relative select-none">
+      <div 
+        style={{
+          width: '1440px',
+          height: '960px',
+          transform: `scale(${scale})`,
+          transformOrigin: 'center center',
+          flexShrink: 0,
+        }}
+        className="relative"
+      >
+        {children}
+      </div>
     </div>
   );
 }
