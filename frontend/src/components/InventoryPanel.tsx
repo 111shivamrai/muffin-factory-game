@@ -64,23 +64,23 @@ export default function InventoryPanel() {
 
   // ─── Sub-components ──────────────────────────────────────────────────────────
 
-  /** Centered label & stepper controls matching the reference design */
+  /** Inline label on left, unified pill-stepper on right */
   function StepperRow({
     label, value, onChange, step = 10,
   }: {
     label: string; value: number; onChange: (v: number) => void; step?: number;
   }) {
     return (
-      <div className="flex flex-col items-center gap-1.5 py-1">
-        <span className="text-[10px] font-extrabold tracking-wider text-[#4a3d30] text-center uppercase leading-none font-sans">
+      <div className="flex items-center justify-between py-3 border-b border-stone-100 last:border-0">
+        <span className="text-[11px] font-extrabold text-[#111111] tracking-wide font-sans select-none">
           {label}
         </span>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-[#fffdfa] shrink-0 shadow-sm">
           {isController ? (
             <button
               type="button"
               onClick={() => onChange(Math.max(0, value - step))}
-              className="w-16 h-10 rounded-xl bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] border border-[#d8ccbb] text-[#4a3d30] font-bold text-2xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:scale-95 transition-all leading-none select-none"
+              className="w-12 h-10 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-80 transition-all border-none select-none leading-none"
             >
               −
             </button>
@@ -90,13 +90,13 @@ export default function InventoryPanel() {
             value={value}
             onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
             disabled={!isController}
-            className="w-32 h-10 rounded-xl bg-[#fffdfa] border border-[#d8ccbb] text-[#2b2640] text-xl font-extrabold flex items-center justify-center text-center outline-none font-sans"
+            className="w-20 h-10 bg-white text-[#2b2640] text-sm font-extrabold flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
           />
           {isController ? (
             <button
               type="button"
               onClick={() => onChange(value + step)}
-              className="w-16 h-10 rounded-xl bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] border border-[#d8ccbb] text-[#4a3d30] font-bold text-2xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:scale-95 transition-all leading-none select-none"
+              className="w-12 h-10 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-80 transition-all border-none select-none leading-none"
             >
               +
             </button>
@@ -111,8 +111,8 @@ export default function InventoryPanel() {
     <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '32rem' }}>
 
       {/* Header */}
-      <header className="px-4 py-2.5 bg-gradient-to-r from-emerald-400 to-emerald-500 text-white font-extrabold tracking-wide text-sm flex items-center gap-2 shrink-0">
-        <span className="size-6 rounded-md bg-white/25 grid place-items-center">🧺</span>
+      <header className="px-4 py-3 bg-[#0e8a43] text-white font-extrabold tracking-wide text-sm flex items-center gap-2 shrink-0 select-none">
+        <span className="size-6 rounded-md bg-white/20 grid place-items-center">📦</span>
         RAW MATERIAL MANAGEMENT
       </header>
 
@@ -138,14 +138,14 @@ export default function InventoryPanel() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1.5 shrink-0">
+        <div className="flex gap-1.5 shrink-0 select-none">
           <button
             type="button"
             onClick={() => setActiveTab('mix')}
-            className={`flex-1 py-2 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl border transition-all cursor-pointer ${
+            className={`flex-1 py-2.5 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl border transition-all cursor-pointer ${
               activeTab === 'mix'
-                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm font-bold'
-                : 'bg-[#fffcf7] text-[#5d4037] border-rose-100/60 hover:bg-rose-50/30'
+                ? 'bg-[#0e8a43] text-white border-[#0e8a43] shadow-sm font-bold'
+                : 'bg-white text-[#5d4037] border-rose-100/60 hover:bg-rose-50/30'
             }`}
           >
             MUFFIN MIX INTEGRANTS
@@ -153,10 +153,10 @@ export default function InventoryPanel() {
           <button
             type="button"
             onClick={() => setActiveTab('pack')}
-            className={`flex-1 py-2 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl border transition-all cursor-pointer ${
+            className={`flex-1 py-2.5 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl border transition-all cursor-pointer ${
               activeTab === 'pack'
-                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm font-bold'
-                : 'bg-[#fffcf7] text-[#5d4037] border-rose-100/60 hover:bg-rose-50/30'
+                ? 'bg-[#0e8a43] text-white border-[#0e8a43] shadow-sm font-bold'
+                : 'bg-white text-[#5d4037] border-rose-100/60 hover:bg-rose-50/30'
             }`}
           >
             MUFFIN PACKAGING MATERIAL
@@ -165,7 +165,7 @@ export default function InventoryPanel() {
 
         {/* Tab Card Body */}
         <div className="rounded-b-2xl border border-t-0 bg-[#fffdfa] border-rose-100 p-4 py-3 flex-1 flex flex-col justify-between min-h-0">
-          <div className="space-y-2.5">
+          <div className="space-y-1">
             {activeTab === 'mix' ? (
               <>
                 <StepperRow label="ORDER QUANTITY" value={mixQty} onChange={setMixQty} />
@@ -186,7 +186,7 @@ export default function InventoryPanel() {
             {isController ? (
               <button
                 onClick={handleApplyChanges}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white font-extrabold text-xs shadow-[0_3px_0_#1b5e20] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1b5e20] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
+                className="w-full py-3 rounded-xl bg-gradient-to-b from-[#0e8a43] to-[#0b7036] text-white font-extrabold text-xs shadow-[0_3px_0_#09592b] hover:translate-y-[1px] hover:shadow-[0_2px_0_#09592b] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
               >
                 ✓ APPLY ORDER CHANGES
               </button>
