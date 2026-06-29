@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore.js';
-import { Info } from 'lucide-react';
+import { Info, ShoppingCart, TrendingUp, Scale, FileCheck, Check } from 'lucide-react';
 import { MachineType } from '../../../backend/src/types/index.js';
 
 export default function MachinePanel() {
@@ -71,75 +71,99 @@ export default function MachinePanel() {
     });
   };
 
-  const handleStopAll = () => {
-    setMixActive(0);
-    setBakeActive(0);
-    setIceActive(0);
-    setPackActive(0);
-    useGameStore.getState().stopAllMachines();
-    alert('All machines stopped!');
-  };
-
   if (!teamState) return null;
 
   const { mixing, baking, icing, packaging } = teamState.machines;
   const currentStrategy = (teamState as any).allocationStrategy || 'contracts_first';
 
   const getUtilColor = (type: MachineType) => {
-    if (type === 'mixing') return 'bg-violet-400';
-    if (type === 'baking') return 'bg-amber-400';
-    if (type === 'icing') return 'bg-pink-400';
-    return 'bg-sky-400';
+    if (type === 'mixing') return '#c084fc';
+    if (type === 'baking') return '#fb923c';
+    if (type === 'icing') return '#4ade80';
+    return '#60a5fa';
   };
 
+  const getDotColor = (type: MachineType) => {
+    if (type === 'mixing') return 'bg-purple-400';
+    if (type === 'baking') return 'bg-orange-400';
+    if (type === 'icing') return 'bg-green-400';
+    return 'bg-blue-400';
+  };
+
+  // SVG Circular Progress Ring
+  function ProgressRing({ value, color }: { value: number; color: string }) {
+    const radius = 28;
+    const stroke = 5;
+    const normalizedRadius = radius - stroke * 1.5;
+    const circumference = normalizedRadius * 2 * Math.PI;
+    const strokeDashoffset = circumference - (value / 100) * circumference;
+
+    return (
+      <svg height={radius * 2} width={radius * 2} className="mx-auto select-none">
+        {/* Background Circle */}
+        <circle
+          stroke="#f1f5f9"
+          fill="transparent"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+        />
+        {/* Progress Circle */}
+        <circle
+          stroke={color}
+          fill="transparent"
+          strokeWidth={stroke}
+          strokeDasharray={circumference + ' ' + circumference}
+          style={{ strokeDashoffset }}
+          r={normalizedRadius}
+          cx={radius}
+          cy={radius}
+          className="transition-all duration-300"
+          strokeLinecap="round"
+          transform={`rotate(-90 ${radius} ${radius})`}
+        />
+        <text
+          x="50%"
+          y="50%"
+          dy=".3em"
+          textAnchor="middle"
+          className="text-[10px] font-extrabold fill-stone-700"
+        >
+          {value}%
+        </text>
+      </svg>
+    );
+  }
+
   return (
-    <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '22.5rem' }}>
+    <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '37rem' }}>
       {/* Header */}
-      <header className="px-4 py-2.5 bg-gradient-to-r from-fuchsia-400 to-pink-400 text-white font-extrabold tracking-wide text-sm flex items-center gap-2 shrink-0">
-        <span className="size-6 rounded-md bg-white/25 grid place-items-center">🧁</span>
-        WORKFLOOR ACTIVITY
+      <header className="px-4 py-2.5 bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white font-extrabold tracking-wide text-sm flex items-center gap-2 shrink-0">
+        <span className="size-6 rounded-full bg-white/20 border border-white/40 flex items-center justify-center text-xs">⚙️</span>
+        WORKFLOW ACTIVITY
       </header>
 
       {/* Content */}
-      <div className="p-3 overflow-y-auto flex-1 space-y-2">
-        {[
-          { type: 'mixing' as MachineType, label: 'Mixing', state: mixActive, setter: setMixActive, mData: mixing, cost: 2000, icon: '🥣' },
-          { type: 'baking' as MachineType, label: 'Baking', state: bakeActive, setter: setBakeActive, mData: baking, cost: 3000, icon: '🥧' },
-          { type: 'icing' as MachineType, label: 'Icing', state: iceActive, setter: setIceActive, mData: icing, cost: 1500, icon: '🍦' },
-          { type: 'packaging' as MachineType, label: 'Packaging', state: packActive, setter: setPackActive, mData: packaging, cost: 1000, icon: '🎁' },
-        ].map(({ type, label, state, setter, mData, cost, icon }) => {
-          const histUtil = teamState.history?.utilization?.[type];
-          const currentUtil = histUtil && histUtil.length > 0 ? histUtil[histUtil.length - 1] : 0;
-
-          return (
-            <div key={type} className="flex items-center gap-2 text-stone-700">
-              {/* Left label area */}
-              <div className="flex flex-col justify-center w-24 shrink-0">
-                <div className="flex items-center gap-1.5">
-                  <span>{icon}</span>
-                  <span className="text-xs font-bold text-stone-700">{label}</span>
-                </div>
-                {isController && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (confirm(`Procure additional ${label} machine for ₹${cost}? Lead Time: 5 days.`)) {
-                        buyMachine(type);
-                      }
-                    }}
-                    className="text-[7.5px] text-[#ba78d1] hover:text-[#9e63bc] font-bold tracking-wider uppercase hover:underline cursor-pointer text-left bg-transparent border-none p-0 mt-0.5"
-                  >
-                    + Buy (₹{cost})
-                  </button>
-                )}
-                {mData.inTransit > 0 && (
-                  <span className="text-[7.5px] text-orange-500 font-bold font-mono animate-pulse">
-                    (+{mData.inTransit} Transit)
-                  </span>
-                )}
+      <div className="p-3 overflow-y-auto flex-1 flex flex-col min-h-0 space-y-3">
+        
+        {/* Machine Rows */}
+        <div className="space-y-2.5 shrink-0">
+          {[
+            { type: 'mixing' as MachineType, label: 'Mixing', state: mixActive, setter: setMixActive, mData: mixing, cost: 2000, icon: '🥣' },
+            { type: 'baking' as MachineType, label: 'Baking', state: bakeActive, setter: setBakeActive, mData: baking, cost: 3000, icon: '🥧' },
+            { type: 'icing' as MachineType, label: 'Icing', state: iceActive, setter: setIceActive, mData: icing, cost: 1500, icon: '🍦' },
+            { type: 'packaging' as MachineType, label: 'Packaging', state: packActive, setter: setPackActive, mData: packaging, cost: 1000, icon: '🎁' },
+          ].map(({ type, label, state, setter, mData, cost, icon }, idx) => (
+            <div key={type} className={`flex items-center justify-between pb-2 ${idx < 3 ? 'border-b border-dashed border-stone-200/60' : ''}`}>
+              
+              {/* Process Info */}
+              <div className="flex items-center gap-2 w-24 shrink-0">
+                <span className="text-2xl">{icon}</span>
+                <span className="text-xs font-extrabold text-stone-700 font-sans">{label}</span>
               </div>
 
-              {/* Stepper */}
+              {/* Stepper controls */}
               <div className="flex items-center gap-1.5 shrink-0">
                 {isController ? (
                   <button
@@ -149,13 +173,13 @@ export default function MachinePanel() {
                       setter(newVal);
                       updateSingle(type, newVal);
                     }}
-                    className="size-6 rounded-md bg-rose-100 text-rose-500 text-sm font-bold leading-none hover:bg-rose-200 cursor-pointer flex items-center justify-center border-none"
+                    className="size-7 rounded-md bg-[#f8f0fd] border border-[#d8b4fe]/40 text-[#6a1b9a] font-bold text-lg flex items-center justify-center cursor-pointer hover:bg-[#f3e5f5] transition-all leading-none select-none"
                   >
                     −
                   </button>
                 ) : null}
-                <div className="w-10 h-7 rounded-md bg-[#2b2640] text-white text-sm font-bold flex items-center justify-center">
-                  {state}/{mData.count}
+                <div className="w-12 h-7 rounded-md bg-[#fffdfa] border border-[#d8ccbb] text-[#2b2640] text-xs font-bold flex items-center justify-center font-mono">
+                  {state} / {mData.count}
                 </div>
                 {isController ? (
                   <button
@@ -165,78 +189,128 @@ export default function MachinePanel() {
                       setter(newVal);
                       updateSingle(type, newVal);
                     }}
-                    className="size-6 rounded-md bg-emerald-100 text-emerald-600 text-sm font-bold leading-none hover:bg-emerald-200 cursor-pointer flex items-center justify-center border-none"
+                    className="size-7 rounded-md bg-[#f8f0fd] border border-[#d8b4fe]/40 text-[#6a1b9a] font-bold text-lg flex items-center justify-center cursor-pointer hover:bg-[#f3e5f5] transition-all leading-none select-none"
                   >
                     +
                   </button>
                 ) : null}
               </div>
 
-              {/* Utilization */}
-              <div className="flex-1 min-w-0">
-                <div className="text-[8px] font-bold text-stone-500 tracking-wider mb-0.5">UTILIZATION</div>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 rounded-full bg-stone-100 overflow-hidden border border-stone-200/50">
-                    <div 
-                      className={`h-full ${getUtilColor(type)} rounded-full`}
-                      style={{ width: `${currentUtil}%` }}
-                    />
-                  </div>
-                  <span className="text-[10px] font-extrabold text-stone-600 w-8 text-right font-mono">{currentUtil}%</span>
+              {/* BUY button */}
+              {isController ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm(`Procure additional ${label} machine for ₹${cost}? Lead Time: 5 days.`)) {
+                      buyMachine(type);
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-[#8e24aa] hover:bg-[#7b1fa2] text-white rounded-lg text-[9px] font-extrabold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm border-none shrink-0"
+                >
+                  <ShoppingCart className="w-3 h-3" />
+                  <span>BUY</span>
+                </button>
+              ) : (
+                <div className="w-14 h-6 bg-stone-100 rounded-lg flex items-center justify-center text-[8px] text-stone-400 font-bold uppercase shrink-0">
+                  Locked
                 </div>
-              </div>
+              )}
             </div>
-          );
-        })}
+          ))}
+        </div>
 
-        {/* Output strategy */}
-        <div className="pt-2 border-t border-rose-100/50">
-          <div className="text-[10px] font-extrabold text-stone-500 tracking-wider mb-1.5">OUTPUT ALLOCATION STRATEGY</div>
-          <div className="flex gap-1.5">
+        {/* ─── UTILIZATION Section ─── */}
+        <div className="shrink-0">
+          <div className="flex items-center justify-center gap-2 mb-2 text-center">
+            <div className="h-px bg-stone-200 flex-1"></div>
+            <span className="text-[9px] font-extrabold text-[#7b1fa2] tracking-widest uppercase">UTILIZATION</span>
+            <div className="h-px bg-stone-200 flex-1"></div>
+          </div>
+
+          <div className="rounded-xl border border-rose-100/50 bg-[#fffdfa] p-2.5 grid grid-cols-4 gap-1 text-center">
             {[
-              { id: 'contracts_first', label: 'CONTRACTS FIRST' },
-              { id: 'market_first', label: 'MARKET FIRST' },
-              { id: 'split', label: 'SPLIT EQUAL' }
-            ].map(strat => (
-              <button
-                key={strat.id}
-                type="button"
-                onClick={() => isController && updateAllocationStrategy(strat.id as any)}
-                className={`flex-1 text-[9px] font-extrabold tracking-wide py-1.5 rounded-md border transition-all cursor-pointer ${
-                  currentStrategy === strat.id
-                    ? 'bg-sky-100 text-sky-700 border-sky-200'
-                    : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100'
-                }`}
-                disabled={!isController}
-              >
-                {strat.label}
-              </button>
-            ))}
+              { type: 'mixing' as MachineType, label: 'Mixing' },
+              { type: 'baking' as MachineType, label: 'Baking' },
+              { type: 'icing' as MachineType, label: 'Icing' },
+              { type: 'packaging' as MachineType, label: 'Packaging' },
+            ].map(({ type, label }) => {
+              const histUtil = teamState.history?.utilization?.[type];
+              const currentUtil = histUtil && histUtil.length > 0 ? histUtil[histUtil.length - 1] : 0;
+              return (
+                <div key={type} className="flex flex-col items-center justify-between min-w-0">
+                  <span className="text-[9px] font-bold text-stone-600 truncate">{label}</span>
+                  <div className="my-1 shrink-0">
+                    <ProgressRing value={currentUtil} color={getUtilColor(type)} />
+                  </div>
+                  <span className="text-[7.5px] font-semibold text-stone-400 tracking-wider">Utilization</span>
+                  <div className={`size-1.5 rounded-full ${getDotColor(type)} mt-1`}></div>
+                </div>
+              );
+            })}
           </div>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div className="p-2.5 shrink-0 flex gap-2">
-        <button
-          onClick={handleStopAll}
-          className="flex-1 py-2.5 rounded-xl bg-gradient-to-b from-rose-400 to-red-500 text-white font-extrabold text-xs shadow-[0_3px_0_#b91c1c] hover:translate-y-[1px] hover:shadow-[0_2px_0_#b91c1c] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer"
-        >
-          🛑 STOP ALL
-        </button>
-        {isController ? (
-          <button
-            onClick={handleApplyOperations}
-            className="flex-[2] py-2.5 rounded-xl bg-gradient-to-b from-fuchsia-400 to-purple-500 text-white font-extrabold text-xs shadow-[0_3px_0_#7e22ce] hover:translate-y-[1px] hover:shadow-[0_2px_0_#7e22ce] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer"
-          >
-            🧁 APPLY OPERATIONS
-          </button>
-        ) : (
-          <div className="flex-[2] py-2.5 bg-slate-100 border border-slate-200 text-[10px] rounded-xl text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
-            <Info className="w-3.5 h-3.5" />
-            <span>OBSERVER MODE</span>
+        {/* ─── OUTPUT ALLOCATION STRATEGY Section ─── */}
+        <div className="flex-1 flex flex-col justify-between min-h-0">
+          <div>
+            <div className="flex items-center justify-center gap-2 mb-2 text-center">
+              <div className="h-px bg-stone-200 flex-1"></div>
+              <span className="text-[9px] font-extrabold text-[#7b1fa2] tracking-widest uppercase">OUTPUT ALLOCATION STRATEGY</span>
+              <div className="h-px bg-stone-200 flex-1"></div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { id: 'contracts_first', label: 'CONTRACT FIRST', icon: FileCheck },
+                { id: 'market_first', label: 'MARKET FORECAST', icon: TrendingUp },
+                { id: 'split', label: 'SPLIT EQUAL', icon: Scale }
+              ].map(strat => {
+                const IconComponent = strat.icon;
+                const isSelected = currentStrategy === strat.id;
+                return (
+                  <div key={strat.id} className="relative flex flex-col items-center">
+                    <button
+                      type="button"
+                      onClick={() => isController && updateAllocationStrategy(strat.id as any)}
+                      className={`w-full py-2.5 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#f3e5f5] border-[#9c27b0] text-[#7b1fa2] shadow-sm font-extrabold'
+                          : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+                      }`}
+                      disabled={!isController}
+                    >
+                      <IconComponent className={`w-5 h-5 ${isSelected ? 'text-[#7b1fa2]' : 'text-stone-400'}`} />
+                      <span className="text-[8px] font-bold text-center tracking-wide leading-tight">{strat.label}</span>
+                    </button>
+                    {isSelected && (
+                      <div className="absolute -bottom-1.5 size-4 rounded-full bg-[#7b1fa2] text-white flex items-center justify-center shadow-sm">
+                        <Check className="w-2.5 h-2.5 font-bold" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        )}
+
+          {/* Footer Apply Operations Button */}
+          <div className="mt-2.5 shrink-0">
+            {isController ? (
+              <button
+                onClick={handleApplyOperations}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-b from-fuchsia-500 to-purple-600 text-white font-extrabold text-xs shadow-[0_3px_0_#7b1fa2] hover:translate-y-[1px] hover:shadow-[0_2px_0_#7b1fa2] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                🧁 APPLY OPERATIONS
+              </button>
+            ) : (
+              <div className="py-2.5 bg-slate-100 border border-slate-200 text-[10px] rounded-xl text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
+                <Info className="w-3.5 h-3.5" />
+                <span>OBSERVER MODE</span>
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   );
