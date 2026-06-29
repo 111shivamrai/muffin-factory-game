@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from './store/gameStore.js';
+import { useShallow } from 'zustand/react/shallow';
 import LandingPage from './components/LandingPage.tsx';
 import AdminDashboard from './components/AdminDashboard.tsx';
 import InstructorDashboard from './components/InstructorDashboard.tsx';
@@ -14,7 +15,16 @@ import OperationsAdvisor from './components/OperationsAdvisor.tsx';
 import { AlertCircle, Lock, ShieldAlert } from 'lucide-react';
 
 export default function App() {
-  const { isAuthenticated, user, room, teamState, role, logout } = useGameStore();
+  const { isAuthenticated, user, room, teamState, role, logout } = useGameStore(
+    useShallow((state) => ({
+      isAuthenticated: state.isAuthenticated,
+      user: state.user,
+      room: state.room,
+      teamState: state.teamState,
+      role: state.role,
+      logout: state.logout,
+    }))
+  );
   const [path, setPath] = useState(window.location.pathname);
 
   // Sync with browser navigation
@@ -261,45 +271,4 @@ export default function App() {
   );
 }
 
-// ─── Scale Wrapper Viewport Manager Component ─────────────────────────────────
-function ScaleWrapper({ children }: { children: React.ReactNode }) {
-  const [scale, setScale] = useState(1);
 
-  useEffect(() => {
-    const handleResize = () => {
-      const targetWidth = 1440;
-      const targetHeight = 960;
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-
-      // Calculate scale factors
-      const scaleX = windowWidth / targetWidth;
-      const scaleY = windowHeight / targetHeight;
-      
-      // Preserve aspect ratio by using the minimum scale factor (letterboxing / pillarboxing)
-      const s = Math.min(scaleX, scaleY);
-      setScale(s);
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  return (
-    <div className="w-screen h-screen overflow-hidden flex items-center justify-center bg-black relative select-none">
-      <div 
-        style={{
-          width: '1440px',
-          height: '960px',
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center',
-          flexShrink: 0,
-        }}
-        className="relative"
-      >
-        {children}
-      </div>
-    </div>
-  );
-}

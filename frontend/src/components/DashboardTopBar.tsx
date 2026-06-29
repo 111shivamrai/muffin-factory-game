@@ -1,9 +1,19 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore.js';
+import { useShallow } from 'zustand/react/shallow';
 import { Settings, LogOut, ClipboardList, Menu, X } from 'lucide-react';
 
-export default function DashboardTopBar() {
-  const { room, teamState, role, leaderboard, logout, updateContractStatus } = useGameStore();
+function DashboardTopBar() {
+  const { room, teamState, role, leaderboard, logout, updateContractStatus } = useGameStore(
+    useShallow((state) => ({
+      room: state.room,
+      teamState: state.teamState,
+      role: state.role,
+      leaderboard: state.leaderboard,
+      logout: state.logout,
+      updateContractStatus: state.updateContractStatus,
+    }))
+  );
   const [showContractsModal, setShowContractsModal] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -328,3 +338,5 @@ export default function DashboardTopBar() {
     </div>
   );
 }
+
+export default React.memo(DashboardTopBar);

@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore.js';
+import { useShallow } from 'zustand/react/shallow';
 import { Info, ShoppingCart, TrendingUp, Scale, FileCheck, Check } from 'lucide-react';
 import { MachineType } from '../../../backend/src/types/index.js';
 
-export default function MachinePanel() {
-  const { teamState, role, buyMachine, updateAllMachineStatuses, updateAllocationStrategy } = useGameStore();
+function MachinePanel() {
+  const { teamState, role, buyMachine, updateAllMachineStatuses, updateAllocationStrategy } = useGameStore(
+    useShallow((state) => ({
+      teamState: state.teamState,
+      role: state.role,
+      buyMachine: state.buyMachine,
+      updateAllMachineStatuses: state.updateAllMachineStatuses,
+      updateAllocationStrategy: state.updateAllocationStrategy,
+    }))
+  );
 
   const [mixActive, setMixActive] = useState(1);
   const [bakeActive, setBakeActive] = useState(1);
@@ -315,3 +324,5 @@ export default function MachinePanel() {
     </div>
   );
 }
+
+export default React.memo(MachinePanel);

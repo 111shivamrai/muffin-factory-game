@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore.js';
+import { useShallow } from 'zustand/react/shallow';
 import { Info } from 'lucide-react';
 
-export default function InventoryPanel() {
-  const { teamState, role, updateInventorySettings } = useGameStore();
+function InventoryPanel() {
+  const { teamState, role, updateInventorySettings } = useGameStore(
+    useShallow((state) => ({
+      teamState: state.teamState,
+      role: state.role,
+      updateInventorySettings: state.updateInventorySettings,
+    }))
+  );
 
   const [activeTab,  setActiveTab]  = useState<'mix' | 'pack'>('mix');
   const [mixQty,     setMixQty]     = useState(10);
@@ -203,3 +210,5 @@ export default function InventoryPanel() {
     </div>
   );
 }
+
+export default React.memo(InventoryPanel);

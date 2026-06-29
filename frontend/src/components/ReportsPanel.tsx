@@ -1,34 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore.js';
+import { useShallow } from 'zustand/react/shallow';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
 
-export default function ReportsPanel() {
-  const { teamState } = useGameStore();
+function ReportsPanel() {
+  const teamState = useGameStore(
+    useShallow((state) => state.teamState)
+  );
   const [selectedChart, setSelectedChart] = useState<'cash' | 'demand' | 'inventory' | 'utilization'>('cash');
 
   if (!teamState) return null;
 
   const { report, history, academicScore } = teamState;
 
-  // Prepare chart data from history arrays
-  const chartData = history.days.map((d, idx) => ({
-    day: `Day ${d}`,
-    cash: history.cash[idx],
-    revenue: history.revenue[idx],
-    demand: history.demand[idx],
-    baseMix: history.inventory.base_mix[idx],
-    packaging: history.inventory.packaging_material[idx],
-    muffins: history.inventory.finished_muffin[idx],
-    mixing: history.utilization.mixing[idx],
-    baking: history.utilization.baking[idx],
-    icing: history.utilization.icing[idx],
-    packagingUtil: history.utilization.packaging[idx],
-    bottleneck: history.bottlenecks[idx],
-    bottleneckCap: history.bottleneckCapacity[idx]
-  }));
+  // Prepare chart data from history arrays (memoized)
+  const chartData = useMemo(() => {
+    return history.days.map((d, idx) => ({
+      day: `Day ${d}`,
+      cash: history.cash[idx],
+      revenue: history.revenue[idx],
+      demand: history.demand[idx],
+      baseMix: history.inventory.base_mix[idx],
+      packaging: history.inventory.packaging_material[idx],
+      muffins: history.inventory.finished_muffin[idx],
+      mixing: history.utilization.mixing[idx],
+      baking: history.utilization.baking[idx],
+      icing: history.utilization.icing[idx],
+      packagingUtil: history.utilization.packaging[idx],
+      bottleneck: history.bottlenecks[idx],
+      bottleneckCap: history.bottleneckCapacity[idx]
+    }));
+  }, [
+    history.days,
+    history.cash,
+    history.revenue,
+    history.demand,
+    history.inventory.base_mix,
+    history.inventory.packaging_material,
+    history.inventory.finished_muffin,
+    history.utilization.mixing,
+    history.utilization.baking,
+    history.utilization.icing,
+    history.utilization.packaging,
+    history.bottlenecks,
+    history.bottleneckCapacity
+  ]);
 
   return (
     <div className="space-y-3 font-sans">
@@ -188,3 +207,5 @@ export default function ReportsPanel() {
     </div>
   );
 }
+
+export default React.memo(ReportsPanel);

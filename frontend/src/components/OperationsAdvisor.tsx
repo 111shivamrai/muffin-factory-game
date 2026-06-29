@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore.js';
+import { useShallow } from 'zustand/react/shallow';
 import { HelpCircle, Activity, AlertTriangle } from 'lucide-react';
 
-export default function OperationsAdvisor() {
-  const { teamState, room } = useGameStore();
+function OperationsAdvisor() {
+  const { teamState, room } = useGameStore(
+    useShallow((state) => ({
+      teamState: state.teamState,
+      room: state.room,
+    }))
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [lastReadDay, setLastReadDay] = useState<number>(() => {
     const val = localStorage.getItem('advisor_last_read_day');
@@ -162,3 +168,5 @@ export default function OperationsAdvisor() {
     </>
   );
 }
+
+export default React.memo(OperationsAdvisor);
