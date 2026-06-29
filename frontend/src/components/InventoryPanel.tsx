@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { useShallow } from 'zustand/react/shallow';
-import { Info } from 'lucide-react';
+import { Info, Check } from 'lucide-react';
 
 function InventoryPanel() {
   const { teamState, role, updateInventorySettings } = useGameStore(
@@ -71,23 +71,23 @@ function InventoryPanel() {
 
   // ─── Sub-components ──────────────────────────────────────────────────────────
 
-  /** Inline label on left, unified pill-stepper on right */
+  /** Inline label on left, unified pill-stepper on right matching reference exactly */
   function StepperRow({
     label, value, onChange, step = 10,
   }: {
     label: string; value: number; onChange: (v: number) => void; step?: number;
   }) {
     return (
-      <div className="flex items-center justify-between py-3 border-b border-stone-100 last:border-0">
-        <span className="text-[11px] font-extrabold text-[#111111] tracking-wide font-sans select-none">
+      <div className="flex items-center justify-between py-4 border-b border-[#f0e6d6]/60 last:border-0">
+        <span className="text-[12px] font-extrabold text-[#1c1917] tracking-wide font-sans select-none">
           {label}
         </span>
-        <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-[#fffdfa] shrink-0 shadow-sm">
+        <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-sm">
           {isController ? (
             <button
               type="button"
               onClick={() => onChange(Math.max(0, value - step))}
-              className="w-12 h-10 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-80 transition-all border-none select-none leading-none"
+              className="w-14 h-12 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-2xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
             >
               −
             </button>
@@ -97,13 +97,13 @@ function InventoryPanel() {
             value={value}
             onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
             disabled={!isController}
-            className="w-20 h-10 bg-white text-[#2b2640] text-sm font-extrabold flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
+            className="w-24 h-12 bg-white text-[#1c1917] text-sm font-extrabold flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
           />
           {isController ? (
             <button
               type="button"
               onClick={() => onChange(value + step)}
-              className="w-12 h-10 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-80 transition-all border-none select-none leading-none"
+              className="w-14 h-12 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-2xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
             >
               +
             </button>
@@ -115,44 +115,44 @@ function InventoryPanel() {
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '32rem' }}>
+    <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '32.5rem' }}>
 
       {/* Header */}
-      <header className="px-4 py-3 bg-[#0e8a43] text-white font-extrabold tracking-wide text-sm flex items-center gap-2 shrink-0 select-none">
-        <span className="size-6 rounded-md bg-white/20 grid place-items-center">📦</span>
+      <header className="px-4 py-3 bg-[#0e8a43] text-white font-extrabold tracking-wide text-sm flex items-center gap-2.5 shrink-0 select-none">
+        <span className="size-6 rounded-md bg-white/20 grid place-items-center text-xs">📦</span>
         RAW MATERIAL MANAGEMENT
       </header>
 
       {/* Content */}
-      <div className="p-3 overflow-y-auto flex-1 flex flex-col min-h-0">
+      <div className="p-3.5 overflow-y-auto flex-1 flex flex-col min-h-0">
         {/* Top Stats */}
-        <div className="grid grid-cols-3 gap-2 mb-3 shrink-0">
-          <div className="rounded-xl bg-rose-50/70 border border-rose-100 p-2 text-center">
+        <div className="grid grid-cols-3 gap-2 mb-3.5 shrink-0">
+          <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
             <div className="text-[9px] font-bold text-stone-500 tracking-wider">MIX ON HAND</div>
-            <div className="text-xl font-extrabold text-stone-800 leading-tight">{mixOnHand}</div>
-            <div className="text-[9px] text-stone-400 font-bold">Transits: {mixTransit}</div>
+            <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{mixOnHand}</div>
+            <div className="text-[9px] text-stone-400 font-bold mt-0.5">Transits: {mixTransit}</div>
           </div>
-          <div className="rounded-xl bg-rose-50/70 border border-rose-100 p-2 text-center">
+          <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
             <div className="text-[9px] font-bold text-stone-500 tracking-wider">PACK ON HAND</div>
-            <div className="text-xl font-extrabold text-stone-800 leading-tight">{packOnHand}</div>
-            <div className="text-[9px] text-stone-400 font-bold">Transits: {packTransit}</div>
+            <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{packOnHand}</div>
+            <div className="text-[9px] text-stone-400 font-bold mt-0.5">Transits: {packTransit}</div>
           </div>
-          <div className="rounded-xl bg-rose-50/70 border border-rose-100 p-2 text-center">
+          <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
             <div className="text-[9px] font-bold text-stone-500 tracking-wider">FINISHED GOODS</div>
-            <div className="text-xl font-extrabold text-stone-800 leading-tight">{finishedOnHand}</div>
-            <div className="text-[9px] text-stone-400 font-bold">Muffins</div>
+            <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{finishedOnHand}</div>
+            <div className="text-[9px] text-stone-400 font-bold mt-0.5">Muffins</div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1.5 shrink-0 select-none">
+        <div className="flex shrink-0 border-b border-[#e6dcce] select-none">
           <button
             type="button"
             onClick={() => setActiveTab('mix')}
-            className={`flex-1 py-2.5 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl border transition-all cursor-pointer ${
+            className={`flex-1 py-3 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl transition-all cursor-pointer border-t border-x ${
               activeTab === 'mix'
                 ? 'bg-[#0e8a43] text-white border-[#0e8a43] shadow-sm font-bold'
-                : 'bg-white text-[#5d4037] border-rose-100/60 hover:bg-rose-50/30'
+                : 'bg-white text-[#5d4037] border-transparent hover:bg-stone-50'
             }`}
           >
             MUFFIN MIX INTEGRANTS
@@ -160,10 +160,10 @@ function InventoryPanel() {
           <button
             type="button"
             onClick={() => setActiveTab('pack')}
-            className={`flex-1 py-2.5 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl border transition-all cursor-pointer ${
+            className={`flex-1 py-3 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl transition-all cursor-pointer border-t border-x ${
               activeTab === 'pack'
                 ? 'bg-[#0e8a43] text-white border-[#0e8a43] shadow-sm font-bold'
-                : 'bg-white text-[#5d4037] border-rose-100/60 hover:bg-rose-50/30'
+                : 'bg-white text-[#5d4037] border-transparent hover:bg-stone-50'
             }`}
           >
             MUFFIN PACKAGING MATERIAL
@@ -171,7 +171,7 @@ function InventoryPanel() {
         </div>
 
         {/* Tab Card Body */}
-        <div className="rounded-b-2xl border border-t-0 bg-[#fffdfa] border-rose-100 p-4 py-3 flex-1 flex flex-col justify-between min-h-0">
+        <div className="rounded-b-2xl border border-t-0 bg-white border-rose-100 p-5 py-4 flex-1 flex flex-col justify-between min-h-0">
           <div className="space-y-1">
             {activeTab === 'mix' ? (
               <>
@@ -189,13 +189,14 @@ function InventoryPanel() {
           </div>
 
           {/* Footer Apply Changes Button */}
-          <div className="mt-3 pt-2">
+          <div className="mt-4 pt-2">
             {isController ? (
               <button
                 onClick={handleApplyChanges}
                 className="w-full py-3 rounded-xl bg-gradient-to-b from-[#0e8a43] to-[#0b7036] text-white font-extrabold text-xs shadow-[0_3px_0_#09592b] hover:translate-y-[1px] hover:shadow-[0_2px_0_#09592b] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
               >
-                ✓ APPLY ORDER CHANGES
+                <Check className="w-4 h-4 font-bold" />
+                <span>APPLY ORDER CHANGES</span>
               </button>
             ) : (
               <div className="py-2.5 bg-slate-100 border border-slate-200 text-[10px] rounded-xl text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
