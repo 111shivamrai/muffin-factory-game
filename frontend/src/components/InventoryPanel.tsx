@@ -63,21 +63,23 @@ export default function InventoryPanel() {
 
   // ─── Sub-components ──────────────────────────────────────────────────────────
 
-  /** Stepper input row matching Image 2 style */
+  /** Centered label & stepper controls matching the reference design */
   function StepperRow({
     label, value, onChange, step = 10,
   }: {
     label: string; value: number; onChange: (v: number) => void; step?: number;
   }) {
     return (
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold tracking-wider text-stone-500">{label}</span>
-        <div className="flex items-center gap-1.5">
+      <div className="flex flex-col items-center gap-1.5 py-1">
+        <span className="text-[8.5px] font-extrabold tracking-wider text-stone-600 text-center uppercase leading-none">
+          {label}
+        </span>
+        <div className="flex items-center gap-2">
           {isController ? (
             <button
               type="button"
               onClick={() => onChange(Math.max(0, value - step))}
-              className="size-6 rounded-md bg-rose-100 text-rose-500 text-sm font-bold leading-none hover:bg-rose-200 cursor-pointer flex items-center justify-center border-none"
+              className="w-7 h-7 rounded-md bg-[#fffdfa] border border-[#d8ccbb] text-[#4a3d30] font-bold text-sm flex items-center justify-center cursor-pointer hover:bg-stone-50 transition-colors leading-none"
             >
               −
             </button>
@@ -87,13 +89,13 @@ export default function InventoryPanel() {
             value={value}
             onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
             disabled={!isController}
-            className="w-10 h-7 rounded-md bg-[#2b2640] text-white text-sm font-bold flex items-center justify-center text-center border-none outline-none"
+            className="w-12 h-7 rounded-md bg-[#2b2640] text-white text-sm font-bold flex items-center justify-center text-center border-none outline-none"
           />
           {isController ? (
             <button
               type="button"
               onClick={() => onChange(value + step)}
-              className="size-6 rounded-md bg-emerald-100 text-emerald-600 text-sm font-bold leading-none hover:bg-emerald-200 cursor-pointer flex items-center justify-center border-none"
+              className="w-7 h-7 rounded-md bg-[#fffdfa] border border-[#d8ccbb] text-[#4a3d30] font-bold text-sm flex items-center justify-center cursor-pointer hover:bg-stone-50 transition-colors leading-none"
             >
               +
             </button>
@@ -136,14 +138,14 @@ export default function InventoryPanel() {
 
         {/* Inputs */}
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl border bg-amber-50 border-amber-100 p-2.5 space-y-2">
-            <div className="text-[10px] font-extrabold text-stone-600 tracking-wider">MUFFIN MIX INTEGRANTS</div>
+          <div className="rounded-xl border bg-amber-50 border-amber-100 p-2.5 py-1.5 space-y-1">
+            <div className="text-[10px] font-extrabold text-emerald-600 tracking-wider text-center mb-1 font-[Fredoka]">MUFFIN MIX INTEGRANTS</div>
             <StepperRow label="ORDER QTY (BOX)" value={mixQty} onChange={setMixQty} />
             <StepperRow label="REORDER POINT (BOX)" value={mixROP} onChange={setMixROP} />
             <StepperRow label="SAFETY STOCK (BOX)" value={mixSafety} onChange={setMixSafety} />
           </div>
-          <div className="rounded-xl border bg-sky-50 border-sky-100 p-2.5 space-y-2">
-            <div className="text-[10px] font-extrabold text-stone-600 tracking-wider">MUFFIN PACKAGING MATERIAL</div>
+          <div className="rounded-xl border bg-sky-50 border-sky-100 p-2.5 py-1.5 space-y-1">
+            <div className="text-[10px] font-extrabold text-emerald-600 tracking-wider text-center mb-1 font-[Fredoka]">MUFFIN PACKAGING MATERIAL</div>
             <StepperRow label="ORDER QTY (BOX)" value={packQty} onChange={setPackQty} />
             <StepperRow label="REORDER POINT (BOX)" value={packROP} onChange={setPackROP} />
             <StepperRow label="SAFETY STOCK (BOX)" value={packSafety} onChange={setPackSafety} />
