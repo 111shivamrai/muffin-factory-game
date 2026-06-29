@@ -25,11 +25,11 @@ export default function DashboardTopBar() {
       
       {/* Logo block */}
       <div className="rounded-2xl bg-white border border-rose-200 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-3 shrink-0">
-        <div className="size-12 rounded-xl bg-rose-100 grid place-items-center text-2xl animate-bounce">
+        <div className="size-12 rounded-xl bg-rose-100 grid place-items-center text-2xl">
           🧁
         </div>
         <div>
-          <div className="font-[Fredoka] text-xl font-bold text-rose-500 leading-none tracking-wide">
+          <div className="font-[Fredoka] text-2xl font-bold text-rose-500 leading-none tracking-wide">
             MUFFIN FACTORY
           </div>
           <div className="flex items-center gap-2 mt-1">

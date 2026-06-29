@@ -154,7 +154,7 @@ export default function MachinePanel() {
                     −
                   </button>
                 ) : null}
-                <div className="w-12 h-7 rounded-md bg-[#2b2640] text-white text-xs font-bold flex items-center justify-center font-mono">
+                <div className="w-10 h-7 rounded-md bg-[#2b2640] text-white text-sm font-bold flex items-center justify-center">
                   {state}/{mData.count}
                 </div>
                 {isController ? (
