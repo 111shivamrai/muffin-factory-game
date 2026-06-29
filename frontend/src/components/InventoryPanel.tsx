@@ -5,6 +5,7 @@ import { Info } from 'lucide-react';
 export default function InventoryPanel() {
   const { teamState, role, updateInventorySettings } = useGameStore();
 
+  const [activeTab,  setActiveTab]  = useState<'mix' | 'pack'>('mix');
   const [mixQty,     setMixQty]     = useState(10);
   const [mixROP,     setMixROP]     = useState(40);
   const [mixSafety,  setMixSafety]  = useState(10);
@@ -71,15 +72,15 @@ export default function InventoryPanel() {
   }) {
     return (
       <div className="flex flex-col items-center gap-1.5 py-1">
-        <span className="text-[8.5px] font-extrabold tracking-wider text-stone-600 text-center uppercase leading-none">
+        <span className="text-[10px] font-extrabold tracking-wider text-[#4a3d30] text-center uppercase leading-none font-sans">
           {label}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {isController ? (
             <button
               type="button"
               onClick={() => onChange(Math.max(0, value - step))}
-              className="w-7 h-7 rounded-md bg-[#fffdfa] border border-[#d8ccbb] text-[#4a3d30] font-bold text-sm flex items-center justify-center cursor-pointer hover:bg-stone-50 transition-colors leading-none"
+              className="w-16 h-10 rounded-xl bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] border border-[#d8ccbb] text-[#4a3d30] font-bold text-2xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:scale-95 transition-all leading-none select-none"
             >
               −
             </button>
@@ -89,13 +90,13 @@ export default function InventoryPanel() {
             value={value}
             onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
             disabled={!isController}
-            className="w-12 h-7 rounded-md bg-[#2b2640] text-white text-sm font-bold flex items-center justify-center text-center border-none outline-none"
+            className="w-32 h-10 rounded-xl bg-[#fffdfa] border border-[#d8ccbb] text-[#2b2640] text-xl font-extrabold flex items-center justify-center text-center outline-none font-sans"
           />
           {isController ? (
             <button
               type="button"
               onClick={() => onChange(value + step)}
-              className="w-7 h-7 rounded-md bg-[#fffdfa] border border-[#d8ccbb] text-[#4a3d30] font-bold text-sm flex items-center justify-center cursor-pointer hover:bg-stone-50 transition-colors leading-none"
+              className="w-16 h-10 rounded-xl bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] border border-[#d8ccbb] text-[#4a3d30] font-bold text-2xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:scale-95 transition-all leading-none select-none"
             >
               +
             </button>
@@ -107,7 +108,7 @@ export default function InventoryPanel() {
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '29.375rem' }}>
+    <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '32rem' }}>
 
       {/* Header */}
       <header className="px-4 py-2.5 bg-gradient-to-r from-emerald-400 to-emerald-500 text-white font-extrabold tracking-wide text-sm flex items-center gap-2 shrink-0">
@@ -116,9 +117,9 @@ export default function InventoryPanel() {
       </header>
 
       {/* Content */}
-      <div className="p-3 overflow-y-auto flex-1">
+      <div className="p-3 overflow-y-auto flex-1 flex flex-col min-h-0">
         {/* Top Stats */}
-        <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="grid grid-cols-3 gap-2 mb-3 shrink-0">
           <div className="rounded-xl bg-rose-50/70 border border-rose-100 p-2 text-center">
             <div className="text-[9px] font-bold text-stone-500 tracking-wider">MIX ON HAND</div>
             <div className="text-xl font-extrabold text-stone-800 leading-tight">{mixOnHand}</div>
@@ -136,38 +137,68 @@ export default function InventoryPanel() {
           </div>
         </div>
 
-        {/* Inputs */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl border bg-amber-50 border-amber-100 p-2.5 py-1.5 space-y-1">
-            <div className="text-[10px] font-extrabold text-emerald-600 tracking-wider text-center mb-1 font-[Fredoka]">MUFFIN MIX INTEGRANTS</div>
-            <StepperRow label="ORDER QTY (BOX)" value={mixQty} onChange={setMixQty} />
-            <StepperRow label="REORDER POINT (BOX)" value={mixROP} onChange={setMixROP} />
-            <StepperRow label="SAFETY STOCK (BOX)" value={mixSafety} onChange={setMixSafety} />
+        {/* Tabs */}
+        <div className="flex gap-1.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab('mix')}
+            className={`flex-1 py-2 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl border transition-all cursor-pointer ${
+              activeTab === 'mix'
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm font-bold'
+                : 'bg-[#fffcf7] text-[#5d4037] border-rose-100/60 hover:bg-rose-50/30'
+            }`}
+          >
+            MUFFIN MIX INTEGRANTS
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('pack')}
+            className={`flex-1 py-2 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl border transition-all cursor-pointer ${
+              activeTab === 'pack'
+                ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm font-bold'
+                : 'bg-[#fffcf7] text-[#5d4037] border-rose-100/60 hover:bg-rose-50/30'
+            }`}
+          >
+            MUFFIN PACKAGING MATERIAL
+          </button>
+        </div>
+
+        {/* Tab Card Body */}
+        <div className="rounded-b-2xl border border-t-0 bg-[#fffdfa] border-rose-100 p-4 py-3 flex-1 flex flex-col justify-between min-h-0">
+          <div className="space-y-2.5">
+            {activeTab === 'mix' ? (
+              <>
+                <StepperRow label="ORDER QUANTITY" value={mixQty} onChange={setMixQty} />
+                <StepperRow label="REORDER POINT" value={mixROP} onChange={setMixROP} />
+                <StepperRow label="SAFETY STOCK" value={mixSafety} onChange={setMixSafety} />
+              </>
+            ) : (
+              <>
+                <StepperRow label="ORDER QUANTITY" value={packQty} onChange={setPackQty} />
+                <StepperRow label="REORDER POINT" value={packROP} onChange={setPackROP} />
+                <StepperRow label="SAFETY STOCK" value={packSafety} onChange={setPackSafety} />
+              </>
+            )}
           </div>
-          <div className="rounded-xl border bg-sky-50 border-sky-100 p-2.5 py-1.5 space-y-1">
-            <div className="text-[10px] font-extrabold text-emerald-600 tracking-wider text-center mb-1 font-[Fredoka]">MUFFIN PACKAGING MATERIAL</div>
-            <StepperRow label="ORDER QTY (BOX)" value={packQty} onChange={setPackQty} />
-            <StepperRow label="REORDER POINT (BOX)" value={packROP} onChange={setPackROP} />
-            <StepperRow label="SAFETY STOCK (BOX)" value={packSafety} onChange={setPackSafety} />
+
+          {/* Footer Apply Changes Button */}
+          <div className="mt-3 pt-2">
+            {isController ? (
+              <button
+                onClick={handleApplyChanges}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white font-extrabold text-xs shadow-[0_3px_0_#1b5e20] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1b5e20] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                ✓ APPLY ORDER CHANGES
+              </button>
+            ) : (
+              <div className="py-2.5 bg-slate-100 border border-slate-200 text-[10px] rounded-xl text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
+                <Info className="w-3.5 h-3.5" />
+                <span>OBSERVER MODE – READ ONLY</span>
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div className="p-2.5 shrink-0">
-        {isController ? (
-          <button
-            onClick={handleApplyChanges}
-            className="w-full py-2.5 rounded-xl bg-gradient-to-b from-emerald-400 to-emerald-500 text-white font-extrabold text-sm shadow-[0_3px_0_#16a34a] hover:translate-y-[1px] hover:shadow-[0_2px_0_#16a34a] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer"
-          >
-            🧁 APPLY ORDER CHANGES
-          </button>
-        ) : (
-          <div className="py-2.5 bg-slate-100 border border-slate-200 text-[10px] rounded-xl text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
-            <Info className="w-3.5 h-3.5" />
-            <span>OBSERVER MODE – READ ONLY</span>
-          </div>
-        )}
       </div>
     </div>
   );
