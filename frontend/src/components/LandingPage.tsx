@@ -605,11 +605,6 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
       <main className="flex-1">
           <section id="hero" className="max-w-6xl mx-auto px-6 py-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             <div className="lg:col-span-7 select-none">
-              <div className="inline-flex items-center gap-2 bg-[#f0f9f4] border border-[#b8deca] rounded-full px-4 py-1.5 mb-6 shadow-sm">
-                <span className="w-2 h-2 rounded-full bg-[#25a05a] animate-pulse"></span>
-                <span className="font-mono text-[10px] font-bold tracking-wider text-[#1d7a45] uppercase">Live in 45+ universities</span>
-              </div>
-
               <h1 className="font-serif text-4xl md:text-5xl lg:text-[54px] font-bold leading-[1.1] text-[#1c1917] mb-6 tracking-tight">
                 The factory simulator built for <span className="text-[#1d7a45] underline decoration-[#b8deca] underline-offset-4 decoration-2">operations</span> education.
               </h1>
@@ -1342,9 +1337,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
               </button>
             </div>
             <div className="text-[10px] flex items-center gap-1 font-sans text-[#a8a29e]/60">
-              <span>Built with</span>
-              <Heart className="w-3 h-3 fill-red-500 text-red-500" />
-              <span>for Operations and Supply Chain Strategy Education.</span>
+              <span>Operations and Supply Chain Strategy Education.</span>
             </div>
           </div>
         </div>
