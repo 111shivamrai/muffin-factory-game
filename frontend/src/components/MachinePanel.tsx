@@ -150,7 +150,7 @@ function MachinePanel() {
       {/* Header */}
       <header className="px-4 py-2.5 bg-gradient-to-r from-fuchsia-500 to-purple-500 text-white font-extrabold tracking-wide text-sm flex items-center gap-2 shrink-0">
         <span className="size-6 rounded-full bg-white/20 border border-white/40 flex items-center justify-center text-xs">⚙️</span>
-        WORKFLOW ACTIVITY
+        FACTORY FLOOR
       </header>
 
       {/* Content */}
@@ -159,10 +159,10 @@ function MachinePanel() {
         {/* Machine Rows */}
         <div className="space-y-2.5 shrink-0">
           {[
-            { type: 'mixing' as MachineType, label: 'Mixing', state: mixActive, setter: setMixActive, mData: mixing, cost: 2000, icon: '🥣' },
-            { type: 'baking' as MachineType, label: 'Baking', state: bakeActive, setter: setBakeActive, mData: baking, cost: 3000, icon: '🥧' },
-            { type: 'icing' as MachineType, label: 'Icing', state: iceActive, setter: setIceActive, mData: icing, cost: 1500, icon: '🍦' },
-            { type: 'packaging' as MachineType, label: 'Packaging', state: packActive, setter: setPackActive, mData: packaging, cost: 1000, icon: '🎁' },
+            { type: 'mixing' as MachineType, label: 'Mixer', state: mixActive, setter: setMixActive, mData: mixing, cost: 2000, icon: '🥣' },
+            { type: 'baking' as MachineType, label: 'Oven', state: bakeActive, setter: setBakeActive, mData: baking, cost: 3000, icon: '🥧' },
+            { type: 'icing' as MachineType, label: 'Icing Machine', state: iceActive, setter: setIceActive, mData: icing, cost: 1500, icon: '🍦' },
+            { type: 'packaging' as MachineType, label: 'Packaging Machine', state: packActive, setter: setPackActive, mData: packaging, cost: 1000, icon: '🎁' },
           ].map(({ type, label, state, setter, mData, cost, icon }, idx) => (
             <div key={type} className={`flex items-center justify-between pb-2 ${idx < 3 ? 'border-b border-dashed border-stone-200/60' : ''}`}>
               
@@ -238,10 +238,10 @@ function MachinePanel() {
 
           <div className="rounded-xl border border-rose-100/50 bg-[#fffdfa] p-2.5 grid grid-cols-4 gap-1 text-center">
             {[
-              { type: 'mixing' as MachineType, label: 'Mixing' },
-              { type: 'baking' as MachineType, label: 'Baking' },
-              { type: 'icing' as MachineType, label: 'Icing' },
-              { type: 'packaging' as MachineType, label: 'Packaging' },
+              { type: 'mixing' as MachineType, label: 'Mixer' },
+              { type: 'baking' as MachineType, label: 'Oven' },
+              { type: 'icing' as MachineType, label: 'Icing Machine' },
+              { type: 'packaging' as MachineType, label: 'Packaging Machine' },
             ].map(({ type, label }) => {
               const histUtil = teamState.history?.utilization?.[type];
               const currentUtil = histUtil && histUtil.length > 0 ? histUtil[histUtil.length - 1] : 0;

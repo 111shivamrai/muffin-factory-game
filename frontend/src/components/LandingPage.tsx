@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import emailjs from '@emailjs/browser';
 import { useGameStore } from '../store/gameStore.js';
 import { UserRole } from '../../../backend/src/types/index.js';
 import { 
@@ -1026,7 +1027,26 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
               ) : (
                 <>
                   <p className="text-[13px] text-[#78716c] mb-6 leading-relaxed">Fill in your details below and our Operations Strategy team will reach out to schedule your personalized walkthrough.</p>
-                  <form onSubmit={(e) => { e.preventDefault(); setDemoSubmitted(true); }} className="space-y-4">
+                  <form onSubmit={(e) => { 
+                    e.preventDefault(); 
+                    emailjs.send(
+                      'service_5pcx4hw',
+                      'template_r9639yf',
+                      {
+                        to_email: 'muffinmegafactory@gmail.com',
+                        from_name: demoName,
+                        from_email: demoEmail,
+                        institution: demoInstitution,
+                        type: 'Book a Demo'
+                      },
+                      'TmzldpiycMQDEttvp'
+                    ).then(() => {
+                      setDemoSubmitted(true);
+                    }).catch((err) => {
+                      console.error('Failed to send demo request', err);
+                      alert('Failed to send request. Please try again.');
+                    });
+                  }} className="space-y-4">
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-[#44403c] mb-1.5">FULL NAME <span className="text-red-500">*</span></label>
                       <input
@@ -1105,7 +1125,27 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                   <button onClick={() => { setIsQuoteModalOpen(false); setQuoteSubmitted(false); }} className="mt-6 bg-[#1c1917] text-white font-bold text-xs px-6 py-2.5 rounded-full cursor-pointer border-none transition-all hover:bg-black">Close</button>
                 </div>
               ) : (
-                <form onSubmit={(e) => { e.preventDefault(); setQuoteSubmitted(true); }} className="space-y-4">
+                <form onSubmit={(e) => { 
+                  e.preventDefault(); 
+                  emailjs.send(
+                    'service_5pcx4hw',
+                    'template_r9639yf',
+                    {
+                      to_email: 'muffinmegafactory@gmail.com',
+                      from_name: quoteName,
+                      from_email: quoteEmail,
+                      institution: quoteOrg,
+                      department: quoteDept,
+                      type: 'Request Formal Quote'
+                    },
+                    'TmzldpiycMQDEttvp'
+                  ).then(() => {
+                    setQuoteSubmitted(true);
+                  }).catch((err) => {
+                    console.error('Failed to send quote request', err);
+                    alert('Failed to send request. Please try again.');
+                  });
+                }} className="space-y-4">
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-widest text-[#44403c] mb-1.5">YOUR FULL NAME <span className="text-red-500">*</span></label>
                     <input
