@@ -1035,8 +1035,14 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                       {
                         to_email: 'muffinmegafactory@gmail.com',
                         from_name: demoName,
+                        name: demoName,
+                        user_name: demoName,
+                        sender: demoName,
                         from_email: demoEmail,
-                        institution: demoInstitution,
+                        email: demoEmail,
+                        reply_to: demoEmail,
+                        user_email: demoEmail,
+                        message: `New Request: Book a Demo\n\nName: ${demoName}\nEmail: ${demoEmail}\nInstitution/Company: ${demoInstitution}`,
                         type: 'Book a Demo'
                       },
                       'TmzldpiycMQDEttvp'
@@ -1133,9 +1139,14 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                     {
                       to_email: 'muffinmegafactory@gmail.com',
                       from_name: quoteName,
+                      name: quoteName,
+                      user_name: quoteName,
+                      sender: quoteName,
                       from_email: quoteEmail,
-                      institution: quoteOrg,
-                      department: quoteDept,
+                      email: quoteEmail,
+                      reply_to: quoteEmail,
+                      user_email: quoteEmail,
+                      message: `New Request: Formal Quote\n\nName: ${quoteName}\nEmail: ${quoteEmail}\nOrganization: ${quoteOrg}\nDepartment/Role: ${quoteDept}`,
                       type: 'Request Formal Quote'
                     },
                     'TmzldpiycMQDEttvp'
