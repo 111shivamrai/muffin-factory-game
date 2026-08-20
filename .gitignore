@@ -9,7 +9,7 @@ build/
 .next/
 out/
 
-# Environment variables
+# Environment variables — keep secrets local only
 .env
 .env.local
 .env.development.local

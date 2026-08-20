@@ -10,9 +10,6 @@ import {
 
 const getApiUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
-  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-    return window.location.origin;
-  }
   return 'http://localhost:5001';
 };
 const API_URL = getApiUrl();
