@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { Mail, Key, Eye, EyeOff } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && !window.location.hostname.includes('localhost') ? 'https://muffin-factory-game.onrender.com' : 'http://localhost:5001');
 
 interface AdminLoginPageProps {
   navigate: (to: string) => void;

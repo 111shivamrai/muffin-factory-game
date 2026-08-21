@@ -4,6 +4,9 @@ import { User, Room, TeamState, LeaderboardEntry, SavedScenario } from '../../..
 
 const getApiUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+    return 'https://muffin-factory-game.onrender.com';
+  }
   return 'http://localhost:5001';
 };
 export const API_URL = getApiUrl();
