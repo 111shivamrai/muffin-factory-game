@@ -171,7 +171,7 @@ function InventoryPanel() {
         </div>
 
         {/* Tab Card Body */}
-        <div className="rounded-b-2xl border border-t-0 bg-white border-rose-100 p-4 py-3 flex-1 flex flex-col justify-start min-h-0">
+        <div className="rounded-b-2xl border border-t-0 bg-white border-rose-100 p-4 py-3 flex flex-col">
           <div className="space-y-1">
             {activeTab === 'mix' ? (
               <>
