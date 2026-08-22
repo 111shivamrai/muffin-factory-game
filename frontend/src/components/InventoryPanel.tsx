@@ -87,7 +87,7 @@ function InventoryPanel() {
             <button
               type="button"
               onClick={() => onChange(Math.max(0, value - step))}
-              className="w-14 h-12 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-2xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
+              className="w-12 h-10 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
             >
               −
             </button>
@@ -97,13 +97,13 @@ function InventoryPanel() {
             value={value}
             onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
             disabled={!isController}
-            className="w-24 h-12 bg-white text-[#1c1917] text-sm font-extrabold flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
+            className="w-20 h-10 bg-white text-[#1c1917] text-sm font-extrabold flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
           />
           {isController ? (
             <button
               type="button"
               onClick={() => onChange(value + step)}
-              className="w-14 h-12 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-2xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
+              className="w-12 h-10 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
             >
               +
             </button>
