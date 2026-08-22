@@ -171,7 +171,7 @@ function InventoryPanel() {
         </div>
 
         {/* Tab Card Body */}
-        <div className="rounded-b-2xl border border-t-0 bg-white border-rose-100 p-5 py-4 flex-1 flex flex-col justify-between min-h-0">
+        <div className="rounded-b-2xl border border-t-0 bg-white border-rose-100 p-4 py-3 flex-1 flex flex-col justify-start min-h-0">
           <div className="space-y-1">
             {activeTab === 'mix' ? (
               <>
@@ -189,7 +189,7 @@ function InventoryPanel() {
           </div>
 
           {/* Footer Apply Changes Button */}
-          <div className="mt-2 pt-1">
+          <div className="mt-3">
             {isController ? (
               <button
                 onClick={handleApplyChanges}
