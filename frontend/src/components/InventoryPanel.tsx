@@ -78,7 +78,7 @@ function InventoryPanel() {
     label: string; value: number; onChange: (v: number) => void; step?: number;
   }) {
     return (
-      <div className="flex items-center justify-between py-4 border-b border-[#f0e6d6]/60 last:border-0">
+      <div className="flex items-center justify-between py-2 border-b border-[#f0e6d6]/60 last:border-0">
         <span className="text-[12px] font-extrabold text-[#1c1917] tracking-wide font-sans select-none">
           {label}
         </span>
@@ -124,7 +124,7 @@ function InventoryPanel() {
       </header>
 
       {/* Content */}
-      <div className="p-3.5 overflow-y-auto flex-1 flex flex-col min-h-0">
+      <div className="p-3.5 overflow-hidden flex-1 flex flex-col min-h-0">
         {/* Top Stats */}
         <div className="grid grid-cols-3 gap-2 mb-3.5 shrink-0">
           <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
@@ -189,7 +189,7 @@ function InventoryPanel() {
           </div>
 
           {/* Footer Apply Changes Button */}
-          <div className="mt-4 pt-2">
+          <div className="mt-2 pt-1">
             {isController ? (
               <button
                 onClick={handleApplyChanges}
