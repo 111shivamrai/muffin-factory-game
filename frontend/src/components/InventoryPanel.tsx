@@ -115,7 +115,7 @@ function InventoryPanel() {
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '32.5rem' }}>
+    <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0">
 
       {/* Header */}
       <header className="px-4 py-3 bg-[#0e8a43] text-white font-extrabold tracking-wide text-sm flex items-center gap-2.5 shrink-0 select-none">
