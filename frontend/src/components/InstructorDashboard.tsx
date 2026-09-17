@@ -1609,7 +1609,7 @@ export default function InstructorDashboard() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 font-bold block">Simulated Days Length</label>
+                      <label className="text-[9px] uppercase text-gray-500 font-bold block">Number of Simulated Days</label>
                       <input
                         type="number"
                         value={scMaxDays}
@@ -1618,7 +1618,7 @@ export default function InstructorDashboard() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 font-bold block">Real Time session duration (Minutes)</label>
+                      <label className="text-[9px] uppercase text-gray-500 font-bold block">Real-time Length of One Session (Minutes)</label>
                       <input
                         type="number"
                         value={scRealTime}
@@ -1652,7 +1652,7 @@ export default function InstructorDashboard() {
               {wizardStep === 2 && (
                 <div className="space-y-4 animate-[fadeIn_0.3s_ease-out] text-xs text-[#2c1a0a]">
                   <h4 className="font-sans font-black text-[#2c1a0a] text-xs uppercase tracking-wider border-b border-muffin-brown/5 pb-1">
-                    Step 2: Calibrate wholesale contracts
+                    Step 2: Wholesale Contracts
                   </h4>
                   <div className="space-y-2">
                     <span className="text-[9px] uppercase font-bold text-gray-500 block">Custom Scenario Wholesale Contracts:</span>
@@ -1801,7 +1801,7 @@ export default function InstructorDashboard() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-400 font-extrabold block">Starting Silo Materials (un)</label>
+                      <label className="text-[9px] uppercase text-gray-400 font-extrabold block">Starting Raw Materials (un)</label>
                       <input
                         type="number"
                         value={scStartMaterials}
@@ -1810,7 +1810,7 @@ export default function InstructorDashboard() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-400 font-extrabold block">Initial Q order size</label>
+                      <label className="text-[9px] uppercase text-gray-400 font-extrabold block">Initial Reorder Size</label>
                       <input
                         type="number"
                         value={scStartQ}
@@ -1819,7 +1819,7 @@ export default function InstructorDashboard() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-400 font-extrabold block">Initial R reorder level</label>
+                      <label className="text-[9px] uppercase text-gray-400 font-extrabold block">Initial Reorder Point</label>
                       <input
                         type="number"
                         value={scStartR}
