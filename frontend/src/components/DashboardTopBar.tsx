@@ -25,8 +25,23 @@ function DashboardTopBar() {
   const rank = rankEntry ? rankEntry.rank : '1';
   const totalTeams = leaderboard.length || 2;
 
-  // Active contracts count
-  const activeContracts = teamState.contracts.filter(c => c.active);
+  // Filter visible contracts based on currentDay
+  // 1. Only show contracts whose startDay <= currentDay (future contracts are hidden until startDay arrives)
+  // 2. Contracts that have passed endDay are collapsed / closed out
+  const currentDay = room?.currentDay ?? 0;
+  
+  const visibleContracts = teamState.contracts.filter(c => {
+    // If contract has not arrived yet, hide it
+    if (c.startDay > currentDay) return false;
+    return true;
+  });
+
+  const activeContracts = visibleContracts.filter(c => c.active && currentDay >= c.startDay && currentDay <= c.endDay);
+  
+  // Contracts that just arrived today (startDay === currentDay) and haven't been accepted/declined yet
+  const newContractsToday = visibleContracts.filter(c => c.startDay === currentDay && (!c.status || c.status === 'offered'));
+  const [closedNoticeContractIds, setClosedNoticeContractIds] = useState<string[]>([]);
+  const pendingNotificationContracts = newContractsToday.filter(c => !closedNoticeContractIds.includes(c.id));
 
   // Lead time: static 3.0 Days to match lovable UI design exactly
   const leadTime = '3.0 Days';
@@ -69,15 +84,15 @@ function DashboardTopBar() {
           </div>
         </div>
 
-        {/* LIVE LEAD TIME */}
+        {/* LIVE DAY END */}
         <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
           <div className="text-2xl">⏱️</div>
           <div className="min-w-0">
             <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
-              LIVE LEAD TIME
+              LIVE DAY END
             </div>
             <div className="text-sm font-extrabold truncate text-stone-800 font-mono">
-              {leadTime}
+              Day {room.currentDay ?? 0}
             </div>
           </div>
         </div>
@@ -85,12 +100,25 @@ function DashboardTopBar() {
         {/* CONTRACTS */}
         <div 
           onClick={() => setShowContractsModal(true)}
-          className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2 cursor-pointer hover:bg-rose-50/50 transition-colors"
+          className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2 cursor-pointer hover:bg-rose-50/50 transition-colors relative"
         >
-          <div className="text-2xl">📋</div>
+          <div className="text-2xl relative">
+            📋
+            {pendingNotificationContracts.length > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 text-[7px] text-white font-bold items-center justify-center">
+                  {pendingNotificationContracts.length}
+                </span>
+              </span>
+            )}
+          </div>
           <div className="min-w-0">
-            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase flex items-center gap-1">
               CONTRACTS
+              {pendingNotificationContracts.length > 0 && (
+                <span className="px-1 py-0.2 bg-rose-500 text-white text-[7px] rounded-full font-bold animate-pulse">NEW</span>
+              )}
             </div>
             <div className="text-sm font-extrabold truncate text-rose-500">
               {activeContracts.length} Active
@@ -174,13 +202,13 @@ function DashboardTopBar() {
               </div>
             </div>
 
-            {/* Lead Time */}
+            {/* Live Day End */}
             <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
               <div className="text-xl">⏱️</div>
               <div className="min-w-0">
-                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Lead Time</div>
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Live Day End</div>
                 <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
-                  {leadTime}
+                  Day {room.currentDay ?? 0}
                 </div>
               </div>
             </div>
@@ -233,6 +261,40 @@ function DashboardTopBar() {
         </div>
       )}
 
+      {/* Floating Contract Notification Toast (appears when new contract unlocks on currentDay) */}
+      {pendingNotificationContracts.length > 0 && !showContractsModal && (
+        <div className="fixed top-16 right-6 z-50 animate-bounce">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3.5 rounded-2xl shadow-2xl border-2 border-white/50 flex items-center gap-3 max-w-sm">
+            <div className="text-2xl bg-white/20 p-2 rounded-xl">📜</div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] uppercase font-mono tracking-widest text-blue-200 font-bold">
+                New Wholesale Deal Available!
+              </div>
+              <div className="text-xs font-black truncate">
+                {pendingNotificationContracts[0].name} (Day {pendingNotificationContracts[0].startDay})
+              </div>
+              <div className="text-[9px] text-blue-100 opacity-90 font-mono mt-0.5">
+                Target: {pendingNotificationContracts[0].dailyQuantity} Muffins/day
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <button 
+                onClick={() => setShowContractsModal(true)}
+                className="px-2.5 py-1 bg-white text-blue-700 hover:bg-blue-50 font-bold rounded-lg text-[9px] cursor-pointer shadow-sm border-none uppercase transition-all"
+              >
+                Review
+              </button>
+              <button 
+                onClick={() => setClosedNoticeContractIds(prev => [...prev, pendingNotificationContracts[0].id])}
+                className="px-2.5 py-0.5 bg-white/20 hover:bg-white/30 text-white font-bold rounded-lg text-[8px] cursor-pointer border-none transition-all"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Contracts Detail Modal */}
       {showContractsModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 font-sans text-xs">
@@ -255,71 +317,86 @@ function DashboardTopBar() {
             </p>
 
             <div className="space-y-3 max-h-60 overflow-y-auto">
-              {teamState.contracts.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 italic">No active contracts assigned to this room.</div>
+              {visibleContracts.length === 0 ? (
+                <div className="text-center py-6 text-slate-400 italic">No wholesale contracts active or available on Day {currentDay}. Contracts will unlock as simulation days progress.</div>
               ) : (
-                teamState.contracts.map(c => (
-                  <div 
-                    key={c.id}
-                    className={`p-3 rounded-xl border ${
-                      c.status === 'offered' ? 'bg-blue-50/50 border-blue-300' :
-                      c.status === 'declined' ? 'bg-red-50/50 border-red-200 text-slate-400 opacity-75' :
-                      c.active 
-                        ? 'bg-pink-50/50 border-pink-300 text-slate-700' 
-                        : 'bg-slate-50 border-slate-200 text-slate-400'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="font-bold font-mono">{c.name}</span>
-                      <span className={`px-1.5 py-0.5 rounded text-[8px] font-pixel ${
-                        c.status === 'offered' ? 'bg-blue-100 text-blue-700' :
-                        c.status === 'declined' ? 'bg-red-100 text-red-700' :
-                        c.status === 'completed' ? 'bg-green-100 text-green-700' :
-                        c.active ? 'bg-pink-100 text-pink-700' : 'bg-slate-200 text-slate-500'
-                      }`}>
-                        {c.status === 'offered' ? 'NEW OFFER' :
-                         c.status === 'declined' ? 'DECLINED' :
-                         c.status === 'completed' ? 'COMPLETED' :
-                         c.active ? 'ACTIVE' : 'UPCOMING'}
-                      </span>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
-                      <div>Days: {c.startDay} - {c.endDay}</div>
-                      <div>Daily Target: {c.dailyQuantity} Muffins</div>
-                      <div className="text-green-600">Price Multiplier: {c.priceMultiplier}x</div>
-                      <div className="text-red-500 font-bold">Penalty: ₹{c.penalty}/missed</div>
-                    </div>
+                visibleContracts.map(c => {
+                  const isExpired = currentDay > c.endDay;
+                  const isOfferPending = !c.status || c.status === 'offered';
 
-                    {c.status === 'offered' ? (
-                      <div className="mt-3 pt-2 border-t border-blue-200 flex justify-end gap-2">
-                        {role === 'controller' ? (
-                          <>
-                            <button
-                              onClick={() => updateContractStatus(c.id, 'declined')}
-                              className="px-3 py-1 bg-white hover:bg-red-50 text-red-600 rounded text-[9px] font-bold border border-red-200 cursor-pointer shadow-sm transition-colors"
-                            >
-                              DECLINE
-                            </button>
-                            <button
-                              onClick={() => updateContractStatus(c.id, 'accepted')}
-                              className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-[9px] font-bold border-none cursor-pointer shadow-sm transition-colors"
-                            >
-                              ACCEPT DEAL
-                            </button>
-                          </>
-                        ) : (
-                          <span className="text-[9px] text-blue-500 font-bold uppercase tracking-wider">Waiting for Controller</span>
-                        )}
+                  return (
+                    <div 
+                      key={c.id}
+                      className={`p-3 rounded-xl border transition-all ${
+                        isExpired 
+                          ? 'bg-zinc-900 border-zinc-700 text-zinc-400 opacity-60' 
+                          : isOfferPending 
+                            ? 'bg-blue-50/70 border-blue-400 ring-2 ring-blue-300 shadow-sm' 
+                            : c.status === 'declined' 
+                              ? 'bg-red-50/50 border-red-200 text-slate-400 opacity-60' 
+                              : c.active 
+                                ? 'bg-pink-50/50 border-pink-300 text-slate-700' 
+                                : 'bg-slate-50 border-slate-200 text-slate-400'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center mb-1">
+                        <span className={`font-bold font-mono ${isExpired ? 'text-zinc-300 line-through' : ''}`}>{c.name}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[8px] font-pixel ${
+                          isExpired ? 'bg-zinc-800 text-zinc-400 border border-zinc-700' :
+                          isOfferPending ? 'bg-blue-600 text-white animate-pulse' :
+                          c.status === 'declined' ? 'bg-red-100 text-red-700' :
+                          c.status === 'completed' ? 'bg-zinc-800 text-zinc-300' :
+                          c.active ? 'bg-pink-100 text-pink-700' : 'bg-slate-200 text-slate-500'
+                        }`}>
+                          {isExpired ? 'COLLAPSED / EXPIRED' :
+                           isOfferPending ? 'NEW OFFER (DAY ' + c.startDay + ')' :
+                           c.status === 'declined' ? 'DECLINED' :
+                           c.status === 'completed' ? 'COMPLETED' :
+                           c.active ? 'ACTIVE' : 'UPCOMING'}
+                        </span>
                       </div>
-                    ) : c.status === 'declined' ? null : (c.active || c.status === 'completed' || c.status === 'accepted') ? (
-                      <div className="mt-2 pt-2 border-t border-pink-200 flex justify-between text-[10px] text-pink-600 font-bold font-mono">
-                        <span>Fulfilled Today: {c.fulfilledToday} / {c.dailyQuantity}</span>
-                        <span>Total Fulfilled: {c.totalFulfilled} / {c.totalTarget}</span>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                        <div>Days: {c.startDay} - {c.endDay}</div>
+                        <div>Daily Target: {c.dailyQuantity} Muffins</div>
+                        <div className={isExpired ? 'text-zinc-400' : 'text-green-600'}>Price Multiplier: {c.priceMultiplier}x</div>
+                        <div className={isExpired ? 'text-zinc-500' : 'text-red-500 font-bold'}>Penalty: ₹{c.penalty}/missed</div>
                       </div>
-                    ) : null}
-                  </div>
-                ))
+
+                      {isOfferPending && !isExpired ? (
+                        <div className="mt-3 pt-2 border-t border-blue-200 flex justify-end gap-2">
+                          {role === 'controller' ? (
+                            <>
+                              <button
+                                onClick={() => updateContractStatus(c.id, 'declined')}
+                                className="px-3 py-1 bg-white hover:bg-red-50 text-red-600 rounded text-[9px] font-bold border border-red-200 cursor-pointer shadow-sm transition-colors"
+                              >
+                                DECLINE
+                              </button>
+                              <button
+                                onClick={() => updateContractStatus(c.id, 'accepted')}
+                                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[9px] font-bold border-none cursor-pointer shadow-sm transition-colors"
+                              >
+                                ACCEPT DEAL
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-[9px] text-blue-500 font-bold uppercase tracking-wider">Waiting for Controller</span>
+                          )}
+                        </div>
+                      ) : isExpired ? (
+                        <div className="mt-2 pt-1 text-[9px] text-zinc-500 font-mono italic">
+                          Contract period concluded on Day {c.endDay}. Collapsed.
+                        </div>
+                      ) : c.status === 'declined' ? null : (c.active || c.status === 'completed' || c.status === 'accepted') ? (
+                        <div className="mt-2 pt-2 border-t border-pink-200 flex justify-between text-[10px] text-pink-600 font-bold font-mono">
+                          <span>Fulfilled Today: {c.fulfilledToday} / {c.dailyQuantity}</span>
+                          <span>Total Fulfilled: {c.totalFulfilled} / {c.totalTarget}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })
               )}
             </div>
 

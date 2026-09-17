@@ -128,12 +128,12 @@ function InventoryPanel() {
         {/* Top Stats */}
         <div className="grid grid-cols-3 gap-2 mb-3.5 shrink-0">
           <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
-            <div className="text-[9px] font-bold text-stone-500 tracking-wider">MIX ON HAND</div>
+            <div className="text-[9px] font-bold text-stone-500 tracking-wider">RAW MATERIAL INVENTORY</div>
             <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{mixOnHand}</div>
             <div className="text-[9px] text-stone-400 font-bold mt-0.5">Transits: {mixTransit}</div>
           </div>
           <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
-            <div className="text-[9px] font-bold text-stone-500 tracking-wider">PACK ON HAND</div>
+            <div className="text-[9px] font-bold text-stone-500 tracking-wider">PACKAGING MATERIAL INVENTORY</div>
             <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{packOnHand}</div>
             <div className="text-[9px] text-stone-400 font-bold mt-0.5">Transits: {packTransit}</div>
           </div>
