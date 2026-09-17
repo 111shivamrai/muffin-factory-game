@@ -1440,6 +1440,7 @@ export default function InstructorDashboard() {
               .sort((a, b) => b.cash - a.cash)
               .map((team, idx) => {
                 const stars = calculateStars(team.cash, room?.scenarioId ? scenarios.find(s => s.id === room.scenarioId)?.starsThresholds : undefined);
+                const teamMembers = members?.filter(m => m.teamId === team.id || m.teamName === team.name) || [];
                 
                 return (
                   <div
@@ -1450,14 +1451,41 @@ export default function InstructorDashboard() {
                       <span className="font-mono font-black text-4xl text-gray-600 w-16">
                         #{idx + 1}
                       </span>
-                      <div className="space-y-1">
-                        <span className="font-sans font-black text-2xl text-white block tracking-tight">
-                          {team.name}
-                        </span>
-                        <div className="flex gap-1">
-                          {Array.from({ length: 3 }).map((_, sidx) => (
-                            <span key={sidx} className={`text-xl ${sidx < stars ? "text-yellow-500 font-extrabold" : "text-gray-700"}`}>⭐</span>
-                          ))}
+                      <div className="space-y-1.5">
+                        <div>
+                          <span className="text-[10px] uppercase font-mono tracking-wider text-gray-400 font-bold block">
+                            Team Name
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-sans font-black text-2xl text-white block tracking-tight">
+                              {team.name}
+                            </span>
+                            <div className="flex gap-1 ml-1">
+                              {Array.from({ length: 3 }).map((_, sidx) => (
+                                <span key={sidx} className={`text-lg ${sidx < stars ? "text-yellow-500 font-extrabold" : "text-gray-700"}`}>⭐</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] uppercase font-mono tracking-wider text-gray-400 font-bold block">
+                            Team Players
+                          </span>
+                          {teamMembers.length === 0 ? (
+                            <span className="text-xs text-gray-500 italic font-mono">No players joined yet</span>
+                          ) : (
+                            <div className="flex flex-wrap gap-1.5 mt-0.5">
+                              {teamMembers.map((m, midx) => (
+                                <span 
+                                  key={midx}
+                                  className="px-2.5 py-0.5 bg-zinc-800 border border-zinc-700 text-muffin-cream rounded-md text-xs font-mono font-semibold"
+                                >
+                                  {m.userName}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

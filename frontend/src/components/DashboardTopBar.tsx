@@ -84,12 +84,12 @@ function DashboardTopBar() {
           </div>
         </div>
 
-        {/* LIVE DAY END */}
+        {/* LIVE DAY */}
         <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
           <div className="text-2xl">⏱️</div>
           <div className="min-w-0">
             <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
-              LIVE DAY END
+              LIVE DAY
             </div>
             <div className="text-sm font-extrabold truncate text-stone-800 font-mono">
               Day {room.currentDay ?? 0}
@@ -202,11 +202,11 @@ function DashboardTopBar() {
               </div>
             </div>
 
-            {/* Live Day End */}
+            {/* Live Day */}
             <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
               <div className="text-xl">⏱️</div>
               <div className="min-w-0">
-                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Live Day End</div>
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Live Day</div>
                 <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
                   Day {room.currentDay ?? 0}
                 </div>
