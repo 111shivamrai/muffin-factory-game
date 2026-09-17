@@ -70,7 +70,7 @@ function DashboardTopBar() {
       </div>
 
       {/* DESKTOP Stat Cards Grid (Hidden on mobile) */}
-      <div className="hidden lg:grid flex-1 grid-cols-5 gap-2 mx-2">
+      <div className="hidden lg:grid flex-1 grid-cols-6 gap-2 mx-2">
         {/* TOTAL CASH */}
         <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
           <div className="text-2xl">🪙</div>
@@ -93,6 +93,19 @@ function DashboardTopBar() {
             </div>
             <div className="text-sm font-extrabold truncate text-stone-800 font-mono">
               Day {room.currentDay ?? 0}
+            </div>
+          </div>
+        </div>
+
+        {/* ORDER ARRIVAL TIME */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
+          <div className="text-2xl">🚚</div>
+          <div className="min-w-0">
+            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+              ORDER ARRIVAL TIME
+            </div>
+            <div className="text-sm font-extrabold truncate text-stone-800 font-mono">
+              3.0 Days
             </div>
           </div>
         </div>
@@ -209,6 +222,17 @@ function DashboardTopBar() {
                 <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Live Day</div>
                 <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
                   Day {room.currentDay ?? 0}
+                </div>
+              </div>
+            </div>
+
+            {/* Order Arrival Time */}
+            <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
+              <div className="text-xl">🚚</div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Order Arrival Time</div>
+                <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
+                  3.0 Days
                 </div>
               </div>
             </div>
