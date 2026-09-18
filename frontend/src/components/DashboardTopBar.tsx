@@ -43,6 +43,7 @@ function DashboardTopBar() {
   const [closedNoticeContractIds, setClosedNoticeContractIds] = useState<string[]>([]);
   const pendingNotificationContracts = pendingOffers.filter(c => !closedNoticeContractIds.includes(c.id));
   const contractBadgeCount = pendingNotificationContracts.length;
+  const upcomingContracts = teamState.contracts.filter(c => c.startDay > currentDay).sort((a, b) => a.startDay - b.startDay);
 
   // Active lead time modifier from events
   const leadTimeMod = teamState.activeEvents
@@ -136,6 +137,9 @@ function DashboardTopBar() {
             <div className="text-sm font-extrabold truncate text-stone-800 font-mono mt-0.5">
               {rawArrivalText}
             </div>
+            <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
+              {rawPoInTransit ? `Arrives Day ${rawPoInTransit.arrivalDay}` : 'Std lead time'}
+            </div>
           </div>
         </div>
 
@@ -148,6 +152,9 @@ function DashboardTopBar() {
             </div>
             <div className="text-sm font-extrabold truncate text-stone-800 font-mono mt-0.5">
               {pkgArrivalText}
+            </div>
+            <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
+              {pkgPoInTransit ? `Arrives Day ${pkgPoInTransit.arrivalDay}` : 'Std lead time'}
             </div>
           </div>
         </div>
@@ -165,7 +172,7 @@ function DashboardTopBar() {
               </span>
             )}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-[9px] font-extrabold text-stone-500 tracking-wider uppercase flex items-center gap-1">
               CONTRACTS
               {contractBadgeCount > 0 && (
@@ -176,6 +183,13 @@ function DashboardTopBar() {
             </div>
             <div className="text-sm font-extrabold truncate text-rose-500">
               {activeContracts.length} Active
+            </div>
+            <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
+              {pendingOffers.length > 0 
+                ? `Offered Day ${pendingOffers[0].startDay}` 
+                : upcomingContracts.length > 0 
+                  ? `Next on Day ${upcomingContracts[0].startDay}`
+                  : 'All deals viewed'}
             </div>
           </div>
         </div>
@@ -447,7 +461,8 @@ function DashboardTopBar() {
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
-                        <div>Days: {c.startDay} - {c.endDay}</div>
+                        <div>Arrived / Starts: <span className="font-bold text-stone-900">Day {c.startDay}</span></div>
+                        <div>Concludes: <span className="font-bold text-stone-900">Day {c.endDay}</span></div>
                         <div>Daily Target: {c.dailyQuantity} Muffins</div>
                         <div className={isExpired ? 'text-zinc-400' : 'text-green-600'}>Price Multiplier: {c.priceMultiplier}x</div>
                         <div className={isExpired ? 'text-zinc-500' : 'text-red-500 font-bold'}>Penalty: ₹{c.penalty}/missed</div>
@@ -487,6 +502,28 @@ function DashboardTopBar() {
                     </div>
                   );
                 })
+              )}
+
+              {/* Upcoming Contracts in Scenario */}
+              {upcomingContracts.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-slate-200">
+                  <div className="text-[10px] font-extrabold text-stone-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span>⏳ Upcoming Scenario Contracts ({upcomingContracts.length})</span>
+                  </div>
+                  <div className="space-y-2">
+                    {upcomingContracts.map(uc => (
+                      <div key={uc.id} className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[10px] font-mono flex items-center justify-between">
+                        <div>
+                          <span className="font-bold text-stone-800">{uc.name}</span>
+                          <span className="text-stone-500 ml-2">({uc.dailyQuantity} muffins/day • Days {uc.startDay}–{uc.endDay})</span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-[9px]">
+                          Arriving on Day {uc.startDay}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 

@@ -75,100 +75,25 @@ export default function App() {
 
   // Route 1: Admin Panel Dashboard or Login
   if (path === '/saas-admin') {
-    if (isAuthenticated && user) {
-      if (user.role === 'admin') {
-        return <AdminDashboard />;
-      } else {
-        return (
-          <div className="min-h-screen bg-[#fdfaf5] flex items-center justify-center p-4">
-            <div className="bg-white border border-[#e8e8e3] rounded-[24px] max-w-md w-full p-8 shadow-xl text-center space-y-6">
-              <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto text-[#c8852a] border border-[#ebdcc0]">
-                <ShieldAlert size={28} />
-              </div>
-              <h2 className="font-serif font-bold text-2xl text-[#1a1a18]">Console Collision</h2>
-              <p className="text-xs text-[#7a7a72] leading-relaxed">
-                You are currently logged in as a <strong>{user.role}</strong> ({user.email}). 
-                To access the Admin Console, please log out first.
-              </p>
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => navigate('/')}
-                  className="flex-1 bg-transparent hover:bg-slate-50 text-[#7a7a72] border border-[#d8d8d0] font-sans font-bold text-xs py-3 rounded-full cursor-pointer transition-all"
-                >
-                  Back to Lobby
-                </button>
-                <button
-                  onClick={() => logout()}
-                  className="flex-1 bg-[#c8852a] hover:bg-[#b06818] text-white font-sans font-bold text-xs py-3 rounded-full cursor-pointer transition-all"
-                >
-                  Log Out
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      }
+    if (isAuthenticated && user && user.role === 'admin') {
+      return <AdminDashboard />;
     }
     return <AdminLoginPage navigate={navigate} />;
   }
 
   // Route 2: Instructor Panel Dashboard or Login
   if (path === '/instructor') {
-    if (isAuthenticated && user) {
-      if (user.role === 'instructor') {
-        return <InstructorDashboard />;
-      } else {
-        return (
-          <div className="min-h-screen bg-[#fdfaf5] flex items-center justify-center p-4">
-            <div className="bg-white border border-[#e8e8e3] rounded-[24px] max-w-md w-full p-8 shadow-xl text-center space-y-6">
-              <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto text-[#c8852a] border border-[#ebdcc0]">
-                <ShieldAlert size={28} />
-              </div>
-              <h2 className="font-serif font-bold text-2xl text-[#1a1a18]">Console Collision</h2>
-              <p className="text-xs text-[#7a7a72] leading-relaxed">
-                You are currently logged in as a <strong>{user.role}</strong> ({user.email}). 
-                To access the Instructor Console, please log out first.
-              </p>
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => navigate('/')}
-                  className="flex-1 bg-transparent hover:bg-slate-50 text-[#7a7a72] border border-[#d8d8d0] font-sans font-bold text-xs py-3 rounded-full cursor-pointer transition-all"
-                >
-                  Back to Lobby
-                </button>
-                <button
-                  onClick={() => logout()}
-                  className="flex-1 bg-[#c8852a] hover:bg-[#b06818] text-white font-sans font-bold text-xs py-3 rounded-full cursor-pointer transition-all"
-                >
-                  Log Out
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      }
+    if (isAuthenticated && user && user.role === 'instructor') {
+      return <InstructorDashboard />;
     }
     return <InstructorLoginPage navigate={navigate} />;
   }
 
-  // Route 3: Standard Lobby & Simulation
-  if (!isAuthenticated || !user) {
-    return <LandingPage navigate={navigate} />;
-  }
-
-  if (user.role === 'admin') {
-    return <AdminDashboard />;
-  }
-
-  if (user.role === 'instructor') {
-    return <InstructorDashboard />;
-  }
-
-  if (user.role === 'operator' && (!room || !teamState)) {
-    return <LandingPage navigate={navigate} />;
-  }
-
-  if (!room) {
+  // Route 3: Active Simulation Workfloor (only when actively inside a room with team state)
+  if (isAuthenticated && user && room && teamState) {
+    // Continue to full Operations Dashboard below
+  } else {
+    // Default Route: Always render the natural Landing Page
     return <LandingPage navigate={navigate} />;
   }
 

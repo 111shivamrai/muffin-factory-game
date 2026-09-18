@@ -310,117 +310,6 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
     }
   ];
 
-  // If user is already authenticated as operator, but has no active session room yet
-  if (isAuthenticated && user && user.role === 'operator' && (!room || !teamState) && user.email !== 'operator@factory.com' && !isDemoLoading) {
-    return (
-      <div className="muffin-landing min-h-screen flex flex-col items-center justify-between p-4 md:p-8">
-        <style dangerouslySetInnerHTML={{ __html: `
-          @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=Inconsolata:wght@400;500;700&display=swap');
-          .muffin-landing {
-            --bg: #f7f0e6;
-            --ink: #1e1408;
-            background-color: var(--bg);
-            color: var(--ink);
-            font-family: 'Manrope', sans-serif;
-            position: relative;
-          }
-          .muffin-landing::after {
-            content: '';
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 9999;
-            opacity: .018;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='512' height='512'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='512' height='512' filter='url(%23n)'/%3E%3C/svg%3E");
-          }
-          .font-serif { font-family: 'Cormorant Garamond', Georgia, serif; }
-        `}} />
-        
-        {/* Header */}
-        <header className="w-full max-w-lg flex flex-col items-center text-center mt-6 select-none relative z-10">
-          <div className="inline-flex items-center gap-3 bg-white border border-[#e8d9c4] rounded-2xl px-4 py-2.5 shadow-[0_4px_15px_rgba(44,26,10,0.02)]">
-            <div className="w-9 h-9 rounded-lg bg-[#1e1408] flex items-center justify-center text-xl shadow-md">🧁</div>
-            <div className="text-left">
-              <h1 className="font-serif text-lg font-bold text-[#1e1408] leading-none">Muffin Factory Lab</h1>
-              <p className="text-[#9a7a52] font-mono text-[8px] uppercase tracking-widest mt-0.5">Operations Strategy Engine</p>
-            </div>
-          </div>
-        </header>
-
-        {/* Join classroom box */}
-        <main className="w-full max-w-md bg-white border border-[#e8d9c4] p-8 rounded-3xl shadow-[0_8px_35px_rgba(44,26,10,0.03)] relative z-10 my-auto">
-          <div className="flex items-center space-x-2 text-[#1d7a45] mb-3">
-            <Play className="w-4 h-4 fill-[#1d7a45]" />
-            <h3 className="font-serif font-bold text-xl uppercase tracking-wide">Enter Classroom</h3>
-          </div>
-          <p className="text-xs text-[#6b4e30] mb-6 leading-relaxed">
-            Welcome back, <span className="font-bold text-[#1e1408]">{user.name}</span>! Ready to join the simulation? Provide a team name and the room code shared by your instructor.
-          </p>
-
-          <form onSubmit={handleJoinRoomSubmit} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold text-[#6b4e30] tracking-wider uppercase mb-1.5">OPERATOR NAME</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Shivam"
-                value={joinName}
-                onChange={(e) => setJoinName(e.target.value)}
-                className="w-full bg-[#faf8f5] border border-[#e2d6c5] rounded-xl px-4 py-2.5 text-xs text-[#1e1408] placeholder-[#b5a796] focus:outline-none focus:border-[#1d7a45] focus:ring-1 focus:ring-[#1d7a45] transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-[#6b4e30] tracking-wider uppercase mb-1.5">TEAM NAME (OR CREATE NEW)</label>
-              <input
-                type="text"
-                required
-                placeholder="e.g. Cupcake Crew"
-                value={teamName}
-                onChange={(e) => setTeamName(e.target.value)}
-                className="w-full bg-[#faf8f5] border border-[#e2d6c5] rounded-xl px-4 py-2.5 text-xs text-[#1e1408] placeholder-[#b5a796] focus:outline-none focus:border-[#1d7a45] focus:ring-1 focus:ring-[#1d7a45] transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-[#6b4e30] tracking-wider uppercase mb-1.5">ROOM CODE</label>
-              <input
-                type="text"
-                required
-                placeholder="6-CHARACTER CODE"
-                maxLength={6}
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value)}
-                className="w-full bg-[#faf8f5] border border-[#e2d6c5] rounded-xl py-2.5 px-4 text-sm text-center text-[#1e1408] placeholder-[#b5a796] font-mono tracking-widest uppercase font-bold focus:outline-none focus:border-[#1d7a45] focus:ring-1 focus:ring-[#1d7a45] transition-all"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full mt-2 bg-[#1d7a45] hover:bg-[#155a32] text-[#f0f9f4] font-bold text-xs py-3.5 rounded-full flex items-center justify-center space-x-2 transition-all shadow-md active:translate-y-0.5 select-none cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>JOIN TEAM WORKFLOOR</span>
-            </button>
-          </form>
-
-          {error && (
-            <div className="mt-4 px-4 py-2 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl text-center shadow-sm">
-              ⚠️ {error}
-            </div>
-          )}
-        </main>
-
-        <footer className="w-full max-w-lg mt-6 text-center select-none relative z-10">
-          <button onClick={logout} className="text-red-600 hover:text-red-700 font-bold text-xs flex items-center gap-1.5 mx-auto">
-            <LogOut className="w-4 h-4" />
-            <span>Switch Accounts / Log Out</span>
-          </button>
-        </footer>
-      </div>
-    );
-  }
-
   return (
     <div className="muffin-landing min-h-screen flex flex-col justify-between overflow-x-hidden">
       <style dangerouslySetInnerHTML={{ __html: `
@@ -1484,11 +1373,6 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                     )}
                   </form>
                 </div>
-                <div className="border-t border-[#f0ede4] mt-8 pt-4 text-center">
-                  <span className="text-[9px] text-[#78716c] uppercase tracking-widest font-mono">
-                    Maximum 50 operators per room
-                  </span>
-                </div>
               </div>
 
               {/* Right Column: Console Access (Instructor/Admin login) */}
@@ -1499,7 +1383,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                     <h3 className="font-serif font-bold text-lg uppercase tracking-wide">Console Access</h3>
                   </div>
                   <p className="text-[11px] text-[#78716c] mb-6 leading-relaxed">
-                    Sign in to access Saved Scenarios, configure Rooms, monitor active teams, or audit global user metrics. Are you looking for the dedicated consoles? Go directly to the <button type="button" onClick={() => { setIsLoginModalOpen(false); navigate('/instructor'); }} className="text-[#c8852a] hover:underline bg-transparent border-none p-0 cursor-pointer font-bold transition-all">Instructor Portal</button> or the <button type="button" onClick={() => { setIsLoginModalOpen(false); navigate('/saas-admin'); }} className="text-[#c8852a] hover:underline bg-transparent border-none p-0 cursor-pointer font-bold transition-all">Admin Console</button>.
+                    Sign in to access Saved Scenarios, configure Rooms, monitor active teams, or audit global user metrics. Are you looking for the dedicated console? Go directly to the <button type="button" onClick={() => { setIsLoginModalOpen(false); navigate('/instructor'); }} className="text-[#c8852a] hover:underline bg-transparent border-none p-0 cursor-pointer font-bold transition-all">Instructor Portal</button>.
                   </p>
 
                   <form onSubmit={handleAuthSubmit} className="space-y-4">

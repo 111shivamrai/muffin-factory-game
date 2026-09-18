@@ -85,18 +85,9 @@ export default function FactoryVisualization() {
   return (
     <section className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden">
       {/* Header bar */}
-      <header className="px-4 py-2.5 bg-gradient-to-r from-rose-100 to-pink-100 font-extrabold tracking-wide text-sm flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className={`size-2.5 rounded-full ${isProducing ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
-          <span className="text-rose-600">🏭 FACTORY FLOOR LIVE FEED</span>
-        </div>
-        <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
-          isProducing 
-            ? 'bg-emerald-100 text-emerald-700 border border-emerald-300' 
-            : 'bg-amber-100 text-amber-700 border border-amber-300'
-        }`}>
-          {isProducing ? 'RUNNING' : isSimulationActive ? 'PRODUCTION HALTED' : 'SIMULATION IDLE'}
-        </span>
+      <header className="px-4 py-2.5 bg-gradient-to-r from-rose-100 to-pink-100 font-extrabold tracking-wide text-sm flex items-center gap-2">
+        <span className={`size-2.5 rounded-full ${isProducing ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+        <span className="text-rose-600">🏭 FACTORY FLOOR LIVE FEED</span>
       </header>
 
       {/* Video Content */}
