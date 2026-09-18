@@ -38,13 +38,42 @@ function DashboardTopBar() {
 
   const activeContracts = visibleContracts.filter(c => c.active && currentDay >= c.startDay && currentDay <= c.endDay);
   
-  // Contracts that just arrived today (startDay === currentDay) and haven't been accepted/declined yet
-  const newContractsToday = visibleContracts.filter(c => c.startDay === currentDay && (!c.status || c.status === 'offered'));
+  // Contracts that are offered and pending decision
+  const pendingOffers = visibleContracts.filter(c => (!c.status || c.status === 'offered') && currentDay >= c.startDay && currentDay <= c.endDay);
   const [closedNoticeContractIds, setClosedNoticeContractIds] = useState<string[]>([]);
-  const pendingNotificationContracts = newContractsToday.filter(c => !closedNoticeContractIds.includes(c.id));
+  const pendingNotificationContracts = pendingOffers.filter(c => !closedNoticeContractIds.includes(c.id));
+  const contractBadgeCount = pendingNotificationContracts.length;
 
-  // Lead time: static 3.0 Days to match lovable UI design exactly
-  const leadTime = '3.0 Days';
+  // Active lead time modifier from events
+  const leadTimeMod = teamState.activeEvents
+    ?.filter(ev => ev.active && ev.targetVariable === 'lead_time')
+    .reduce((sum, ev) => sum + ev.modifier, 0) || 0;
+
+  // Raw Material (base_mix) dynamic arrival time
+  const rawPoInTransit = teamState.purchaseOrders
+    ?.filter(po => po.materialType === 'base_mix' && po.status === 'transit')
+    .sort((a, b) => a.arrivalDay - b.arrivalDay)[0];
+
+  const rawArrivalDays = rawPoInTransit 
+    ? Math.max(1, rawPoInTransit.arrivalDay - currentDay) 
+    : Math.max(1, ((room as any)?.scenario?.leadTimes?.rawMaterial ?? 3) + leadTimeMod);
+
+  const rawArrivalText = rawPoInTransit 
+    ? `${rawArrivalDays} Day${rawArrivalDays === 1 ? '' : 's'}`
+    : `${rawArrivalDays.toFixed(1)} Days`;
+
+  // Packaging Material dynamic arrival time
+  const pkgPoInTransit = teamState.purchaseOrders
+    ?.filter(po => po.materialType === 'packaging_material' && po.status === 'transit')
+    .sort((a, b) => a.arrivalDay - b.arrivalDay)[0];
+
+  const pkgArrivalDays = pkgPoInTransit 
+    ? Math.max(1, pkgPoInTransit.arrivalDay - currentDay) 
+    : Math.max(1, ((room as any)?.scenario?.leadTimes?.packagingMaterial ?? 3) + leadTimeMod);
+
+  const pkgArrivalText = pkgPoInTransit 
+    ? `${pkgArrivalDays} Day${pkgArrivalDays === 1 ? '' : 's'}`
+    : `${pkgArrivalDays.toFixed(1)} Days`;
 
   return (
     <div className="flex items-center justify-between gap-2.5 select-none relative z-30 w-full">
@@ -100,12 +129,12 @@ function DashboardTopBar() {
         {/* RAW MATERIAL ARRIVAL TIME */}
         <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5">
           <div className="text-xl shrink-0">🚚</div>
-          <div className="min-w-0">
-            <div className="text-[8px] font-extrabold text-stone-500 tracking-wider truncate uppercase leading-tight">
-              RAW MATERIAL ARRIVAL TIME
+          <div className="min-w-0 flex-1">
+            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight whitespace-normal">
+              RAW MATERIAL<br />ARRIVAL TIME
             </div>
             <div className="text-sm font-extrabold truncate text-stone-800 font-mono mt-0.5">
-              3.0 Days
+              {rawArrivalText}
             </div>
           </div>
         </div>
@@ -113,12 +142,12 @@ function DashboardTopBar() {
         {/* PACKAGING MATERIAL ARRIVAL TIME */}
         <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5">
           <div className="text-xl shrink-0">📦</div>
-          <div className="min-w-0">
-            <div className="text-[8px] font-extrabold text-stone-500 tracking-wider truncate uppercase leading-tight">
-              PACKAGING MATERIAL ARRIVAL TIME
+          <div className="min-w-0 flex-1">
+            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight whitespace-normal">
+              PACKAGING MATERIAL<br />ARRIVAL TIME
             </div>
             <div className="text-sm font-extrabold truncate text-stone-800 font-mono mt-0.5">
-              3.0 Days
+              {pkgArrivalText}
             </div>
           </div>
         </div>
@@ -130,20 +159,19 @@ function DashboardTopBar() {
         >
           <div className="text-2xl relative">
             📋
-            {pendingNotificationContracts.length > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-500 text-[7px] text-white font-bold items-center justify-center">
-                  {pendingNotificationContracts.length}
-                </span>
+            {contractBadgeCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 size-5 rounded-full bg-rose-500 text-white text-[10px] font-black grid place-items-center shadow-md animate-bounce">
+                {contractBadgeCount}
               </span>
             )}
           </div>
           <div className="min-w-0">
-            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase flex items-center gap-1">
+            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider uppercase flex items-center gap-1">
               CONTRACTS
-              {pendingNotificationContracts.length > 0 && (
-                <span className="px-1 py-0.2 bg-rose-500 text-white text-[7px] rounded-full font-bold animate-pulse">NEW</span>
+              {contractBadgeCount > 0 && (
+                <span className="px-1.5 py-0.2 bg-rose-500 text-white text-[7px] rounded-full font-bold animate-pulse">
+                  {contractBadgeCount} NEW
+                </span>
               )}
             </div>
             <div className="text-sm font-extrabold truncate text-rose-500">
@@ -245,7 +273,7 @@ function DashboardTopBar() {
               <div className="min-w-0">
                 <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Raw Material Arrival Time</div>
                 <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
-                  3.0 Days
+                  {rawArrivalText}
                 </div>
               </div>
             </div>
@@ -256,7 +284,7 @@ function DashboardTopBar() {
               <div className="min-w-0">
                 <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Packaging Material Arrival Time</div>
                 <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
-                  3.0 Days
+                  {pkgArrivalText}
                 </div>
               </div>
             </div>
@@ -264,11 +292,25 @@ function DashboardTopBar() {
             {/* Contracts */}
             <div 
               onClick={() => { setShowContractsModal(true); setShowMobileMenu(false); }}
-              className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20 cursor-pointer"
+              className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20 cursor-pointer relative"
             >
-              <div className="text-xl">📋</div>
+              <div className="text-xl relative">
+                📋
+                {contractBadgeCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 size-4 rounded-full bg-rose-500 text-white text-[9px] font-black grid place-items-center animate-bounce">
+                    {contractBadgeCount}
+                  </span>
+                )}
+              </div>
               <div className="min-w-0">
-                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Contracts</div>
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1">
+                  Contracts
+                  {contractBadgeCount > 0 && (
+                    <span className="px-1 py-0.2 bg-rose-500 text-white text-[6px] rounded-full font-bold animate-pulse">
+                      {contractBadgeCount} NEW
+                    </span>
+                  )}
+                </div>
                 <div className="text-xs font-extrabold truncate text-rose-500">
                   {activeContracts.length} Active
                 </div>

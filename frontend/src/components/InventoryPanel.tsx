@@ -125,27 +125,32 @@ function InventoryPanel() {
 
       {/* Content */}
       <div className="p-3.5 overflow-hidden flex-1 flex flex-col min-h-0">
-        {/* Inventory Sub-header */}
-        <div className="text-[11px] font-extrabold text-[#1c1917] tracking-wider uppercase mb-1.5 px-0.5 select-none">
-          INVENTORY
-        </div>
+        {/* Enclosing Inventory Section Container */}
+        <div className="rounded-2xl bg-[#faf7f2] border border-[#e8dfd3] p-2.5 mb-3.5 shrink-0 shadow-xs">
+          {/* Centered INVENTORY Header directly above middle card */}
+          <div className="text-center mb-2 select-none">
+            <span className="text-[11px] font-extrabold text-[#1c1917] tracking-widest uppercase bg-white px-3 py-0.5 rounded-full border border-[#e6dcce] shadow-2xs">
+              INVENTORY
+            </span>
+          </div>
 
-        {/* Top Stats */}
-        <div className="grid grid-cols-3 gap-2 mb-3.5 shrink-0">
-          <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
-            <div className="text-[9px] font-bold text-stone-500 tracking-wider">RAW MATERIAL INVENTORY</div>
-            <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{mixOnHand}</div>
-            <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {mixTransit}</div>
-          </div>
-          <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
-            <div className="text-[9px] font-bold text-stone-500 tracking-wider">PACKAGING MATERIAL INVENTORY</div>
-            <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{packOnHand}</div>
-            <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {packTransit}</div>
-          </div>
-          <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
-            <div className="text-[9px] font-bold text-stone-500 tracking-wider">FINISHED GOODS INVENTORY</div>
-            <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{finishedOnHand}</div>
-            <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Muffins</div>
+          {/* Three Inventory Cards Grid */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
+              <div className="text-[9px] font-bold text-stone-500 tracking-wider">RAW MATERIAL INVENTORY</div>
+              <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{mixOnHand}</div>
+              <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {mixTransit}</div>
+            </div>
+            <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
+              <div className="text-[9px] font-bold text-stone-500 tracking-wider">PACKAGING MATERIAL INVENTORY</div>
+              <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{packOnHand}</div>
+              <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {packTransit}</div>
+            </div>
+            <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
+              <div className="text-[9px] font-bold text-stone-500 tracking-wider">FINISHED GOODS INVENTORY</div>
+              <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{finishedOnHand}</div>
+              <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Muffins</div>
+            </div>
           </div>
         </div>
 

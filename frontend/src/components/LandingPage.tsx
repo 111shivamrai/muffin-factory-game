@@ -612,10 +612,15 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
               <div className="flex items-center gap-3.5 flex-wrap">
                 <button 
                   onClick={handleLaunchDemo}
-                  className="bg-[#1c1917] hover:bg-[#44403c] text-white font-sans font-bold text-sm px-6 py-3.5 rounded-full flex items-center gap-2 shadow-md transition-all cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
+                  disabled={isDemoLoading}
+                  className="bg-[#1c1917] hover:bg-[#44403c] disabled:opacity-75 disabled:cursor-wait text-white font-sans font-bold text-sm px-6 py-3.5 rounded-full flex items-center gap-2 shadow-md transition-all cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
                 >
-                  <Play className="w-4 h-4 fill-white text-white" />
-                  <span>Launch Demo Free</span>
+                  {isDemoLoading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Play className="w-4 h-4 fill-white text-white" />
+                  )}
+                  <span>{isDemoLoading ? 'Launching Simulation...' : 'Launch Demo Free'}</span>
                 </button>
               </div>
             </div>

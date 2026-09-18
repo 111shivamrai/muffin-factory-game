@@ -209,12 +209,12 @@ function MachinePanel() {
               {isController ? (
                 <button
                   type="button"
+                  disabled={teamState.cash < cost}
                   onClick={() => {
-                    if (confirm(`Procure additional ${label} machine for ₹${cost}?`)) {
-                      buyMachine(type);
-                    }
+                    buyMachine(type);
                   }}
-                  className="px-3 py-2 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm border-none shrink-0"
+                  title={teamState.cash < cost ? `Need ₹${cost.toLocaleString()} (Cash: ₹${teamState.cash.toLocaleString()})` : `Procure additional ${label} machine for ₹${cost.toLocaleString()}`}
+                  className={`px-3 py-2 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm border-none shrink-0 ${teamState.cash < cost ? 'opacity-40 cursor-not-allowed' : ''}`}
                 >
                   <ShoppingCart className="w-3.5 h-3.5" />
                   <span>BUY</span>
