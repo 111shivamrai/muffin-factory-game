@@ -125,22 +125,27 @@ function InventoryPanel() {
 
       {/* Content */}
       <div className="p-3.5 overflow-hidden flex-1 flex flex-col min-h-0">
+        {/* Inventory Sub-header */}
+        <div className="text-[11px] font-extrabold text-[#1c1917] tracking-wider uppercase mb-1.5 px-0.5 select-none">
+          INVENTORY
+        </div>
+
         {/* Top Stats */}
         <div className="grid grid-cols-3 gap-2 mb-3.5 shrink-0">
           <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
             <div className="text-[9px] font-bold text-stone-500 tracking-wider">RAW MATERIAL INVENTORY</div>
             <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{mixOnHand}</div>
-            <div className="text-[9px] text-stone-400 font-bold mt-0.5">Transits: {mixTransit}</div>
+            <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {mixTransit}</div>
           </div>
           <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
             <div className="text-[9px] font-bold text-stone-500 tracking-wider">PACKAGING MATERIAL INVENTORY</div>
             <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{packOnHand}</div>
-            <div className="text-[9px] text-stone-400 font-bold mt-0.5">Transits: {packTransit}</div>
+            <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {packTransit}</div>
           </div>
           <div className="rounded-xl bg-[#fffdfa] border border-[#e6dcce] p-2 text-center shadow-sm">
-            <div className="text-[9px] font-bold text-stone-500 tracking-wider">FINISHED GOODS</div>
+            <div className="text-[9px] font-bold text-stone-500 tracking-wider">FINISHED GOODS INVENTORY</div>
             <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{finishedOnHand}</div>
-            <div className="text-[9px] text-stone-400 font-bold mt-0.5">Muffins</div>
+            <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Muffins</div>
           </div>
         </div>
 
@@ -155,7 +160,7 @@ function InventoryPanel() {
                 : 'bg-white text-[#5d4037] border-transparent hover:bg-stone-50'
             }`}
           >
-            MUFFIN MIX INTEGRANTS
+            MUFFIN MIX INGREDIENTS
           </button>
           <button
             type="button"
@@ -171,19 +176,17 @@ function InventoryPanel() {
         </div>
 
         {/* Tab Card Body */}
-        <div className="rounded-b-2xl border border-t-0 bg-white border-rose-100 p-4 py-3 flex flex-col">
-          <div className="space-y-1">
+        <div className="rounded-b-2xl border border-t-0 bg-white border-rose-100 p-4 py-3.5 flex flex-col">
+          <div className="space-y-2 py-1">
             {activeTab === 'mix' ? (
               <>
                 <StepperRow label="ORDER QUANTITY" value={mixQty} onChange={setMixQty} />
                 <StepperRow label="REORDER POINT" value={mixROP} onChange={setMixROP} />
-                <StepperRow label="SAFETY STOCK" value={mixSafety} onChange={setMixSafety} />
               </>
             ) : (
               <>
                 <StepperRow label="ORDER QUANTITY" value={packQty} onChange={setPackQty} />
                 <StepperRow label="REORDER POINT" value={packROP} onChange={setPackROP} />
-                <StepperRow label="SAFETY STOCK" value={packSafety} onChange={setPackSafety} />
               </>
             )}
           </div>

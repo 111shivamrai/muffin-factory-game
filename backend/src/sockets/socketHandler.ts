@@ -301,7 +301,8 @@ export function registerSocketHandler(io: Server) {
             };
 
             team.machineOrders.push(newOrder);
-            team.machines[machineType as MachineType].inTransit += 1;
+            team.machines[machineType as MachineType].count += 1;
+            team.machines[machineType as MachineType].active += 1;
             
             // Deduct cash immediately
             team.cash = Number((team.cash - purchaseCost).toFixed(2));

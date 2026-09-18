@@ -70,7 +70,7 @@ function DashboardTopBar() {
       </div>
 
       {/* DESKTOP Stat Cards Grid (Hidden on mobile) */}
-      <div className="hidden lg:grid flex-1 grid-cols-6 gap-2 mx-2">
+      <div className="hidden lg:grid flex-1 grid-cols-7 gap-2 mx-2">
         {/* TOTAL CASH */}
         <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
           <div className="text-2xl">🪙</div>
@@ -97,14 +97,27 @@ function DashboardTopBar() {
           </div>
         </div>
 
-        {/* ORDER ARRIVAL TIME */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
-          <div className="text-2xl">🚚</div>
+        {/* RAW MATERIAL ARRIVAL TIME */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5">
+          <div className="text-xl shrink-0">🚚</div>
           <div className="min-w-0">
-            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
-              ORDER ARRIVAL TIME
+            <div className="text-[8px] font-extrabold text-stone-500 tracking-wider truncate uppercase leading-tight">
+              RAW MATERIAL ARRIVAL TIME
             </div>
-            <div className="text-sm font-extrabold truncate text-stone-800 font-mono">
+            <div className="text-sm font-extrabold truncate text-stone-800 font-mono mt-0.5">
+              3.0 Days
+            </div>
+          </div>
+        </div>
+
+        {/* PACKAGING MATERIAL ARRIVAL TIME */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5">
+          <div className="text-xl shrink-0">📦</div>
+          <div className="min-w-0">
+            <div className="text-[8px] font-extrabold text-stone-500 tracking-wider truncate uppercase leading-tight">
+              PACKAGING MATERIAL ARRIVAL TIME
+            </div>
+            <div className="text-sm font-extrabold truncate text-stone-800 font-mono mt-0.5">
               3.0 Days
             </div>
           </div>
@@ -226,11 +239,22 @@ function DashboardTopBar() {
               </div>
             </div>
 
-            {/* Order Arrival Time */}
+            {/* Raw Material Arrival Time */}
             <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
               <div className="text-xl">🚚</div>
               <div className="min-w-0">
-                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Order Arrival Time</div>
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Raw Material Arrival Time</div>
+                <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
+                  3.0 Days
+                </div>
+              </div>
+            </div>
+
+            {/* Packaging Material Arrival Time */}
+            <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
+              <div className="text-xl">📦</div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Packaging Material Arrival Time</div>
                 <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
                   3.0 Days
                 </div>

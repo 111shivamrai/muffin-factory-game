@@ -173,7 +173,7 @@ function MachinePanel() {
               </div>
 
               {/* Stepper controls */}
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-xs">
                 {isController ? (
                   <button
                     type="button"
@@ -182,12 +182,12 @@ function MachinePanel() {
                       setter(newVal);
                       updateSingle(type, newVal);
                     }}
-                    className="size-7 rounded-md bg-[#f8f0fd] border border-[#d8b4fe]/40 text-[#6a1b9a] font-bold text-lg flex items-center justify-center cursor-pointer hover:bg-[#f3e5f5] transition-all leading-none select-none"
+                    className="w-8 h-8 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
                   >
                     −
                   </button>
                 ) : null}
-                <div className="w-12 h-7 rounded-md bg-[#fffdfa] border border-[#d8ccbb] text-[#2b2640] text-xs font-bold flex items-center justify-center font-mono">
+                <div className="px-2.5 h-8 bg-white text-[#1c1917] text-xs font-extrabold flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none min-w-[52px]">
                   {state} / {mData.count}
                 </div>
                 {isController ? (
@@ -198,7 +198,7 @@ function MachinePanel() {
                       setter(newVal);
                       updateSingle(type, newVal);
                     }}
-                    className="size-7 rounded-md bg-[#f8f0fd] border border-[#d8b4fe]/40 text-[#6a1b9a] font-bold text-lg flex items-center justify-center cursor-pointer hover:bg-[#f3e5f5] transition-all leading-none select-none"
+                    className="w-8 h-8 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
                   >
                     +
                   </button>
@@ -210,17 +210,17 @@ function MachinePanel() {
                 <button
                   type="button"
                   onClick={() => {
-                    if (confirm(`Procure additional ${label} machine for ₹${cost}? Lead Time: 5 days.`)) {
+                    if (confirm(`Procure additional ${label} machine for ₹${cost}?`)) {
                       buyMachine(type);
                     }
                   }}
-                  className="px-3 py-1.5 bg-[#8e24aa] hover:bg-[#7b1fa2] text-white rounded-lg text-[9px] font-extrabold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm border-none shrink-0"
+                  className="px-3 py-2 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm border-none shrink-0"
                 >
-                  <ShoppingCart className="w-3 h-3" />
+                  <ShoppingCart className="w-3.5 h-3.5" />
                   <span>BUY</span>
                 </button>
               ) : (
-                <div className="w-14 h-6 bg-stone-100 rounded-lg flex items-center justify-center text-[8px] text-stone-400 font-bold uppercase shrink-0">
+                <div className="w-14 h-8 bg-stone-100 rounded-xl flex items-center justify-center text-[8px] text-stone-400 font-bold uppercase shrink-0">
                   Locked
                 </div>
               )}

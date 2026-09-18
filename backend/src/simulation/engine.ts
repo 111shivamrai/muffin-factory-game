@@ -55,7 +55,7 @@ export function runSimDay(
   baseDemand: number,
   scenarioMachineSettings?: Record<MachineType, MachineConfig>,
   scenarioRawMaterialCosts?: { baseMix: number; packaging: number; orderCost: number },
-  scenarioLeadTimes?: { rawMaterial: number; machineProcurement: number },
+  scenarioLeadTimes?: { rawMaterial: number; packagingMaterial?: number; machineProcurement: number },
   scenarioHoldingCostRate?: number,
   scenarioPenaltyRate?: number,
   scenarioBreakdownsEnabled?: boolean
@@ -82,7 +82,7 @@ export function runSimDay(
     packaging_material: scenarioRawMaterialCosts.packaging,
     order_cost: scenarioRawMaterialCosts.orderCost
   } : BASE_MATERIAL_COSTS;
-  const baseLeadTimes = scenarioLeadTimes || { rawMaterial: 3, machineProcurement: 5 };
+  const baseLeadTimes = scenarioLeadTimes || { rawMaterial: 3, packagingMaterial: 3, machineProcurement: 5 };
   const breakdownsEnabled = scenarioBreakdownsEnabled !== false;
 
   // If already bankrupt, lock operations and carry forward state
@@ -221,11 +221,8 @@ export function runSimDay(
   nextState.machineOrders.forEach((mo: MachineOrder) => {
     if (mo.status === 'procuring' && mo.arrivalDay <= day) {
       mo.status = 'delivered';
-      nextState.machines[mo.machineType].count += 1;
+      // Machine count is already incremented at purchase time
       nextState.machines[mo.machineType].inTransit = Math.max(0, nextState.machines[mo.machineType].inTransit - 1);
-      
-      // Automatically activate new machines if they were purchased
-      nextState.machines[mo.machineType].active += 1;
     }
   });
 
@@ -245,7 +242,10 @@ export function runSimDay(
       const orderQty = inv.orderQty;
       if (orderQty > 0) {
         // Place automatic order
-        const leadTime = Math.max(1, baseLeadTimes.rawMaterial + rawMaterialLeadTimeModifier);
+        const baseLT = (matType === 'packaging_material' && (baseLeadTimes as any).packagingMaterial !== undefined)
+          ? (baseLeadTimes as any).packagingMaterial
+          : baseLeadTimes.rawMaterial;
+        const leadTime = Math.max(1, baseLT + rawMaterialLeadTimeModifier);
         const poId = `po_${day}_${matType}_${Math.random().toString(36).substr(2, 5)}`;
         
         const rawCost = orderQty * currentMaterialCosts[matType === 'base_mix' ? 'base_mix' : 'packaging_material'];
@@ -312,20 +312,21 @@ export function runSimDay(
   };
 
   // 10. Consume Raw Materials & 11. Produce Finished Goods
+  // 10. Consume Raw Materials & 11. Produce Finished Goods
   // 1 muffin requires 1 mix + 1 packaging material
-  const baseMixOnHand = nextState.inventory.base_mix.onHand;
-  const packagingOnHand = nextState.inventory.packaging_material.onHand;
+  const baseMixOnHand = Math.max(0, nextState.inventory.base_mix.onHand);
+  const packagingOnHand = Math.max(0, nextState.inventory.packaging_material.onHand);
 
   // Maximum production is limited by raw materials and bottleneck capacity
   const rawMaterialLimit = Math.min(baseMixOnHand, packagingOnHand);
-  const actualProduction = Math.min(rawMaterialLimit, minCapacity);
+  const actualProduction = rawMaterialLimit <= 0 ? 0 : Math.max(0, Math.min(rawMaterialLimit, minCapacity));
 
-  // Consume materials
-  nextState.inventory.base_mix.onHand -= actualProduction;
-  nextState.inventory.packaging_material.onHand -= actualProduction;
-
-  // Produce muffins
-  nextState.inventory.finished_muffin.onHand += actualProduction;
+  // Consume materials and produce muffins only if actual production occurred
+  if (actualProduction > 0) {
+    nextState.inventory.base_mix.onHand = Math.max(0, nextState.inventory.base_mix.onHand - actualProduction);
+    nextState.inventory.packaging_material.onHand = Math.max(0, nextState.inventory.packaging_material.onHand - actualProduction);
+    nextState.inventory.finished_muffin.onHand += actualProduction;
+  }
 
   // 12. Allocate to Contracts & 13. Allocate to Market Demand
   // Gather active contract targets
@@ -481,8 +482,10 @@ export function runSimDay(
   const dailyProfit = dailyRevenue - totalDailyCosts;
 
   // 17. Update Cash (and Bankruptcy check)
-  const startingCash = nextState.cash;
-  const endingCash = startingCash + dailyProfit;
+  // Since operator machine purchases immediately decrement team cash upon click in socketHandler,
+  // we restore dailyMachinePurchaseCost to the baseline cash so it is not double-deducted here.
+  const baselineCash = nextState.cash + dailyMachinePurchaseCost;
+  const endingCash = baselineCash + dailyProfit;
 
   if (endingCash <= 0) {
     nextState.cash = 0;

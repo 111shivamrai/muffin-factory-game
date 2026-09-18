@@ -211,6 +211,7 @@ export interface SavedScenario {
   };
   leadTimes: {
     rawMaterial: number;
+    packagingMaterial?: number;
     machineProcurement: number;
   };
   breakdownsEnabled: boolean;

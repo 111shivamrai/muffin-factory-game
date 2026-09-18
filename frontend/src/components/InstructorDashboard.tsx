@@ -53,12 +53,12 @@ export default function InstructorDashboard() {
   const [editingScenarioId, setEditingScenarioId] = useState<string | null>(null);
 
   // Wizard Fields
-  const [scName, setScName] = useState('Muffin Experience Preset');
-  const [scDesc, setScDesc] = useState('Custom crafted baking operations scenario');
-  const [scMaxDays, setScMaxDays] = useState(30);
-  const [scRealTime, setScRealTime] = useState(15);
-  const [scBaseMixCost, setScBaseMixCost] = useState(5.0);
-  const [scSellingPrice, setScSellingPrice] = useState(20.0);
+  const [scName, setScName] = useState('');
+  const [scDesc, setScDesc] = useState('');
+  const [scMaxDays, setScMaxDays] = useState<number | ''>('');
+  const [scRealTime, setScRealTime] = useState<number | ''>('');
+  const [scBaseMixCost, setScBaseMixCost] = useState<number | ''>('');
+  const [scSellingPrice, setScSellingPrice] = useState<number | ''>('');
 
   // Wizard Step 2: Wholesale Contracts
   interface WizardContract {
@@ -72,11 +72,11 @@ export default function InstructorDashboard() {
   }
   const [scContracts, setScContracts] = useState<WizardContract[]>([]);
   const [newConName, setNewConName] = useState('');
-  const [newConDemand, setNewConDemand] = useState(40);
-  const [newConRate, setNewConRate] = useState(30);
-  const [newConStart, setNewConStart] = useState(10);
-  const [newConEnd, setNewConEnd] = useState(25);
-  const [newConPenalty, setNewConPenalty] = useState(5);
+  const [newConDemand, setNewConDemand] = useState<number | ''>('');
+  const [newConRate, setNewConRate] = useState<number | ''>('');
+  const [newConStart, setNewConStart] = useState<number | ''>('');
+  const [newConEnd, setNewConEnd] = useState<number | ''>('');
+  const [newConPenalty, setNewConPenalty] = useState<number | ''>('');
 
   // Wizard Step 3: Walk-in Retail Breaking Points
   const [scPoissonDemand, setScPoissonDemand] = useState(true);
@@ -88,33 +88,31 @@ export default function InstructorDashboard() {
     { day: 0, demand: 100 },
     { day: 30, demand: 100 }
   ]);
-  const [newBpDay, setNewBpDay] = useState(15);
-  const [newBpDemand, setNewBpDemand] = useState(120);
+  const [newBpDay, setNewBpDay] = useState<number | ''>('');
+  const [newBpDemand, setNewBpDemand] = useState<number | ''>('');
 
   // Wizard Step 4: Starting Parameters
-  const [scStartCash, setScStartCash] = useState(100000);
-  const [scStartMaterials, setScStartMaterials] = useState(12000);
-  const [scStartQ, setScStartQ] = useState(12000);
-  const [scStartR, setScStartR] = useState(2300);
-  const [scStartMachinesMixing, setScStartMachinesMixing] = useState(1);
-  const [scStartMachinesBaking, setScStartMachinesBaking] = useState(1);
-  const [scStartMachinesIcing, setScStartMachinesIcing] = useState(1);
-  const [scStartMachinesPackaging, setScStartMachinesPackaging] = useState(1);
+  const [scStartCash, setScStartCash] = useState<number | ''>('');
+  const [scStartMaterials, setScStartMaterials] = useState<number | ''>('');
+  const [scStartMachinesMixing, setScStartMachinesMixing] = useState<number | ''>('');
+  const [scStartMachinesBaking, setScStartMachinesBaking] = useState<number | ''>('');
+  const [scStartMachinesIcing, setScStartMachinesIcing] = useState<number | ''>('');
+  const [scStartMachinesPackaging, setScStartMachinesPackaging] = useState<number | ''>('');
 
   // Wizard Step 5: Capacity speeds & Purchase Costs
-  const [scMixingCap, setScMixingCap] = useState(100);
-  const [scMixingCost, setScMixingCost] = useState(2000);
-  const [scBakingCap, setScBakingCap] = useState(80);
-  const [scBakingCost, setScBakingCost] = useState(3000);
-  const [scIcingCap, setScIcingCap] = useState(120);
-  const [scIcingCost, setScIcingCost] = useState(1500);
-  const [scPackagingCap, setScPackagingCap] = useState(150);
-  const [scPackagingCost, setScPackagingCost] = useState(1000);
+  const [scMixingCap, setScMixingCap] = useState<number | ''>('');
+  const [scMixingCost, setScMixingCost] = useState<number | ''>('');
+  const [scBakingCap, setScBakingCap] = useState<number | ''>('');
+  const [scBakingCost, setScBakingCost] = useState<number | ''>('');
+  const [scIcingCap, setScIcingCap] = useState<number | ''>('');
+  const [scIcingCost, setScIcingCost] = useState<number | ''>('');
+  const [scPackagingCap, setScPackagingCap] = useState<number | ''>('');
+  const [scPackagingCost, setScPackagingCost] = useState<number | ''>('');
 
   // Wizard Step 6: Star Thresholds
-  const [scStarsThreshold1, setScStarsThreshold1] = useState(85000);
-  const [scStarsThreshold2, setScStarsThreshold2] = useState(120000);
-  const [scStarsThreshold3, setScStarsThreshold3] = useState(180000);
+  const [scStarsThreshold1, setScStarsThreshold1] = useState<number | ''>('');
+  const [scStarsThreshold2, setScStarsThreshold2] = useState<number | ''>('');
+  const [scStarsThreshold3, setScStarsThreshold3] = useState<number | ''>('');
 
   // Real-time local ticking timers
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
@@ -205,9 +203,9 @@ export default function InstructorDashboard() {
 
   // Calculate student stars based on thresholds
   const calculateStars = (cash: number, thresholds?: number[]) => {
-    const t1 = thresholds?.[0] ?? scStarsThreshold1;
-    const t2 = thresholds?.[1] ?? scStarsThreshold2;
-    const t3 = thresholds?.[2] ?? scStarsThreshold3;
+    const t1 = typeof (thresholds?.[0] ?? scStarsThreshold1) === 'number' ? Number(thresholds?.[0] ?? scStarsThreshold1) : 85000;
+    const t2 = typeof (thresholds?.[1] ?? scStarsThreshold2) === 'number' ? Number(thresholds?.[1] ?? scStarsThreshold2) : 120000;
+    const t3 = typeof (thresholds?.[2] ?? scStarsThreshold3) === 'number' ? Number(thresholds?.[2] ?? scStarsThreshold3) : 180000;
     if (cash >= t3) return 3;
     if (cash >= t2) return 2;
     if (cash >= t1) return 1;
@@ -384,8 +382,6 @@ export default function InstructorDashboard() {
       ]);
       setScStartCash(sc.startCash);
       setScStartMaterials(12000);
-      setScStartQ(12000);
-      setScStartR(2300);
       setScStartMachinesMixing(1);
       setScStartMachinesBaking(1);
       setScStartMachinesIcing(1);
@@ -403,37 +399,35 @@ export default function InstructorDashboard() {
       setScStarsThreshold3(sc.starsThresholds?.[2] ?? 180000);
     } else {
       setEditingScenarioId(null);
-      setScName('Muffin Experience Preset');
-      setScDesc('Custom crafted baking operations scenario');
-      setScMaxDays(30);
-      setScRealTime(15);
-      setScBaseMixCost(5.0);
-      setScSellingPrice(20.0);
+      setScName('');
+      setScDesc('');
+      setScMaxDays('');
+      setScRealTime('');
+      setScBaseMixCost('');
+      setScSellingPrice('');
       setScContracts([]);
       setScPoissonDemand(true);
       setScBreakingPoints([
         { day: 0, demand: 100 },
         { day: 30, demand: 100 }
       ]);
-      setScStartCash(100000);
-      setScStartMaterials(12000);
-      setScStartQ(12000);
-      setScStartR(2300);
-      setScStartMachinesMixing(1);
-      setScStartMachinesBaking(1);
-      setScStartMachinesIcing(1);
-      setScStartMachinesPackaging(1);
-      setScMixingCap(100);
-      setScMixingCost(2000);
-      setScBakingCap(80);
-      setScBakingCost(3000);
-      setScIcingCap(120);
-      setScIcingCost(1500);
-      setScPackagingCap(150);
-      setScPackagingCost(1000);
-      setScStarsThreshold1(85000);
-      setScStarsThreshold2(120000);
-      setScStarsThreshold3(180000);
+      setScStartCash('');
+      setScStartMaterials('');
+      setScStartMachinesMixing('');
+      setScStartMachinesBaking('');
+      setScStartMachinesIcing('');
+      setScStartMachinesPackaging('');
+      setScMixingCap('');
+      setScMixingCost('');
+      setScBakingCap('');
+      setScBakingCost('');
+      setScIcingCap('');
+      setScIcingCost('');
+      setScPackagingCap('');
+      setScPackagingCost('');
+      setScStarsThreshold1('');
+      setScStarsThreshold2('');
+      setScStarsThreshold3('');
     }
     setWizardStep(1);
     setWizardOpen(true);
@@ -442,8 +436,10 @@ export default function InstructorDashboard() {
   const handleSaveScenario = () => {
     playTone(587.33, 'triangle', 0.1);
     
-    const tickRate = Math.round((scRealTime * 60) / scMaxDays);
-    const dailySchedule = Array.from({ length: scMaxDays + 1 }).map((_, day) => {
+    const maxDaysVal = typeof scMaxDays === 'number' && scMaxDays > 0 ? scMaxDays : 30;
+    const realTimeVal = typeof scRealTime === 'number' && scRealTime > 0 ? scRealTime : 15;
+    const tickRate = Math.round((realTimeVal * 60) / maxDaysVal);
+    const dailySchedule = Array.from({ length: maxDaysVal + 1 }).map((_, day) => {
       const bpBefore = [...scBreakingPoints].reverse().find(bp => bp.day <= day) || scBreakingPoints[0];
       const bpAfter = scBreakingPoints.find(bp => bp.day >= day) || scBreakingPoints[scBreakingPoints.length - 1];
       if (!bpBefore || !bpAfter) return 100;
@@ -454,15 +450,19 @@ export default function InstructorDashboard() {
 
     const scenarioData = {
       id: editingScenarioId || undefined,
-      name: scName,
-      description: scDesc,
-      learningObjective: scDesc,
+      name: scName.trim() || 'Muffin Experience Preset',
+      description: scDesc.trim() || 'Custom crafted baking operations scenario',
+      learningObjective: scDesc.trim() || 'Custom crafted baking operations scenario',
       difficulty: 'custom' as any,
-      maxDays: scMaxDays,
+      maxDays: maxDaysVal,
       tickRate: tickRate || 8,
-      startCash: scStartCash,
-      rawMaterialCosts: { baseMix: scBaseMixCost, packaging: 1.0, orderCost: 150 },
-      leadTimes: { rawMaterial: 3, machineProcurement: 5 },
+      startCash: typeof scStartCash === 'number' && scStartCash >= 0 ? scStartCash : 100000,
+      rawMaterialCosts: {
+        baseMix: typeof scBaseMixCost === 'number' && scBaseMixCost >= 0 ? scBaseMixCost : 5.0,
+        packaging: 1.0,
+        orderCost: 150
+      },
+      leadTimes: { rawMaterial: 3, packagingMaterial: 3, machineProcurement: 5 },
       breakdownsEnabled: true,
       demand: {
         type: scPoissonDemand ? 'random' as any : 'fixed' as any,
@@ -473,20 +473,52 @@ export default function InstructorDashboard() {
         customSchedule: dailySchedule
       },
       machineSettings: {
-        mixing: { capacityPerMachine: scMixingCap, purchaseCost: scMixingCost, operatingCost: 40, breakdownProbability: 0.015, breakdownDuration: 2, repairCost: 300 },
-        baking: { capacityPerMachine: scBakingCap, purchaseCost: scBakingCost, operatingCost: 60, breakdownProbability: 0.015, breakdownDuration: 2, repairCost: 500 },
-        icing: { capacityPerMachine: scIcingCap, purchaseCost: scIcingCost, operatingCost: 30, breakdownProbability: 0.01, breakdownDuration: 1, repairCost: 200 },
-        packaging: { capacityPerMachine: scPackagingCap, purchaseCost: scPackagingCost, operatingCost: 20, breakdownProbability: 0.01, breakdownDuration: 1, repairCost: 150 }
+        mixing: {
+          capacityPerMachine: typeof scMixingCap === 'number' && scMixingCap > 0 ? scMixingCap : 100,
+          purchaseCost: typeof scMixingCost === 'number' && scMixingCost >= 0 ? scMixingCost : 2000,
+          operatingCost: 40,
+          breakdownProbability: 0.015,
+          breakdownDuration: 2,
+          repairCost: 300
+        },
+        baking: {
+          capacityPerMachine: typeof scBakingCap === 'number' && scBakingCap > 0 ? scBakingCap : 80,
+          purchaseCost: typeof scBakingCost === 'number' && scBakingCost >= 0 ? scBakingCost : 3000,
+          operatingCost: 60,
+          breakdownProbability: 0.015,
+          breakdownDuration: 2,
+          repairCost: 500
+        },
+        icing: {
+          capacityPerMachine: typeof scIcingCap === 'number' && scIcingCap > 0 ? scIcingCap : 120,
+          purchaseCost: typeof scIcingCost === 'number' && scIcingCost >= 0 ? scIcingCost : 1500,
+          operatingCost: 30,
+          breakdownProbability: 0.01,
+          breakdownDuration: 1,
+          repairCost: 200
+        },
+        packaging: {
+          capacityPerMachine: typeof scPackagingCap === 'number' && scPackagingCap > 0 ? scPackagingCap : 150,
+          purchaseCost: typeof scPackagingCost === 'number' && scPackagingCost >= 0 ? scPackagingCost : 1000,
+          operatingCost: 20,
+          breakdownProbability: 0.01,
+          breakdownDuration: 1,
+          repairCost: 150
+        }
       },
       contracts: scContracts.map(c => ({
         name: c.name,
         startDay: c.beginsAtDay,
         endDay: c.endsAtDay,
         dailyQuantity: c.dailyDemand,
-        priceMultiplier: c.pricePerUnit / 20.0,
+        priceMultiplier: c.pricePerUnit / (typeof scSellingPrice === 'number' && scSellingPrice > 0 ? scSellingPrice : 20.0),
         penalty: c.fillRatePenalty
       })),
-      starsThresholds: [scStarsThreshold1, scStarsThreshold2, scStarsThreshold3],
+      starsThresholds: [
+        typeof scStarsThreshold1 === 'number' ? scStarsThreshold1 : 85000,
+        typeof scStarsThreshold2 === 'number' ? scStarsThreshold2 : 120000,
+        typeof scStarsThreshold3 === 'number' ? scStarsThreshold3 : 180000
+      ],
       events: []
     };
 
@@ -1639,57 +1671,63 @@ export default function InstructorDashboard() {
                   </h4>
                   <div className="grid grid-cols-2 gap-4 font-semibold text-xs text-[#2c1a0a]">
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 font-bold block">Scenario Title</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Scenario Title</label>
                       <input
                         type="text"
                         value={scName}
                         onChange={e => setScName(e.target.value)}
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono"
+                        placeholder="Muffin Experience Preset"
+                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 font-bold block">Description Brief</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Description Brief</label>
                       <input
                         type="text"
                         value={scDesc}
                         onChange={e => setScDesc(e.target.value)}
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono"
+                        placeholder="Custom crafted baking operations scenario"
+                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 font-bold block">Number of Simulated Days</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Number of Simulated Days</label>
                       <input
                         type="number"
                         value={scMaxDays}
-                        onChange={e => setScMaxDays(parseInt(e.target.value) || 30)}
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono"
+                        onChange={e => setScMaxDays(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                        placeholder="30"
+                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 font-bold block">Real-time Length of One Session (Minutes)</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Real-time Length of One Session (Minutes)</label>
                       <input
                         type="number"
                         value={scRealTime}
-                        onChange={e => setScRealTime(parseInt(e.target.value) || 15)}
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono"
+                        onChange={e => setScRealTime(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                        placeholder="15"
+                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 font-bold block">Raw materials Purchase cost (₹)</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Raw materials Purchase cost (₹)</label>
                       <input
                         type="number"
                         value={scBaseMixCost}
-                        onChange={e => setScBaseMixCost(parseFloat(e.target.value) || 5.0)}
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono"
+                        onChange={e => setScBaseMixCost(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                        placeholder="5.0"
+                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 font-bold block">Retail Sales Value (₹)</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Retail Sales Value (₹)</label>
                       <input
                         type="number"
                         value={scSellingPrice}
-                        onChange={e => setScSellingPrice(parseFloat(e.target.value) || 20.0)}
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono"
+                        onChange={e => setScSellingPrice(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
+                        placeholder="20.0"
+                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
                       />
                     </div>
                   </div>
@@ -1703,7 +1741,7 @@ export default function InstructorDashboard() {
                     Step 2: Wholesale Contracts
                   </h4>
                   <div className="space-y-2">
-                    <span className="text-[9px] uppercase font-bold text-gray-500 block">Custom Scenario Wholesale Contracts:</span>
+                    <span className="text-[10px] uppercase font-extrabold text-[#1c1917] block">Custom Scenario Wholesale Contracts:</span>
                     <div className="space-y-1 max-h-32 overflow-y-auto custom-scroll">
                       {scContracts.map((c, cidx) => (
                         <div key={c.id} className="flex justify-between items-center bg-white border border-muffin-brown/15 p-2 rounded-lg font-mono text-[9px] font-bold">
@@ -1725,43 +1763,53 @@ export default function InstructorDashboard() {
 
                   <div className="border border-muffin-brown/15 p-3 rounded-xl bg-zinc-950/5 grid grid-cols-3 gap-2 font-semibold">
                     <div className="space-y-1">
-                      <label className="text-[8px] uppercase text-gray-500 block">Name</label>
-                      <input type="text" value={newConName} onChange={e => setNewConName(e.target.value)} className="w-full bg-white border p-1" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Name</label>
+                      <input type="text" value={newConName} onChange={e => setNewConName(e.target.value)} placeholder="Distributor Name" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[8px] uppercase text-gray-500 block">Demand</label>
-                      <input type="number" value={newConDemand} onChange={e => setNewConDemand(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Demand</label>
+                      <input type="number" value={newConDemand} onChange={e => setNewConDemand(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} placeholder="40" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[8px] uppercase text-gray-500 block">Rate (₹)</label>
-                      <input type="number" value={newConRate} onChange={e => setNewConRate(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Rate (₹)</label>
+                      <input type="number" value={newConRate} onChange={e => setNewConRate(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} placeholder="30" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[8px] uppercase text-gray-500 block">Start Day</label>
-                      <input type="number" value={newConStart} onChange={e => setNewConStart(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Start Day</label>
+                      <input type="number" value={newConStart} onChange={e => setNewConStart(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} placeholder="10" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[8px] uppercase text-gray-500 block">End Day</label>
-                      <input type="number" value={newConEnd} onChange={e => setNewConEnd(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">End Day</label>
+                      <input type="number" value={newConEnd} onChange={e => setNewConEnd(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} placeholder="25" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[8px] uppercase text-gray-500 block">Penalties (₹)</label>
-                      <input type="number" value={newConPenalty} onChange={e => setNewConPenalty(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Penalties (₹)</label>
+                      <input type="number" value={newConPenalty} onChange={e => setNewConPenalty(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} placeholder="5" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
                     </div>
                     <button
                       type="button"
                       onClick={() => {
                         if (!newConName) return;
+                        const dVal = typeof newConDemand === 'number' ? newConDemand : 40;
+                        const rVal = typeof newConRate === 'number' ? newConRate : 30;
+                        const sVal = typeof newConStart === 'number' ? newConStart : 10;
+                        const eVal = typeof newConEnd === 'number' ? newConEnd : 25;
+                        const pVal = typeof newConPenalty === 'number' ? newConPenalty : 5;
                         setScContracts([...scContracts, {
                           id: `contract_${Date.now()}`,
                           name: newConName,
-                          beginsAtDay: newConStart,
-                          endsAtDay: newConEnd,
-                          dailyDemand: newConDemand,
-                          pricePerUnit: newConRate,
-                          fillRatePenalty: newConPenalty
+                          beginsAtDay: sVal,
+                          endsAtDay: eVal,
+                          dailyDemand: dVal,
+                          pricePerUnit: rVal,
+                          fillRatePenalty: pVal
                         }]);
                         setNewConName('');
+                        setNewConDemand('');
+                        setNewConRate('');
+                        setNewConStart('');
+                        setNewConEnd('');
+                        setNewConPenalty('');
                       }}
                       className="w-full col-span-3 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-sans font-black uppercase text-[9px] py-2 text-center border-none shadow-xs select-none cursor-pointer"
                     >
@@ -1778,7 +1826,7 @@ export default function InstructorDashboard() {
                     Step 3: walk-in retail demand breaking points
                   </h4>
                   <div className="flex justify-between items-center p-2 rounded-lg border border-muffin-brown/15 bg-white">
-                    <span className="font-semibold">Activate Poisson Distribution random demand:</span>
+                    <span className="font-bold text-[#1c1917]">Activate Poisson Distribution random demand:</span>
                     <button
                       type="button"
                       onClick={() => { playTone(260, 'sine', 0.05); setScPoissonDemand(!scPoissonDemand); }}
@@ -1791,7 +1839,7 @@ export default function InstructorDashboard() {
                   </div>
 
                   <div className="space-y-2">
-                    <span className="text-[9px] uppercase font-bold text-gray-500 block">Linear demand breaking points:</span>
+                    <span className="text-[10px] uppercase font-extrabold text-[#1c1917] block">Linear demand breaking points:</span>
                     <div className="space-y-1 max-h-36 overflow-y-auto custom-scroll">
                       {scBreakingPoints.map((bp, bpidx) => (
                         <div key={bpidx} className="flex justify-between items-center bg-white border border-muffin-brown/15 p-2 text-xs rounded-lg font-mono font-bold">
@@ -1810,21 +1858,37 @@ export default function InstructorDashboard() {
 
                   <div className="border border-muffin-brown/15 p-3 rounded-xl bg-zinc-950/5 grid grid-cols-2 gap-3.5 text-xs font-semibold text-slate-700">
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 block">Coordinate Day Offset</label>
-                      <input type="number" value={newBpDay} onChange={e => setNewBpDay(parseInt(e.target.value) || 0)} className="w-full bg-white border border-muffin-brown/20 p-1.5" />
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Coordinate Day Offset</label>
+                      <input
+                        type="number"
+                        value={newBpDay}
+                        onChange={e => setNewBpDay(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                        placeholder="15"
+                        className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]"
+                      />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 block">Retail Demand Volume (un)</label>
-                      <input type="number" value={newBpDemand} onChange={e => setNewBpDemand(parseInt(e.target.value) || 0)} className="w-full bg-white border border-muffin-brown/20 p-1.5" />
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Retail Demand Volume (un)</label>
+                      <input
+                        type="number"
+                        value={newBpDemand}
+                        onChange={e => setNewBpDemand(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                        placeholder="120"
+                        className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]"
+                      />
                     </div>
                     <button
                       type="button"
                       onClick={() => {
-                        const newPoints = [...scBreakingPoints, { day: newBpDay, demand: newBpDemand }];
+                        const dayVal = typeof newBpDay === 'number' ? newBpDay : 15;
+                        const demVal = typeof newBpDemand === 'number' ? newBpDemand : 120;
+                        const newPoints = [...scBreakingPoints, { day: dayVal, demand: demVal }];
                         newPoints.sort((a, b) => a.day - b.day);
                         setScBreakingPoints(newPoints);
+                        setNewBpDay('');
+                        setNewBpDemand('');
                       }}
-                      className="w-full col-span-2 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-sans font-black uppercase text-[9px] py-2 text-center border-none shadow-xs"
+                      className="w-full col-span-2 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-sans font-black uppercase text-[9px] py-2 text-center border-none shadow-xs cursor-pointer"
                     >
                       ➕ Add Coordinate Point
                     </button>
@@ -1840,60 +1904,68 @@ export default function InstructorDashboard() {
                   </h4>
                   <div className="grid grid-cols-2 gap-4 font-semibold text-xs text-[#2c1a0a]">
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-400 font-extrabold block">Starting Cash per team (₹)</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Starting Cash per team (₹)</label>
                       <input
                         type="number"
                         value={scStartCash}
-                        onChange={e => setScStartCash(parseInt(e.target.value) || 0)}
-                        className="w-full bg-white border border-muffin-brown/20 p-2.5 rounded font-mono text-xs"
+                        onChange={e => setScStartCash(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                        placeholder="100000"
+                        className="w-full bg-white border border-muffin-brown/20 p-2.5 rounded font-mono text-xs text-[#1c1917]"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-400 font-extrabold block">Starting Raw Materials (un)</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Starting Raw Materials (un)</label>
                       <input
                         type="number"
                         value={scStartMaterials}
-                        onChange={e => setScStartMaterials(parseInt(e.target.value) || 0)}
-                        className="w-full bg-white border border-muffin-brown/20 p-2.5 rounded font-mono text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-400 font-extrabold block">Initial Reorder Size</label>
-                      <input
-                        type="number"
-                        value={scStartQ}
-                        onChange={e => setScStartQ(parseInt(e.target.value) || 0)}
-                        className="w-full bg-white border border-muffin-brown/20 p-2.5 rounded font-mono text-xs"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-400 font-extrabold block">Initial Reorder Point</label>
-                      <input
-                        type="number"
-                        value={scStartR}
-                        onChange={e => setScStartR(parseInt(e.target.value) || 0)}
-                        className="w-full bg-white border border-muffin-brown/20 p-2.5 rounded font-mono text-xs"
+                        onChange={e => setScStartMaterials(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                        placeholder="12000"
+                        className="w-full bg-white border border-muffin-brown/20 p-2.5 rounded font-mono text-xs text-[#1c1917]"
                       />
                     </div>
                   </div>
                   <div className="pt-3 border-t border-muffin-brown/10 text-left">
-                    <span className="text-[9.5px] uppercase font-black text-gray-500 block mb-2">Initial Starting machine assets</span>
+                    <span className="text-[10px] uppercase font-extrabold text-[#1c1917] block mb-2">Initial Starting machine assets</span>
                     <div className="grid grid-cols-4 gap-2 text-center text-xs font-semibold text-slate-700">
                       <div className="bg-red-500/5 p-2 border border-muffin-brown/15 rounded-xl">
-                        <label className="text-[8px] uppercase text-red-800 block mb-1">Mixing lines</label>
-                        <input type="number" value={scStartMachinesMixing} onChange={e => setScStartMachinesMixing(parseInt(e.target.value) || 1)} className="w-12 bg-white border p-1 text-center text-xs font-mono font-bold" />
+                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block mb-1">Mixing lines</label>
+                        <input
+                          type="number"
+                          value={scStartMachinesMixing}
+                          onChange={e => setScStartMachinesMixing(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                          placeholder="1"
+                          className="w-12 bg-white border border-muffin-brown/20 p-1 text-center text-xs font-mono font-bold text-[#1c1917] mx-auto rounded block"
+                        />
                       </div>
                       <div className="bg-amber-500/5 p-2 border border-muffin-brown/15 rounded-xl">
-                        <label className="text-[8px] uppercase text-yellow-800 block mb-1">Baking lines</label>
-                        <input type="number" value={scStartMachinesBaking} onChange={e => setScStartMachinesBaking(parseInt(e.target.value) || 1)} className="w-12 bg-white border p-1 text-center text-xs font-mono font-bold" />
+                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block mb-1">Baking lines</label>
+                        <input
+                          type="number"
+                          value={scStartMachinesBaking}
+                          onChange={e => setScStartMachinesBaking(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                          placeholder="1"
+                          className="w-12 bg-white border border-muffin-brown/20 p-1 text-center text-xs font-mono font-bold text-[#1c1917] mx-auto rounded block"
+                        />
                       </div>
                       <div className="bg-blue-500/5 p-2 border border-muffin-brown/15 rounded-xl">
-                        <label className="text-[8px] uppercase text-blue-800 block mb-1">Icing lines</label>
-                        <input type="number" value={scStartMachinesIcing} onChange={e => setScStartMachinesIcing(parseInt(e.target.value) || 1)} className="w-12 bg-white border p-1 text-center text-xs font-mono font-bold" />
+                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block mb-1">Icing lines</label>
+                        <input
+                          type="number"
+                          value={scStartMachinesIcing}
+                          onChange={e => setScStartMachinesIcing(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                          placeholder="1"
+                          className="w-12 bg-white border border-muffin-brown/20 p-1 text-center text-xs font-mono font-bold text-[#1c1917] mx-auto rounded block"
+                        />
                       </div>
                       <div className="bg-emerald-500/5 p-2 border border-muffin-brown/15 rounded-xl">
-                        <label className="text-[8px] uppercase text-emerald-800 block mb-1">Packaging lines</label>
-                        <input type="number" value={scStartMachinesPackaging} onChange={e => setScStartMachinesPackaging(parseInt(e.target.value) || 1)} className="w-12 bg-white border p-1 text-center text-xs font-mono font-bold" />
+                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block mb-1">Packaging lines</label>
+                        <input
+                          type="number"
+                          value={scStartMachinesPackaging}
+                          onChange={e => setScStartMachinesPackaging(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                          placeholder="1"
+                          className="w-12 bg-white border border-muffin-brown/20 p-1 text-center text-xs font-mono font-bold text-[#1c1917] mx-auto rounded block"
+                        />
                       </div>
                     </div>
                   </div>
@@ -1908,57 +1980,105 @@ export default function InstructorDashboard() {
                   </h4>
                   <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-left">
                     <div className="border border-muffin-brown/15 bg-red-500/5 p-2.5 rounded-xl space-y-1">
-                      <span className="text-[9px] text-red-800 block font-bold border-b pb-1">🥣 MIX STATION</span>
+                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">🥣 MIX STATION</span>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[8px] uppercase text-gray-400 font-bold block">Capacity/day</label>
-                          <input type="number" value={scMixingCap} onChange={e => setScMixingCap(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1 font-mono text-[10px]" />
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day</label>
+                          <input
+                            type="number"
+                            value={scMixingCap}
+                            onChange={e => setScMixingCap(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                            placeholder="100"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                          />
                         </div>
                         <div>
-                          <label className="text-[8px] uppercase text-gray-400 font-bold block">Machine cost</label>
-                          <input type="number" value={scMixingCost} onChange={e => setScMixingCost(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1 font-mono text-[10px]" />
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost</label>
+                          <input
+                            type="number"
+                            value={scMixingCost}
+                            onChange={e => setScMixingCost(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                            placeholder="2000"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                          />
                         </div>
                       </div>
                     </div>
 
                     <div className="border border-muffin-brown/15 bg-amber-500/5 p-2.5 rounded-xl space-y-1">
-                      <span className="text-[9px] text-yellow-800 block font-bold border-b pb-1">🔥 OVEN STATION</span>
+                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">🔥 OVEN STATION</span>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[8px] uppercase text-gray-400 font-bold block">Capacity/day</label>
-                          <input type="number" value={scBakingCap} onChange={e => setScBakingCap(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1 font-mono text-[10px]" />
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day</label>
+                          <input
+                            type="number"
+                            value={scBakingCap}
+                            onChange={e => setScBakingCap(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                            placeholder="80"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                          />
                         </div>
                         <div>
-                          <label className="text-[8px] uppercase text-gray-400 font-bold block">Machine cost</label>
-                          <input type="number" value={scBakingCost} onChange={e => setScBakingCost(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1 font-mono text-[10px]" />
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost</label>
+                          <input
+                            type="number"
+                            value={scBakingCost}
+                            onChange={e => setScBakingCost(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                            placeholder="3000"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                          />
                         </div>
                       </div>
                     </div>
 
                     <div className="border border-muffin-brown/15 bg-blue-500/5 p-2.5 rounded-xl space-y-1">
-                      <span className="text-[9px] text-blue-800 block font-bold border-b pb-1">❄️ ICING STATION</span>
+                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">❄️ ICING STATION</span>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[8px] uppercase text-gray-400 font-bold block">Capacity/day</label>
-                          <input type="number" value={scIcingCap} onChange={e => setScIcingCap(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1 font-mono text-[10px]" />
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day</label>
+                          <input
+                            type="number"
+                            value={scIcingCap}
+                            onChange={e => setScIcingCap(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                            placeholder="120"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                          />
                         </div>
                         <div>
-                          <label className="text-[8px] uppercase text-gray-400 font-bold block">Machine cost</label>
-                          <input type="number" value={scIcingCost} onChange={e => setScIcingCost(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1 font-mono text-[10px]" />
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost</label>
+                          <input
+                            type="number"
+                            value={scIcingCost}
+                            onChange={e => setScIcingCost(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                            placeholder="1500"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                          />
                         </div>
                       </div>
                     </div>
 
                     <div className="border border-muffin-brown/15 bg-emerald-500/5 p-2.5 rounded-xl space-y-1">
-                      <span className="text-[9px] text-emerald-800 block font-bold border-b pb-1">📦 PACKAGING STATION</span>
+                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">📦 PACKAGING STATION</span>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[8px] uppercase text-gray-400 font-bold block">Capacity/day</label>
-                          <input type="number" value={scPackagingCap} onChange={e => setScPackagingCap(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1 font-mono text-[10px]" />
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day</label>
+                          <input
+                            type="number"
+                            value={scPackagingCap}
+                            onChange={e => setScPackagingCap(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                            placeholder="150"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                          />
                         </div>
                         <div>
-                          <label className="text-[8px] uppercase text-gray-400 font-bold block">Machine cost</label>
-                          <input type="number" value={scPackagingCost} onChange={e => setScPackagingCost(parseInt(e.target.value) || 0)} className="w-full bg-white border p-1 font-mono text-[10px]" />
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost</label>
+                          <input
+                            type="number"
+                            value={scPackagingCost}
+                            onChange={e => setScPackagingCost(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                            placeholder="1000"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                          />
                         </div>
                       </div>
                     </div>
@@ -1972,35 +2092,38 @@ export default function InstructorDashboard() {
                   <h4 className="font-sans font-black text-[#2c1a0a] text-xs uppercase tracking-wider border-b border-muffin-brown/5 pb-1">
                     Step 6: Stars Achievement thresholds
                   </h4>
-                  <p className="text-[10px] text-gray-400 font-serif leading-relaxed uppercase font-bold text-center">
+                  <p className="text-[11px] text-[#1c1917] font-sans leading-relaxed font-extrabold text-center">
                     Define student grading star ratings based on cumulative total cash.
                   </p>
                   <div className="space-y-4 max-w-sm mx-auto p-4 border border-muffin-brown/15 rounded-xl bg-zinc-950/5 font-semibold text-xs">
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase font-bold text-gray-500 block">⭐ 1 Star Threshold (₹)</label>
+                      <label className="text-[10px] uppercase font-extrabold text-[#1c1917] block">⭐ 1 Star Threshold (₹)</label>
                       <input
                         type="number"
                         value={scStarsThreshold1}
-                        onChange={e => setScStarsThreshold1(parseInt(e.target.value) || 0)}
-                        className="w-full bg-white border border-muffin-brown/20 p-2 text-xs font-mono font-black text-[#2c1a0a]"
+                        onChange={e => setScStarsThreshold1(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                        placeholder="85000"
+                        className="w-full bg-white border border-muffin-brown/20 p-2 text-xs font-mono font-black text-[#1c1917] rounded"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase font-bold text-gray-500 block">⭐⭐ 2 Stars Threshold (₹)</label>
+                      <label className="text-[10px] uppercase font-extrabold text-[#1c1917] block">⭐⭐ 2 Stars Threshold (₹)</label>
                       <input
                         type="number"
                         value={scStarsThreshold2}
-                        onChange={e => setScStarsThreshold2(parseInt(e.target.value) || 0)}
-                        className="w-full bg-white border border-muffin-brown/20 p-2 text-xs font-mono font-black text-[#2c1a0a]"
+                        onChange={e => setScStarsThreshold2(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                        placeholder="120000"
+                        className="w-full bg-white border border-muffin-brown/20 p-2 text-xs font-mono font-black text-[#1c1917] rounded"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase font-bold text-gray-500 block">⭐⭐⭐ 3 Stars Threshold (₹)</label>
+                      <label className="text-[10px] uppercase font-extrabold text-[#1c1917] block">⭐⭐⭐ 3 Stars Threshold (₹)</label>
                       <input
                         type="number"
                         value={scStarsThreshold3}
-                        onChange={e => setScStarsThreshold3(parseInt(e.target.value) || 0)}
-                        className="w-full bg-white border border-muffin-brown/20 p-2 text-xs font-mono font-black text-[#2c1a0a]"
+                        onChange={e => setScStarsThreshold3(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
+                        placeholder="180000"
+                        className="w-full bg-white border border-muffin-brown/20 p-2 text-xs font-mono font-black text-[#1c1917] rounded"
                       />
                     </div>
                   </div>

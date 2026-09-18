@@ -235,4 +235,68 @@ describe('Muffin Mega Factory - Simulation Engine Tests', () => {
     expect(nextState.cash).toBe(0);
   });
 
+  test('Zero Packaging Material results in exactly 0 production and no phantom consumption', () => {
+    const state = createMockTeamState();
+    // Base mix is available, but packaging material is completely 0
+    state.inventory.base_mix.onHand = 500;
+    state.inventory.packaging_material.onHand = 0;
+    state.inventory.finished_muffin.onHand = 0;
+
+    const nextState = runSimDay(
+      mockRoom,
+      state,
+      100, // 100 demand
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      mockScenario.leadTimes,
+      0.02,
+      2.5,
+      false
+    );
+
+    // Production must be 0
+    expect(nextState.history.production[nextState.history.production.length - 1]).toBe(0);
+    // Base mix should NOT be consumed
+    expect(nextState.inventory.base_mix.onHand).toBe(500);
+    // Packaging remains 0
+    expect(nextState.inventory.packaging_material.onHand).toBe(0);
+    // Muffins produced is 0
+    expect(nextState.inventory.finished_muffin.onHand).toBe(0);
+  });
+
+  test('Independent lead times for Raw Material and Packaging Material', () => {
+    const state = createMockTeamState();
+    // Trigger reorder on both
+    state.inventory.base_mix.onHand = 100; // ROP 300
+    state.inventory.packaging_material.onHand = 50; // ROP 200
+
+    const customLeadTimes = {
+      rawMaterial: 3,
+      packagingMaterial: 4,
+      machineProcurement: 5
+    };
+
+    const nextState = runSimDay(
+      mockRoom,
+      state,
+      0,
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      customLeadTimes,
+      0.02,
+      2.5,
+      false
+    );
+
+    const baseMixPO = nextState.purchaseOrders.find(po => po.materialType === 'base_mix');
+    const packagingPO = nextState.purchaseOrders.find(po => po.materialType === 'packaging_material');
+
+    expect(baseMixPO).toBeDefined();
+    expect(packagingPO).toBeDefined();
+    // Base mix lead time = 3 -> arrivalDay = day 1 + 3 = 4
+    expect(baseMixPO?.arrivalDay).toBe(4);
+    // Packaging lead time = 4 -> arrivalDay = day 1 + 4 = 5
+    expect(packagingPO?.arrivalDay).toBe(5);
+  });
+
 });

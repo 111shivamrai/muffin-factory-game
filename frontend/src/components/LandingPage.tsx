@@ -588,15 +588,10 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
               Sign in
             </button>
             <button 
-              onClick={handleLaunchDemo}
-              disabled={isDemoLoading}
-              className="font-sans text-[13px] font-bold text-white bg-[#1c1917] border-none rounded-full px-5 py-2 cursor-pointer hover:bg-[#44403c] transition-all flex items-center gap-1 disabled:opacity-70 disabled:cursor-not-allowed"
+              onClick={() => navigate('/instructor')}
+              className="font-sans text-[13px] font-bold text-[#1c1917] bg-transparent border border-[#e5e2d9] rounded-full px-5 py-2 cursor-pointer hover:border-[#1c1917] transition-all flex items-center gap-1"
             >
-              {isDemoLoading ? (
-                <><span className="animate-pulse">Launching...</span></>
-              ) : (
-                <>Try for free <ChevronRight className="w-3.5 h-3.5" /></>
-              )}
+              Instructor Login
             </button>
           </div>
         </div>
@@ -621,14 +616,6 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                 >
                   <Play className="w-4 h-4 fill-white text-white" />
                   <span>Launch Demo Free</span>
-                </button>
-                
-                <button 
-                  onClick={() => navigate('/instructor')}
-                  className="border border-[#e5e2d9] hover:border-[#1c1917] text-[#1c1917] font-sans font-bold text-sm px-6 py-3.5 rounded-full flex items-center gap-2 transition-all cursor-pointer"
-                >
-                  <span>Instructor Login</span>
-                  <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </div>
