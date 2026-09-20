@@ -287,9 +287,13 @@ export function registerSocketHandler(io: Server) {
               return callback({ error: 'Insufficient cash to buy machine' });
             }
 
+            if ((team.machines[machineType as MachineType].inTransit || 0) > 0) {
+              return callback({ error: `A machine of this type is already in transit.` });
+            }
+
             // Create Machine Order (In Transit)
             const orderId = `mo_${room.currentDay}_${machineType}_${Math.random().toString(36).substr(2, 5)}`;
-            const leadTime = scenario.leadTimes.machineProcurement;
+            const leadTime = scenario.leadTimes.machineProcurement || 3;
 
             const newOrder: MachineOrder = {
               id: orderId,
@@ -301,8 +305,7 @@ export function registerSocketHandler(io: Server) {
             };
 
             team.machineOrders.push(newOrder);
-            team.machines[machineType as MachineType].count += 1;
-            team.machines[machineType as MachineType].active += 1;
+            team.machines[machineType as MachineType].inTransit = (team.machines[machineType as MachineType].inTransit || 0) + 1;
             
             // Deduct cash immediately
             team.cash = Number((team.cash - purchaseCost).toFixed(2));

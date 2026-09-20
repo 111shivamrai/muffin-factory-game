@@ -57,11 +57,11 @@ function DashboardTopBar() {
 
   const rawArrivalDays = rawPoInTransit 
     ? Math.max(1, rawPoInTransit.arrivalDay - currentDay) 
-    : Math.max(1, ((room as any)?.scenario?.leadTimes?.rawMaterial ?? 3) + leadTimeMod);
+    : 0;
 
   const rawArrivalText = rawPoInTransit 
     ? `${rawArrivalDays} Day${rawArrivalDays === 1 ? '' : 's'}`
-    : `${rawArrivalDays.toFixed(1)} Days`;
+    : `0 Days`;
 
   // Packaging Material dynamic arrival time
   const pkgPoInTransit = teamState.purchaseOrders
@@ -70,11 +70,31 @@ function DashboardTopBar() {
 
   const pkgArrivalDays = pkgPoInTransit 
     ? Math.max(1, pkgPoInTransit.arrivalDay - currentDay) 
-    : Math.max(1, ((room as any)?.scenario?.leadTimes?.packagingMaterial ?? 3) + leadTimeMod);
+    : 0;
 
   const pkgArrivalText = pkgPoInTransit 
     ? `${pkgArrivalDays} Day${pkgArrivalDays === 1 ? '' : 's'}`
-    : `${pkgArrivalDays.toFixed(1)} Days`;
+    : `0 Days`;
+
+  // Machine Procurement dynamic arrival time
+  const machineInTransit = teamState.machineOrders
+    ?.filter(mo => mo.status === 'procuring')
+    .sort((a, b) => a.arrivalDay - b.arrivalDay)[0];
+
+  const machineArrivalDays = machineInTransit 
+    ? Math.max(1, machineInTransit.arrivalDay - currentDay) 
+    : 0;
+
+  const machineArrivalText = machineInTransit 
+    ? `${machineArrivalDays} Day${machineArrivalDays === 1 ? '' : 's'}`
+    : `0 Days`;
+
+  const machineTypeNames: Record<string, string> = {
+    mixing: 'Mixer',
+    baking: 'Oven',
+    icing: 'Icing',
+    packaging: 'Packer',
+  };
 
   return (
     <div className="flex items-center justify-between gap-2.5 select-none relative z-30 w-full">
@@ -100,9 +120,9 @@ function DashboardTopBar() {
       </div>
 
       {/* DESKTOP Stat Cards Grid (Hidden on mobile) */}
-      <div className="hidden lg:grid flex-1 grid-cols-7 gap-2 mx-2">
+      <div className="hidden lg:grid flex-1 grid-cols-8 gap-1.5 xl:gap-2 mx-1.5">
         {/* TOTAL CASH */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-2">
           <div className="text-2xl">🪙</div>
           <div className="min-w-0">
             <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
@@ -115,7 +135,7 @@ function DashboardTopBar() {
         </div>
 
         {/* LIVE DAY COUNT */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-2">
           <div className="text-2xl">⏱️</div>
           <div className="min-w-0">
             <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
@@ -138,7 +158,7 @@ function DashboardTopBar() {
               {rawArrivalText}
             </div>
             <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
-              {rawPoInTransit ? `Arrives Day ${rawPoInTransit.arrivalDay}` : 'Std lead time'}
+              {rawPoInTransit ? `Arrives Day ${rawPoInTransit.arrivalDay}` : 'No orders in transit'}
             </div>
           </div>
         </div>
@@ -154,7 +174,23 @@ function DashboardTopBar() {
               {pkgArrivalText}
             </div>
             <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
-              {pkgPoInTransit ? `Arrives Day ${pkgPoInTransit.arrivalDay}` : 'Std lead time'}
+              {pkgPoInTransit ? `Arrives Day ${pkgPoInTransit.arrivalDay}` : 'No orders in transit'}
+            </div>
+          </div>
+        </div>
+
+        {/* MACHINE ARRIVAL TIME */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5">
+          <div className="text-xl shrink-0">🏭</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight whitespace-normal">
+              MACHINE<br />ARRIVAL TIME
+            </div>
+            <div className="text-sm font-extrabold truncate text-stone-800 font-mono mt-0.5">
+              {machineArrivalText}
+            </div>
+            <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
+              {machineInTransit ? `${machineTypeNames[machineInTransit.machineType] || 'Machine'} on Day ${machineInTransit.arrivalDay}` : 'No machines arriving'}
             </div>
           </div>
         </div>
@@ -162,26 +198,19 @@ function DashboardTopBar() {
         {/* CONTRACTS */}
         <div 
           onClick={() => setShowContractsModal(true)}
-          className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2 cursor-pointer hover:bg-rose-50/50 transition-colors relative"
+          className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5 cursor-pointer hover:bg-rose-50/50 transition-colors relative"
         >
-          <div className="text-2xl relative">
-            📋
-            {contractBadgeCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 size-5 rounded-full bg-rose-500 text-white text-[10px] font-black grid place-items-center shadow-md animate-bounce">
-                {contractBadgeCount}
-              </span>
-            )}
-          </div>
+          <div className="text-xl shrink-0">📋</div>
           <div className="min-w-0 flex-1">
-            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider uppercase flex items-center gap-1">
+            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider uppercase flex items-center gap-1 leading-tight whitespace-normal">
               CONTRACTS
-              {contractBadgeCount > 0 && (
-                <span className="px-1.5 py-0.2 bg-rose-500 text-white text-[7px] rounded-full font-bold animate-pulse">
-                  {contractBadgeCount} NEW
+              {pendingOffers.length > 0 && (
+                <span className="px-1.5 py-0.2 bg-rose-100 text-rose-600 border border-rose-200 text-[6.5px] rounded-md font-bold">
+                  {pendingOffers.length} NEW
                 </span>
               )}
             </div>
-            <div className="text-sm font-extrabold truncate text-rose-500">
+            <div className="text-sm font-extrabold truncate text-rose-500 font-mono mt-0.5">
               {activeContracts.length} Active
             </div>
             <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
@@ -296,9 +325,20 @@ function DashboardTopBar() {
             <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
               <div className="text-xl">📦</div>
               <div className="min-w-0">
-                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Packaging Material Arrival Time</div>
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Packaging Arrival Time</div>
                 <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
                   {pkgArrivalText}
+                </div>
+              </div>
+            </div>
+
+            {/* Machine Arrival Time */}
+            <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
+              <div className="text-xl">🏭</div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Machine Arrival Time</div>
+                <div className="text-xs font-extrabold truncate text-stone-800 font-mono">
+                  {machineArrivalText}
                 </div>
               </div>
             </div>
@@ -308,20 +348,15 @@ function DashboardTopBar() {
               onClick={() => { setShowContractsModal(true); setShowMobileMenu(false); }}
               className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20 cursor-pointer relative"
             >
-              <div className="text-xl relative">
+              <div className="text-xl">
                 📋
-                {contractBadgeCount > 0 && (
-                  <span className="absolute -top-1 -right-1.5 size-4 rounded-full bg-rose-500 text-white text-[9px] font-black grid place-items-center animate-bounce">
-                    {contractBadgeCount}
-                  </span>
-                )}
               </div>
               <div className="min-w-0">
                 <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1">
                   Contracts
-                  {contractBadgeCount > 0 && (
-                    <span className="px-1 py-0.2 bg-rose-500 text-white text-[6px] rounded-full font-bold animate-pulse">
-                      {contractBadgeCount} NEW
+                  {pendingOffers.length > 0 && (
+                    <span className="px-1.5 py-0.2 bg-rose-100 text-rose-600 border border-rose-200 text-[6.5px] rounded-md font-bold">
+                      {pendingOffers.length} NEW
                     </span>
                   )}
                 </div>

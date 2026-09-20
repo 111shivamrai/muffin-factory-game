@@ -15,12 +15,24 @@ function MachinePanel() {
     }))
   );
 
+  const isController = role === 'controller';
+
   const [mixActive, setMixActive] = useState(1);
   const [bakeActive, setBakeActive] = useState(1);
   const [iceActive, setIceActive] = useState(1);
   const [packActive, setPackActive] = useState(1);
 
-  const isController = role === 'controller';
+  const [isBuying, setIsBuying] = useState<string | null>(null);
+
+  const handleBuy = async (type: MachineType) => {
+    if (!isController || isBuying) return;
+    setIsBuying(type);
+    try {
+      await buyMachine(type);
+    } finally {
+      setTimeout(() => setIsBuying(null), 500);
+    }
+  };
 
   const prevConfigRef = React.useRef<{
     mix: number; bake: number; ice: number; pack: number;
@@ -163,69 +175,116 @@ function MachinePanel() {
             { type: 'baking' as MachineType, label: 'Oven', state: bakeActive, setter: setBakeActive, mData: baking, cost: 3000, icon: '🥧' },
             { type: 'icing' as MachineType, label: 'Icing Machine', state: iceActive, setter: setIceActive, mData: icing, cost: 1500, icon: '🍦' },
             { type: 'packaging' as MachineType, label: 'Packaging Machine', state: packActive, setter: setPackActive, mData: packaging, cost: 1000, icon: '🎁' },
-          ].map(({ type, label, state, setter, mData, cost, icon }, idx) => (
-            <div key={type} className={`flex items-center justify-between pb-2 ${idx < 3 ? 'border-b border-dashed border-stone-200/60' : ''}`}>
-              
-              {/* Process Info */}
-              <div className="flex items-center gap-2 w-24 shrink-0">
-                <span className="text-2xl">{icon}</span>
-                <span className="text-xs font-extrabold text-stone-700 font-sans">{label}</span>
-              </div>
+          ].map(({ type, label, state, setter, mData, cost, icon }, idx) => {
+            const inTransit = mData.inTransit || 0;
+            const totalCount = mData.count + inTransit;
+            const canAfford = teamState.cash >= cost;
+            const isProcuring = inTransit > 0;
 
-              {/* Stepper controls */}
-              <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-xs">
-                {isController ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newVal = Math.max(0, state - 1);
-                      setter(newVal);
-                      updateSingle(type, newVal);
-                    }}
-                    className="w-8 h-8 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
-                  >
-                    −
-                  </button>
-                ) : null}
-                <div className="px-2.5 h-8 bg-white text-[#1c1917] text-xs font-extrabold flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none min-w-[52px]">
-                  {state} / {mData.count}
+            return (
+              <div key={type} className={`flex items-center justify-between pb-2 ${idx < 3 ? 'border-b border-dashed border-stone-200/60' : ''}`}>
+                
+                {/* Process Info */}
+                <div className="flex flex-col justify-center w-24 shrink-0 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xl shrink-0">{icon}</span>
+                    <span className="text-xs font-extrabold text-stone-700 font-sans truncate">{label}</span>
+                  </div>
+                  {isProcuring && (
+                    <span className="text-[8.5px] font-bold text-amber-700 bg-amber-50 border border-amber-300/80 px-1 py-0.2 rounded mt-0.5 inline-flex items-center gap-0.5 w-fit animate-pulse">
+                      🚚 +{inTransit} in transit
+                    </span>
+                  )}
                 </div>
-                {isController ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newVal = Math.min(mData.count, state + 1);
-                      setter(newVal);
-                      updateSingle(type, newVal);
-                    }}
-                    className="w-8 h-8 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
-                  >
-                    +
-                  </button>
-                ) : null}
-              </div>
 
-              {/* BUY button */}
-              {isController ? (
-                <button
-                  type="button"
-                  disabled={teamState.cash < cost}
-                  onClick={() => {
-                    buyMachine(type);
-                  }}
-                  title={teamState.cash < cost ? `Need ₹${cost.toLocaleString()} (Cash: ₹${teamState.cash.toLocaleString()})` : `Procure additional ${label} machine for ₹${cost.toLocaleString()}`}
-                  className={`px-3 py-2 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm border-none shrink-0 ${teamState.cash < cost ? 'opacity-40 cursor-not-allowed' : ''}`}
-                >
-                  <ShoppingCart className="w-3.5 h-3.5" />
-                  <span>BUY</span>
-                </button>
-              ) : (
-                <div className="w-14 h-8 bg-stone-100 rounded-xl flex items-center justify-center text-[8px] text-stone-400 font-bold uppercase shrink-0">
-                  Locked
+                {/* Stepper controls */}
+                <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-xs">
+                  {isController ? (
+                    <button
+                      type="button"
+                      disabled={state <= 0}
+                      onClick={() => {
+                        const newVal = Math.max(0, state - 1);
+                        setter(newVal);
+                        updateSingle(type, newVal);
+                      }}
+                      title={state <= 0 ? `No active ${label} machines` : `Deactivate one ${label}`}
+                      className={`w-8 h-8 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center transition-all border-none select-none leading-none ${
+                        state <= 0 ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                      }`}
+                    >
+                      −
+                    </button>
+                  ) : null}
+                  <div
+                    className="px-2 h-8 bg-white text-[#1c1917] text-xs font-extrabold flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none min-w-[56px]"
+                    title={`${state} active / ${totalCount} total (${mData.count} floor${isProcuring ? `, ${inTransit} transit` : ''})`}
+                  >
+                    {state} : {totalCount}
+                  </div>
+                  {isController ? (
+                    <button
+                      type="button"
+                      disabled={state >= mData.count}
+                      onClick={() => {
+                        const newVal = Math.min(mData.count, state + 1);
+                        setter(newVal);
+                        updateSingle(type, newVal);
+                      }}
+                      title={
+                        state >= mData.count
+                          ? isProcuring
+                            ? `Cannot activate: purchased machine is still in transit`
+                            : `All available ${label} machines are active`
+                          : `Activate one more ${label}`
+                      }
+                      className={`w-8 h-8 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center transition-all border-none select-none leading-none ${
+                        state >= mData.count ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                      }`}
+                    >
+                      +
+                    </button>
+                  ) : null}
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* BUY button */}
+                {isController ? (
+                  isProcuring ? (
+                    <button
+                      type="button"
+                      disabled
+                      title={`A ${label} machine is currently ordered and in transit! You cannot buy another until this one arrives.`}
+                      className="px-2.5 py-2 bg-amber-50 border border-amber-300 text-amber-800 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 cursor-not-allowed shrink-0 shadow-xs select-none"
+                    >
+                      <span className="text-xs">🚚</span>
+                      <span>ORDERED</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={!canAfford || isBuying === type}
+                      onClick={() => handleBuy(type)}
+                      title={
+                        !canAfford
+                          ? `Need ₹${cost.toLocaleString()} (Cash: ₹${teamState.cash.toLocaleString()})`
+                          : `Procure additional ${label} machine for ₹${cost.toLocaleString()}`
+                      }
+                      className={`px-3 py-2 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm border-none shrink-0 ${
+                        !canAfford || isBuying === type ? 'opacity-40 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <ShoppingCart className="w-3.5 h-3.5" />
+                      <span>{isBuying === type ? 'ORDERING...' : 'BUY'}</span>
+                    </button>
+                  )
+                ) : (
+                  <div className="w-14 h-8 bg-stone-100 rounded-xl flex items-center justify-center text-[8px] text-stone-400 font-bold uppercase shrink-0">
+                    Locked
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* ─── UTILIZATION Section ─── */}

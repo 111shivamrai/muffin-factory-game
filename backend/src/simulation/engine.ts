@@ -221,8 +221,9 @@ export function runSimDay(
   nextState.machineOrders.forEach((mo: MachineOrder) => {
     if (mo.status === 'procuring' && mo.arrivalDay <= day) {
       mo.status = 'delivered';
-      // Machine count is already incremented at purchase time
-      nextState.machines[mo.machineType].inTransit = Math.max(0, nextState.machines[mo.machineType].inTransit - 1);
+      nextState.machines[mo.machineType].count += 1;
+      nextState.machines[mo.machineType].active += 1;
+      nextState.machines[mo.machineType].inTransit = Math.max(0, (nextState.machines[mo.machineType].inTransit || 0) - 1);
     }
   });
 
