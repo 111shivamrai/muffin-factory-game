@@ -2,7 +2,7 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { db } from '../db/db.js';
 import { runSimDay, getDemandForDay, DEFAULT_MACHINE_CONFIGS } from '../simulation/engine.js';
-import { TeamState, Room, SavedScenario, MachineType, MaterialType, MachineOrder } from '../types/index.js';
+import { TeamState, Room, SavedScenario, MachineType, MaterialType, MachineOrder, PurchaseOrder } from '../types/index.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_muffin_mega_factory_2026';
 
@@ -267,9 +267,46 @@ export function registerSocketHandler(io: Server) {
             if (!materialType || orderQty === undefined || reorderPoint === undefined) {
               return callback({ error: 'Missing inventory fields' });
             }
-            if (team.inventory[materialType as MaterialType]) {
-              team.inventory[materialType as MaterialType].orderQty = Math.max(0, parseInt(orderQty));
-              team.inventory[materialType as MaterialType].reorderPoint = Math.max(0, parseInt(reorderPoint));
+            const inv = team.inventory[materialType as MaterialType];
+            if (inv) {
+              inv.orderQty = Math.max(0, parseInt(orderQty));
+              inv.reorderPoint = Math.max(0, parseInt(reorderPoint));
+
+              // If inventory position (onHand + inTransit) is at or below reorder point, trigger replenishment order immediately
+              const inventoryPosition = inv.onHand + inv.inTransit;
+              if (inventoryPosition <= inv.reorderPoint && inv.orderQty > 0) {
+                const baseLeadTimes = scenario.leadTimes;
+                const activeEvents = room.events || [];
+                const rawMaterialLeadTimeModifier = activeEvents
+                  .filter((ev: any) => ev.active && ev.targetVariable === 'lead_time')
+                  .reduce((sum: number, ev: any) => sum + ev.modifier, 0) || 0;
+
+                const baseLT = (materialType === 'packaging_material' && (baseLeadTimes as any).packagingMaterial !== undefined)
+                  ? (baseLeadTimes as any).packagingMaterial
+                  : baseLeadTimes.rawMaterial;
+                const leadTime = Math.max(1, baseLT + rawMaterialLeadTimeModifier);
+                const poId = `po_${room.currentDay}_${materialType}_${Math.random().toString(36).substr(2, 5)}`;
+
+                const currentMaterialCosts = scenario.materialCosts;
+                const rawCost = inv.orderQty * currentMaterialCosts[materialType === 'base_mix' ? 'base_mix' : 'packaging_material'];
+                const orderingFee = currentMaterialCosts.order_cost;
+                const totalOrderCost = rawCost + orderingFee;
+
+                const newPO: PurchaseOrder = {
+                  id: poId,
+                  materialType: materialType as MaterialType,
+                  quantity: inv.orderQty,
+                  orderDay: room.currentDay,
+                  arrivalDay: room.currentDay + leadTime,
+                  cost: totalOrderCost,
+                  status: 'transit'
+                };
+
+                team.purchaseOrders = team.purchaseOrders || [];
+                team.purchaseOrders.push(newPO);
+                inv.inTransit += inv.orderQty;
+                team.cash = Number((team.cash - totalOrderCost).toFixed(2));
+              }
             }
             break;
           }
