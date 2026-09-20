@@ -264,17 +264,26 @@ export function registerSocketHandler(io: Server) {
         switch (payload.actionType) {
           case 'update_inventory_settings': {
             const { materialType, orderQty, reorderPoint } = payload.details;
-            if (!materialType || orderQty === undefined || reorderPoint === undefined) {
+            if (!materialType || orderQty === undefined) {
               return callback({ error: 'Missing inventory fields' });
             }
             const inv = team.inventory[materialType as MaterialType];
             if (inv) {
-              inv.orderQty = Math.max(0, parseInt(orderQty));
-              inv.reorderPoint = Math.max(0, parseInt(reorderPoint));
+              inv.orderQty = Math.max(0, parseInt(orderQty) || 0);
+              if (reorderPoint !== undefined) {
+                inv.reorderPoint = Math.max(0, parseInt(reorderPoint) || 0);
+              }
 
-              // If inventory position (onHand + inTransit) is at or below reorder point, trigger replenishment order immediately
-              const inventoryPosition = inv.onHand + inv.inTransit;
-              if (inventoryPosition <= inv.reorderPoint && inv.orderQty > 0) {
+              // Place replenishment order if none currently in transit and orderQty > 0,
+              // or if inventory position is at/below reorder point
+              const hasTransitPO = (team.purchaseOrders || []).some(
+                (po: PurchaseOrder) => po.materialType === materialType && po.status === 'transit'
+              );
+              
+              const inventoryPosition = inv.onHand + (inv.inTransit || 0);
+              const shouldOrder = (!hasTransitPO && inv.orderQty > 0) || (inventoryPosition <= inv.reorderPoint && inv.orderQty > 0);
+
+              if (shouldOrder && !hasTransitPO) {
                 const baseLeadTimes = scenario.leadTimes;
                 const activeEvents = room.events || [];
                 const rawMaterialLeadTimeModifier = activeEvents
@@ -304,7 +313,7 @@ export function registerSocketHandler(io: Server) {
 
                 team.purchaseOrders = team.purchaseOrders || [];
                 team.purchaseOrders.push(newPO);
-                inv.inTransit += inv.orderQty;
+                inv.inTransit = (inv.inTransit || 0) + inv.orderQty;
                 team.cash = Number((team.cash - totalOrderCost).toFixed(2));
               }
             }

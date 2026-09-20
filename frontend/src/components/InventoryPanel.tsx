@@ -49,11 +49,28 @@ function InventoryPanel() {
     prevRef.current = cur;
   }, [teamState?.inventory]);
 
-  const handleApplyChanges = () => {
-    if (!isController) return;
-    updateInventorySettings('base_mix',           mixQty,  mixROP);
-    updateInventorySettings('packaging_material', packQty, packROP);
-    alert('Inventory target levels successfully updated!');
+  const [isApplying, setIsApplying] = useState(false);
+
+  const handleApplyChanges = async () => {
+    if (!isController || isApplying) return;
+    setIsApplying(true);
+    try {
+      const resMix = await updateInventorySettings('base_mix', mixQty, mixROP, 0);
+      if (resMix && resMix.error) {
+        alert(`Failed to update raw material: ${resMix.error}`);
+        return;
+      }
+      const resPack = await updateInventorySettings('packaging_material', packQty, packROP, 0);
+      if (resPack && resPack.error) {
+        alert(`Failed to update packaging material: ${resPack.error}`);
+        return;
+      }
+      alert('Order changes applied successfully! Materials ordered and in transit.');
+    } catch (err: any) {
+      alert(`Error applying order changes: ${err.message || err}`);
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   if (!teamState) return null;
@@ -196,11 +213,15 @@ function InventoryPanel() {
           <div className="mt-3">
             {isController ? (
               <button
+                type="button"
+                disabled={isApplying}
                 onClick={handleApplyChanges}
-                className="w-full py-3 rounded-xl bg-gradient-to-b from-[#0e8a43] to-[#0b7036] text-white font-extrabold text-xs shadow-[0_3px_0_#09592b] hover:translate-y-[1px] hover:shadow-[0_2px_0_#09592b] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
+                className={`w-full py-3 rounded-xl bg-gradient-to-b from-[#0e8a43] to-[#0b7036] text-white font-extrabold text-xs shadow-[0_3px_0_#09592b] hover:translate-y-[1px] hover:shadow-[0_2px_0_#09592b] active:translate-y-[3px] active:shadow-none transition-all border-none flex items-center justify-center gap-1.5 ${
+                  isApplying ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
               >
                 <Check className="w-4 h-4 font-bold" />
-                <span>APPLY ORDER CHANGES</span>
+                <span>{isApplying ? 'APPLYING ORDER...' : 'APPLY ORDER CHANGES'}</span>
               </button>
             ) : (
               <div className="py-2.5 bg-slate-100 border border-slate-200 text-[10px] rounded-xl text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
