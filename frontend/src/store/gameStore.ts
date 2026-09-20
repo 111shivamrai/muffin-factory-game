@@ -33,7 +33,7 @@ interface GameStore {
   disconnectSocket: () => void;
 
   // Operator Actions
-  updateInventorySettings: (materialType: string, orderQty: number, reorderPoint: number, safetyStock: number) => Promise<void>;
+  updateInventorySettings: (materialType: string, orderQty: number, reorderPoint: number, safetyStock?: number) => Promise<void>;
   buyMachine: (machineType: string) => Promise<void>;
   toggleMachineStatus: (machineType: string, activeCount: number) => Promise<void>;
   updateAllMachineStatuses: (statuses: Record<string, number>) => Promise<void>;
@@ -228,7 +228,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!s) return;
     s.emit('operator_action', {
       actionType: 'update_inventory_settings',
-      details: { materialType, orderQty, reorderPoint, safetyStock }
+      details: { materialType, orderQty, reorderPoint, ...(safetyStock !== undefined ? { safetyStock } : {}) }
     }, (res: any) => {
       if (res && res.error) {
         alert(res.error);

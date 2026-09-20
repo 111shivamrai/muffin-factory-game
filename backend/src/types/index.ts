@@ -45,7 +45,7 @@ export interface Inventory {
   inTransit: number;
   orderQty: number;
   reorderPoint: number;
-  safetyStock: number;
+  safetyStock?: number;
 }
 
 export interface PurchaseOrder {

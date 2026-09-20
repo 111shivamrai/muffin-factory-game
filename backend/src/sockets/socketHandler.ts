@@ -34,9 +34,9 @@ function createInitialTeamState(teamId: string, teamName: string, controllerId: 
   };
 
   const defaultInventory = {
-    base_mix: { materialType: 'base_mix' as MaterialType, onHand: 1000, inTransit: 0, orderQty: 1000, reorderPoint: 300, safetyStock: 200 },
-    packaging_material: { materialType: 'packaging_material' as MaterialType, onHand: 800, inTransit: 0, orderQty: 1000, reorderPoint: 200, safetyStock: 100 },
-    finished_muffin: { materialType: 'finished_muffin' as MaterialType, onHand: 100, inTransit: 0, orderQty: 0, reorderPoint: 0, safetyStock: 0 }
+    base_mix: { materialType: 'base_mix' as MaterialType, onHand: 1000, inTransit: 0, orderQty: 1000, reorderPoint: 300 },
+    packaging_material: { materialType: 'packaging_material' as MaterialType, onHand: 800, inTransit: 0, orderQty: 1000, reorderPoint: 200 },
+    finished_muffin: { materialType: 'finished_muffin' as MaterialType, onHand: 100, inTransit: 0, orderQty: 0, reorderPoint: 0 }
   };
 
   return {
@@ -263,14 +263,13 @@ export function registerSocketHandler(io: Server) {
 
         switch (payload.actionType) {
           case 'update_inventory_settings': {
-            const { materialType, orderQty, reorderPoint, safetyStock } = payload.details;
-            if (!materialType || orderQty === undefined || reorderPoint === undefined || safetyStock === undefined) {
+            const { materialType, orderQty, reorderPoint } = payload.details;
+            if (!materialType || orderQty === undefined || reorderPoint === undefined) {
               return callback({ error: 'Missing inventory fields' });
             }
             if (team.inventory[materialType as MaterialType]) {
               team.inventory[materialType as MaterialType].orderQty = Math.max(0, parseInt(orderQty));
               team.inventory[materialType as MaterialType].reorderPoint = Math.max(0, parseInt(reorderPoint));
-              team.inventory[materialType as MaterialType].safetyStock = Math.max(0, parseInt(safetyStock));
             }
             break;
           }

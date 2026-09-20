@@ -15,17 +15,15 @@ function InventoryPanel() {
   const [activeTab,  setActiveTab]  = useState<'mix' | 'pack'>('mix');
   const [mixQty,     setMixQty]     = useState(10);
   const [mixROP,     setMixROP]     = useState(40);
-  const [mixSafety,  setMixSafety]  = useState(10);
   const [packQty,    setPackQty]    = useState(10);
   const [packROP,    setPackROP]    = useState(40);
-  const [packSafety, setPackSafety] = useState(10);
 
   const isController = role === 'controller';
 
   // Sync server values into local state (only on real changes)
   const prevRef = React.useRef<{
-    mix:  { q: number; r: number; s: number };
-    pack: { q: number; r: number; s: number };
+    mix:  { q: number; r: number };
+    pack: { q: number; r: number };
   } | null>(null);
 
   useEffect(() => {
@@ -35,28 +33,26 @@ function InventoryPanel() {
     if (!m || !p) return;
 
     const cur = {
-      mix:  { q: m.orderQty, r: m.reorderPoint, s: m.safetyStock },
-      pack: { q: p.orderQty, r: p.reorderPoint, s: p.safetyStock },
+      mix:  { q: m.orderQty, r: m.reorderPoint },
+      pack: { q: p.orderQty, r: p.reorderPoint },
     };
     const prev = prevRef.current;
 
-    if (!prev || prev.mix.q !== cur.mix.q || prev.mix.r !== cur.mix.r || prev.mix.s !== cur.mix.s) {
+    if (!prev || prev.mix.q !== cur.mix.q || prev.mix.r !== cur.mix.r) {
       setMixQty(m.orderQty);
       setMixROP(m.reorderPoint);
-      setMixSafety(m.safetyStock);
     }
-    if (!prev || prev.pack.q !== cur.pack.q || prev.pack.r !== cur.pack.r || prev.pack.s !== cur.pack.s) {
+    if (!prev || prev.pack.q !== cur.pack.q || prev.pack.r !== cur.pack.r) {
       setPackQty(p.orderQty);
       setPackROP(p.reorderPoint);
-      setPackSafety(p.safetyStock);
     }
     prevRef.current = cur;
   }, [teamState?.inventory]);
 
   const handleApplyChanges = () => {
     if (!isController) return;
-    updateInventorySettings('base_mix',           mixQty,  mixROP,  mixSafety);
-    updateInventorySettings('packaging_material', packQty, packROP, packSafety);
+    updateInventorySettings('base_mix',           mixQty,  mixROP);
+    updateInventorySettings('packaging_material', packQty, packROP);
     alert('Inventory target levels successfully updated!');
   };
 
@@ -137,17 +133,17 @@ function InventoryPanel() {
           {/* Three Inventory Cards Grid */}
           <div className="grid grid-cols-3 gap-2">
             <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
-              <div className="text-[9px] font-bold text-stone-500 tracking-wider">RAW MATERIAL INVENTORY</div>
+              <div className="text-[9px] font-bold text-stone-500 tracking-wider">RAW MATERIAL</div>
               <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{mixOnHand}</div>
               <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {mixTransit}</div>
             </div>
             <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
-              <div className="text-[9px] font-bold text-stone-500 tracking-wider">PACKAGING MATERIAL INVENTORY</div>
+              <div className="text-[9px] font-bold text-stone-500 tracking-wider">PACKAGING MATERIAL</div>
               <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{packOnHand}</div>
               <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {packTransit}</div>
             </div>
             <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
-              <div className="text-[9px] font-bold text-stone-500 tracking-wider">FINISHED GOODS INVENTORY</div>
+              <div className="text-[9px] font-bold text-stone-500 tracking-wider">FINISHED GOODS</div>
               <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{finishedOnHand}</div>
               <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Muffins</div>
             </div>
