@@ -20,6 +20,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
 
   // Sound Safeguard states
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [copiedCode, setCopiedCode] = useState(false);
 
   // Safeguard limits
   const [safeguards, setSafeguards] = useState({
@@ -816,8 +817,24 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       <span className="font-sans font-black text-xs text-dynamic-text block truncate mt-0.5">{room.name}</span>
                     </div>
                     <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10">
-                      <span className="text-[8px] uppercase text-gray-400 block font-bold">ROOM CODE</span>
-                      <span className="font-mono font-black text-lg text-muffin-gold block mt-0.5 tracking-wider uppercase">{room.code}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[8px] uppercase text-gray-400 block font-bold">ROOM CODE</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (room?.code) {
+                              navigator.clipboard.writeText(room.code);
+                              setCopiedCode(true);
+                              setTimeout(() => setCopiedCode(false), 2000);
+                            }
+                          }}
+                          className="text-[9px] font-bold text-muffin-gold hover:text-muffin-brown dark:hover:text-white flex items-center gap-1 cursor-pointer bg-transparent border-none p-0 transition-colors"
+                          title="Copy Room Code"
+                        >
+                          {copiedCode ? <><Check className="w-3 h-3 text-emerald-500" /><span className="text-emerald-500 font-mono">COPIED!</span></> : <><Copy className="w-3 h-3" /><span className="font-mono">COPY</span></>}
+                        </button>
+                      </div>
+                      <span className="font-mono font-black text-lg text-muffin-gold block mt-0.5 tracking-wider uppercase select-all">{room.code}</span>
                     </div>
                     <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10 grid grid-cols-3 gap-2">
                       <div>
@@ -860,8 +877,24 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       <span className="font-sans font-black text-xs text-dynamic-text block truncate mt-0.5">{room.name}</span>
                     </div>
                     <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10">
-                      <span className="text-[8px] uppercase text-gray-400 block font-bold">ROOM CODE</span>
-                      <span className="font-mono font-black text-xs text-muffin-gold block truncate mt-0.5 tracking-widest uppercase">{room.code}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[8px] uppercase text-gray-400 block font-bold">ROOM CODE</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (room?.code) {
+                              navigator.clipboard.writeText(room.code);
+                              setCopiedCode(true);
+                              setTimeout(() => setCopiedCode(false), 2000);
+                            }
+                          }}
+                          className="text-[9px] font-bold text-muffin-gold hover:text-muffin-brown dark:hover:text-white flex items-center gap-1 cursor-pointer bg-transparent border-none p-0 transition-colors"
+                          title="Copy Room Code"
+                        >
+                          {copiedCode ? <><Check className="w-3 h-3 text-emerald-500" /><span className="text-emerald-500 font-mono">COPIED!</span></> : <><Copy className="w-3 h-3" /><span className="font-mono">COPY</span></>}
+                        </button>
+                      </div>
+                      <span className="font-mono font-black text-sm text-muffin-gold block mt-0.5 tracking-widest uppercase select-all">{room.code}</span>
                     </div>
                     <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10">
                       <span className="text-[8px] uppercase text-gray-400 block font-bold">SIMULATED TIME</span>
@@ -1185,8 +1218,23 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       <p className="text-[10px] font-mono font-black uppercase text-gray-400 tracking-widest leading-relaxed">
                         Waiting for students to connect to factory floor...
                         <br />
-                        <span className="text-slate-700 bg-muffin-gold/15 border border-muffin-gold/30 px-3 py-1.5 text-[14px] rounded-xl mt-3.5 inline-block font-sans lowercase">
-                          Provide code: <span className="font-mono uppercase font-black tracking-normal text-muffin-brown dark:text-muffin-cream">{room.code}</span>
+                        <span className="text-slate-700 dark:text-zinc-200 bg-muffin-gold/15 border border-muffin-gold/30 px-3.5 py-1.5 text-[14px] rounded-xl mt-3.5 inline-flex items-center gap-2 font-sans lowercase">
+                          <span>Provide code:</span>
+                          <span className="font-mono uppercase font-black tracking-wider text-muffin-brown dark:text-muffin-cream select-all">{room.code}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (room?.code) {
+                                navigator.clipboard.writeText(room.code);
+                                setCopiedCode(true);
+                                setTimeout(() => setCopiedCode(false), 2000);
+                              }
+                            }}
+                            className="text-[10px] font-bold text-muffin-gold hover:text-muffin-brown dark:hover:text-white flex items-center gap-1 cursor-pointer bg-white/40 dark:bg-black/20 px-2 py-0.5 rounded border border-muffin-gold/40 transition-colors ml-1"
+                            title="Copy Room Code"
+                          >
+                            {copiedCode ? <><Check className="w-3 h-3 text-emerald-500" /><span className="text-emerald-500 font-mono uppercase">COPIED!</span></> : <><Copy className="w-3 h-3" /><span className="font-mono uppercase">COPY</span></>}
+                          </button>
                         </span>
                       </p>
                     </div>

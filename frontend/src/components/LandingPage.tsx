@@ -28,7 +28,8 @@ interface FeatureItem {
 export default function LandingPage({ navigate }: { navigate: (to: string) => void }) {
   const { login, joinRoom, isAuthenticated, user, logout, room, teamState } = useGameStore();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [error, setError] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [joinError, setJoinError] = useState('');
   
   // Auth Form
   const [authEmail, setAuthEmail] = useState('');
@@ -127,19 +128,19 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
   // Handle Login
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setAuthError('');
 
     try {
       // Use auth login endpoint
       const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: authEmail, password: authPassword })
+        body: JSON.stringify({ email: authEmail.trim(), password: authPassword })
       });
       const data = await res.json();
 
       if (data.error) {
-        setError(data.error);
+        setAuthError(data.error);
       } else {
         login(data.token, data.user);
         setIsLoginModalOpen(false);
@@ -151,17 +152,21 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
         }
       }
     } catch (err) {
-      setError('Connection failed. Is the server running?');
+      setAuthError('Connection failed. Is the server running?');
     }
   };
 
   // Handle Join Room (for student operator entry)
   const handleJoinRoomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setJoinError('');
 
-    if (!roomCode || !teamName || !joinName) {
-      setError('All fields are required to join');
+    const cleanRoomCode = roomCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const cleanTeamName = teamName.trim();
+    const cleanJoinName = joinName.trim();
+
+    if (!cleanRoomCode || !cleanTeamName || !cleanJoinName) {
+      setJoinError('All fields are required to join');
       return;
     }
 
@@ -173,7 +178,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
         res = await fetch(`${API_URL}/api/auth/student-login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: joinName, roomCode: roomCode.toUpperCase() })
+          body: JSON.stringify({ name: cleanJoinName, roomCode: cleanRoomCode })
         });
         data = await res.json();
         if (!data.error) break; // Success!
@@ -184,7 +189,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
       }
 
       if (data.error) {
-        setError(data.error);
+        setJoinError(data.error);
         return;
       }
 
@@ -192,21 +197,23 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
       login(data.token, data.user);
 
       // Now join the room/team
-      await joinRoom(roomCode.toUpperCase(), teamName);
+      await joinRoom(cleanRoomCode, cleanTeamName);
     } catch (err: any) {
-      setError(err?.message || err || 'Failed to join the simulation room');
+      setJoinError(err?.message || err || 'Failed to join the simulation room');
     }
   };
 
+  const [demoError, setDemoError] = useState('');
+
   const handleLaunchDemo = async () => {
-    setError('');
+    setDemoError('');
     setIsDemoLoading(true);
     try {
       // 1. Fetch active demo room code
       const roomRes = await fetch(`${API_URL}/api/rooms/active-demo`);
       const roomData = await roomRes.json();
       if (roomData.error) {
-        setError(roomData.error);
+        setDemoError(roomData.error);
         setIsDemoLoading(false);
         return;
       }
@@ -222,7 +229,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
       const data = await res.json();
 
       if (data.error) {
-        setError(data.error);
+        setDemoError(data.error);
         setIsDemoLoading(false);
         return;
       }
@@ -234,7 +241,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
       // 3. Automatically join the demo room
       await joinRoom(code, 'Demo Team');
     } catch (err: any) {
-      setError(err?.message || err || 'Connection failed. Is the server running?');
+      setDemoError(err?.message || err || 'Connection failed. Is the server running?');
     } finally {
       setIsDemoLoading(false);
     }
@@ -509,7 +516,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
             ) : (
               <>
                 <button 
-                  onClick={() => setIsLoginModalOpen(true)}
+                  onClick={() => { setAuthError(''); setJoinError(''); setIsLoginModalOpen(true); }}
                   className="font-sans text-[13px] font-bold text-[#1c1917] bg-transparent border border-[#e5e2d9] rounded-full px-5 py-2 cursor-pointer hover:border-[#1c1917] transition-all"
                 >
                   Sign in
@@ -1391,10 +1398,13 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                       <input
                         type="text"
                         required
-                        placeholder="6-CHARACTER CODE"
-                        maxLength={6}
+                        placeholder="ENTER ROOM CODE"
+                        maxLength={12}
                         value={roomCode}
-                        onChange={(e) => setRoomCode(e.target.value)}
+                        onChange={(e) => {
+                          setRoomCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+                          setJoinError('');
+                        }}
                         className="w-full bg-[#fcfaf6] border border-[#e5e2d9] rounded-xl py-2.5 px-4 text-xs text-center text-[#1c1917] placeholder-[#a8a29e] font-mono tracking-widest uppercase font-bold focus:outline-none focus:border-[#1c1917] transition-all"
                       />
                     </div>
@@ -1406,9 +1416,9 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>JOIN TEAM WORKFLOOR</span>
                     </button>
-                    {error && !error.includes('email') && !error.includes('password') && !error.includes('Access denied') && !error.includes('Connection failed') && (
+                    {joinError && (
                       <div className="text-[11px] text-[#c0392b] font-semibold text-center mt-2">
-                        ⚠️ {error}
+                        ⚠️ {joinError}
                       </div>
                     )}
                   </form>
@@ -1436,7 +1446,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                           required
                           placeholder="email@example.com"
                           value={authEmail}
-                          onChange={(e) => setAuthEmail(e.target.value)}
+                          onChange={(e) => { setAuthEmail(e.target.value); setAuthError(''); }}
                           className="w-full bg-[#fcfaf6] border border-[#e5e2d9] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#1c1917] placeholder-[#a8a29e] focus:outline-none focus:border-[#1c1917] transition-all"
                         />
                       </div>
@@ -1451,7 +1461,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                           required
                           placeholder="••••••••"
                           value={authPassword}
-                          onChange={(e) => setAuthPassword(e.target.value)}
+                          onChange={(e) => { setAuthPassword(e.target.value); setAuthError(''); }}
                           className="w-full bg-[#fcfaf6] border border-[#e5e2d9] rounded-xl pl-10 pr-10 py-2.5 text-xs text-[#1c1917] placeholder-[#a8a29e] focus:outline-none focus:border-[#1c1917] transition-all"
                         />
                         <button 
@@ -1464,9 +1474,9 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                       </div>
                     </div>
 
-                    {error && (
+                    {authError && (
                       <div className="text-[11px] text-[#c0392b] font-semibold text-center mt-2">
-                        ⚠️ {error}
+                        ⚠️ {authError}
                       </div>
                     )}
 
