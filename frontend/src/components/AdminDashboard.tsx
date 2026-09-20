@@ -23,7 +23,7 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && !window.location.hostname.includes('localhost') ? 'https://muffin-factory-game.onrender.com' : 'http://localhost:5001');
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ navigate }: { navigate?: (to: string) => void } = {}) {
   const { 
     logout, roomsList, loadRooms, deleteRoom, 
     scenarios, loadScenarios, deleteScenario, duplicateScenario, user 
@@ -411,7 +411,7 @@ export default function AdminDashboard() {
               {sidebarCollapsed ? "➡" : "⬅ Collapse"}
             </button>
             <button 
-              onClick={logout}
+              onClick={() => { logout(); if (navigate) navigate('/'); }}
               className="w-9 h-9 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center cursor-pointer select-none hover:bg-red-100 dark:hover:bg-red-950/40 active:scale-95"
               title="Logout"
             >

@@ -32,10 +32,15 @@ export default function InstructorLoginPage({ navigate }: InstructorLoginPagePro
 
       if (data.error) {
         setError(data.error);
-      } else if (data.user.role !== 'instructor') {
-        setError('Access denied: You must be an instructor.');
+      } else if (data.user.role !== 'instructor' && data.user.role !== 'admin') {
+        setError('Access denied: You must be an instructor or administrator.');
       } else {
         login(data.token, data.user);
+        if (data.user.role === 'admin') {
+          navigate('/saas-admin');
+        } else {
+          navigate('/instructor');
+        }
       }
     } catch (err) {
       setLoading(false);

@@ -36,6 +36,7 @@ export default function AdminLoginPage({ navigate }: AdminLoginPageProps) {
         setError('Access denied: You must be an administrator.');
       } else {
         login(data.token, data.user);
+        navigate('/saas-admin');
       }
     } catch (err) {
       setLoading(false);

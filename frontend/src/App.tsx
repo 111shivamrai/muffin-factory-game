@@ -74,17 +74,17 @@ export default function App() {
   }, []);
 
   // Route 1: Admin Panel Dashboard or Login
-  if (path === '/saas-admin') {
+  if (path === '/saas-admin' || path === '/admin') {
     if (isAuthenticated && user && user.role === 'admin') {
-      return <AdminDashboard />;
+      return <AdminDashboard navigate={navigate} />;
     }
     return <AdminLoginPage navigate={navigate} />;
   }
 
   // Route 2: Instructor Panel Dashboard or Login
   if (path === '/instructor') {
-    if (isAuthenticated && user && user.role === 'instructor') {
-      return <InstructorDashboard />;
+    if (isAuthenticated && user && (user.role === 'instructor' || user.role === 'admin')) {
+      return <InstructorDashboard navigate={navigate} />;
     }
     return <InstructorLoginPage navigate={navigate} />;
   }

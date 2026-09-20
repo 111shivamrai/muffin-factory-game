@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { SavedScenario, Room, TeamState } from '../../../backend/src/types/index.js';
 
-export default function InstructorDashboard() {
+export default function InstructorDashboard({ navigate }: { navigate?: (to: string) => void } = {}) {
   const { 
     logout, exitRoom, scenarios, loadScenarios, roomsList, loadRooms, createRoom, deleteRoom,
     room, role, joinRoom, socket, instructorTeams, instructorControl, user, members
@@ -676,7 +676,15 @@ export default function InstructorDashboard() {
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => { playTone(200, 'sine', 0.05); room ? exitRoom() : logout(); }}
+            onClick={() => { 
+              playTone(200, 'sine', 0.05); 
+              if (room) {
+                exitRoom();
+              } else {
+                logout();
+                if (navigate) navigate('/');
+              }
+            }}
             className="flex items-center gap-1.5 bg-white/5 hover:bg-red-950/20 hover:text-red-400 border border-white/10 hover:border-red-500/25 px-3 py-1.5 rounded-lg text-[9px] uppercase font-black text-gray-300 transition-all cursor-pointer select-none active:scale-95 animate-fade-in"
             title={room ? "Return to Lobby" : "Exit Instructor Portal"}
           >

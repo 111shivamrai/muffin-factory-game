@@ -143,6 +143,12 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
       } else {
         login(data.token, data.user);
         setIsLoginModalOpen(false);
+        setAuthPassword('');
+        if (data.user.role === 'admin') {
+          navigate('/saas-admin');
+        } else if (data.user.role === 'instructor') {
+          navigate('/instructor');
+        }
       }
     } catch (err) {
       setError('Connection failed. Is the server running?');
@@ -470,18 +476,52 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
           </div>
 
           <div className="flex items-center gap-2.5">
-            <button 
-              onClick={() => setIsLoginModalOpen(true)}
-              className="font-sans text-[13px] font-bold text-[#1c1917] bg-transparent border border-[#e5e2d9] rounded-full px-5 py-2 cursor-pointer hover:border-[#1c1917] transition-all"
-            >
-              Sign in
-            </button>
-            <button 
-              onClick={() => navigate('/instructor')}
-              className="font-sans text-[13px] font-bold text-[#1c1917] bg-transparent border border-[#e5e2d9] rounded-full px-5 py-2 cursor-pointer hover:border-[#1c1917] transition-all flex items-center gap-1"
-            >
-              Instructor Login
-            </button>
+            {isAuthenticated && user?.role === 'admin' ? (
+              <>
+                <button 
+                  onClick={() => navigate('/saas-admin')}
+                  className="font-sans text-[13px] font-bold text-white bg-[#1a1a18] border border-[#1a1a18] rounded-full px-5 py-2 cursor-pointer hover:bg-[#3d3d38] transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>Admin Console</span>
+                </button>
+                <button 
+                  onClick={logout}
+                  className="font-sans text-[13px] font-bold text-[#78716c] hover:text-[#1c1917] bg-transparent border-none px-2 py-2 cursor-pointer transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : isAuthenticated && user?.role === 'instructor' ? (
+              <>
+                <button 
+                  onClick={() => navigate('/instructor')}
+                  className="font-sans text-[13px] font-bold text-white bg-[#c8852a] border border-[#c8852a] rounded-full px-5 py-2 cursor-pointer hover:bg-[#b06818] transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>Instructor Portal</span>
+                </button>
+                <button 
+                  onClick={logout}
+                  className="font-sans text-[13px] font-bold text-[#78716c] hover:text-[#1c1917] bg-transparent border-none px-2 py-2 cursor-pointer transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button 
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="font-sans text-[13px] font-bold text-[#1c1917] bg-transparent border border-[#e5e2d9] rounded-full px-5 py-2 cursor-pointer hover:border-[#1c1917] transition-all"
+                >
+                  Sign in
+                </button>
+                <button 
+                  onClick={() => navigate('/instructor')}
+                  className="font-sans text-[13px] font-bold text-[#1c1917] bg-transparent border border-[#e5e2d9] rounded-full px-5 py-2 cursor-pointer hover:border-[#1c1917] transition-all flex items-center gap-1"
+                >
+                  Instructor Login
+                </button>
+              </>
+            )}
           </div>
         </div>
       </nav>
