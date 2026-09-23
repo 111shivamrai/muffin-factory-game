@@ -96,6 +96,7 @@ export default function FactoryVisualization() {
           <video
             ref={videoRef}
             src="/factory-feed.mp4"
+            preload="metadata"
             muted
             loop
             playsInline

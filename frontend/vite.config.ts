@@ -25,6 +25,9 @@ export default defineConfig({
             if (id.includes('recharts') || id.includes('d3')) {
               return 'vendor-charts';
             }
+            if (id.includes('jspdf') || id.includes('jspdf-autotable') || id.includes('canvg') || id.includes('html2canvas')) {
+              return 'vendor-pdf';
+            }
             if (id.includes('socket.io-client')) {
               return 'vendor-socket';
             }

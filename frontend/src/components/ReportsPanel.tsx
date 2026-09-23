@@ -1,16 +1,23 @@
 import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { useShallow } from 'zustand/react/shallow';
+import { Download } from 'lucide-react';
+import { generateTeamReportPDF } from '../utils/reportPdfGenerator.js';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Legend 
 } from 'recharts';
 
 function ReportsPanel() {
-  const teamState = useGameStore(
-    useShallow((state) => state.teamState)
+  const { teamState, room, leaderboard } = useGameStore(
+    useShallow((state) => ({
+      teamState: state.teamState,
+      room: state.room,
+      leaderboard: state.leaderboard,
+    }))
   );
   const [selectedChart, setSelectedChart] = useState<'cash' | 'demand' | 'inventory' | 'utilization'>('cash');
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   if (!teamState) return null;
 
@@ -49,6 +56,23 @@ function ReportsPanel() {
     history.bottleneckCapacity
   ]);
 
+  const handleDownloadPdf = async () => {
+    if (!teamState) return;
+    setIsGeneratingPdf(true);
+    try {
+      let rank: number | null = null;
+      if (leaderboard && leaderboard.length > 0) {
+        const entry = leaderboard.find(t => t.teamId === teamState.id);
+        if (entry) rank = entry.rank;
+      }
+      await generateTeamReportPDF(room, teamState, rank);
+    } catch (err) {
+      console.error('Failed to generate report PDF:', err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   return (
     <div className="space-y-3 font-sans">
       
@@ -78,8 +102,20 @@ function ReportsPanel() {
                   </button>
                 ))}
               </div>
-              <div className="text-[10px] font-bold text-stone-500 tracking-wider">
-                SIMULATION PROGRESS: DAY {history.days.length}
+              <div className="flex items-center gap-3">
+                <div className="text-[10px] font-bold text-stone-500 tracking-wider">
+                  SIMULATION PROGRESS: DAY {history.days.length}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDownloadPdf}
+                  disabled={isGeneratingPdf}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-rose-700 bg-white hover:bg-rose-50 active:bg-rose-100 border border-rose-300 rounded-lg cursor-pointer transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Download comprehensive PDF report"
+                >
+                  <Download className="w-3 h-3 text-rose-500" />
+                  <span>{isGeneratingPdf ? 'Generating...' : 'PDF Report'}</span>
+                </button>
               </div>
             </div>
 
