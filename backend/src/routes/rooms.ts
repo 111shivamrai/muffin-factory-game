@@ -45,6 +45,27 @@ router.get('/active-demo', async (req, res) => {
     if (!demoRoom) {
       throw new Error('Failed to find or create demo room');
     }
+
+    // Reset demo team so fresh demo launches always start with BUY button on all 4 machines
+    try {
+      const teams = await db.getTeamsInRoom(demoRoom.id);
+      for (const t of teams) {
+        const teamState = await db.getTeamState(t.id);
+        if (teamState && teamState.machines) {
+          teamState.cash = 50000;
+          teamState.machines.mixing.inTransit = 0;
+          teamState.machines.baking.inTransit = 0;
+          teamState.machines.icing.inTransit = 0;
+          teamState.machines.packaging.inTransit = 0;
+          teamState.machineOrders = [];
+          await db.saveTeamState(t.id, 50000, 'active', teamState);
+        }
+      }
+      await db.updateRoom(demoRoom.id, { currentDay: 0, status: 'active' });
+    } catch (resetErr) {
+      console.warn('Could not reset demo team state:', resetErr);
+    }
+
     res.json({ code: demoRoom.code });
   } catch (err) {
     console.error('Error finding or creating active demo room:', err);

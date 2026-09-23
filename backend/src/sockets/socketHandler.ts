@@ -176,6 +176,16 @@ export function registerSocketHandler(io: Server) {
         if (!teamState || isNewTeam) {
           teamState = createInitialTeamState(team.id, team.name, team.controllerId, scenario);
           await db.saveTeamState(team.id, teamState.cash, teamState.status, (teamState as any).allocationStrategy ? teamState : { ...teamState, allocationStrategy: 'contracts_first' } as any);
+        } else if (room.id === 'room_demo_001') {
+          // In demo room, ensure fresh starting machine inTransit state (0 in transit)
+          if (teamState.machines) {
+            teamState.machines.mixing.inTransit = 0;
+            teamState.machines.baking.inTransit = 0;
+            teamState.machines.icing.inTransit = 0;
+            teamState.machines.packaging.inTransit = 0;
+            teamState.machineOrders = [];
+            await db.saveTeamState(team.id, teamState.cash, teamState.status, teamState);
+          }
         }
 
         // Controller logic fallback

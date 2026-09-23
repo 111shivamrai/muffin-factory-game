@@ -17,57 +17,47 @@ const CAPACITY_PER_MACHINE: Record<MachineType, number> = {
 
 // Theme colours per machine type
 const MACHINE_THEME: Record<MachineType, {
-  gradient: string;
   border: string;
   badge: string;
   icon: string;
   accent: string;
   dot: string;
-  ring: string;
   utilColor: string;
   dotClass: string;
 }> = {
   mixing: {
-    gradient: 'from-violet-500 to-purple-600',
     border: 'border-violet-200',
     badge: 'bg-violet-50 text-violet-700 border-violet-200',
     icon: '🥣',
     accent: 'text-violet-600',
     dot: 'bg-violet-400',
-    ring: 'ring-violet-200',
     utilColor: '#c084fc',
     dotClass: 'bg-purple-400',
   },
   baking: {
-    gradient: 'from-orange-500 to-amber-600',
     border: 'border-orange-200',
     badge: 'bg-orange-50 text-orange-700 border-orange-200',
     icon: '🥧',
     accent: 'text-orange-600',
     dot: 'bg-orange-400',
-    ring: 'ring-orange-200',
     utilColor: '#fb923c',
     dotClass: 'bg-orange-400',
   },
   icing: {
-    gradient: 'from-emerald-500 to-teal-600',
     border: 'border-emerald-200',
     badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     icon: '🍦',
     accent: 'text-emerald-600',
     dot: 'bg-emerald-400',
-    ring: 'ring-emerald-200',
     utilColor: '#4ade80',
     dotClass: 'bg-green-400',
   },
   packaging: {
-    gradient: 'from-blue-500 to-indigo-600',
     border: 'border-blue-200',
     badge: 'bg-blue-50 text-blue-700 border-blue-200',
     icon: '🎁',
     accent: 'text-blue-600',
     dot: 'bg-blue-400',
-    ring: 'ring-blue-200',
     utilColor: '#60a5fa',
     dotClass: 'bg-blue-400',
   },
@@ -214,159 +204,141 @@ function MachinePanel() {
       </header>
 
       {/* ── Scrollable Content ── */}
-      <div className="overflow-y-auto flex-1 flex flex-col min-h-0 p-2.5 gap-2">
+      <div className="overflow-y-auto flex-1 flex flex-col min-h-0 p-2.5 gap-2.5">
 
         {/* ══════════════ MACHINE CARDS ══════════════ */}
-        <div className="space-y-2 shrink-0">
+        <div className="space-y-2.5 shrink-0">
           {machines.map(({ type, label, state, setter, mData, cost }) => {
             const theme        = MACHINE_THEME[type];
             const inTransit    = mData.inTransit || 0;
-            const totalCount   = mData.count;          // owned (on floor)
-            const displayTotal = mData.count + inTransit; // for stepper display
+            const totalCount   = mData.count + inTransit;
             const canAfford    = teamState.cash >= cost;
             const isProcuring  = inTransit > 0;
 
             // ── Capacity formulas ──────────────────────────────────────────
-            // Available = machines on floor × capacity/machine
-            const availableCapacity = totalCount * CAPACITY_PER_MACHINE[type];
-            // Operating = active machines × capacity/machine
+            // Available Capacity = owned machines × capacity/machine
+            const availableCapacity = mData.count * CAPACITY_PER_MACHINE[type];
+            // Operating Capacity = active machines × capacity/machine
             const operatingCapacity = mData.active * CAPACITY_PER_MACHINE[type];
-            // Utilization %
-            const histUtil     = teamState.history?.utilization?.[type];
-            const utilPct      = histUtil && histUtil.length > 0 ? histUtil[histUtil.length - 1] : 0;
 
             return (
               <div
                 key={type}
-                className={`rounded-xl border ${theme.border} bg-white shadow-sm overflow-hidden`}
+                className="rounded-2xl border border-stone-200/80 bg-white p-2.5 shadow-xs space-y-2 hover:border-purple-200 transition-colors"
               >
-                {/* ── Card header band ── */}
-                <div className={`bg-gradient-to-r ${theme.gradient} px-3 py-1.5 flex items-center justify-between`}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-base leading-none">{theme.icon}</span>
-                    <span className="text-white font-extrabold text-[11px] tracking-wide">{label}</span>
+                {/* ── Top Half: Machine Info + Stepper ── */}
+                <div className="flex items-center justify-between gap-2">
+                  {/* Left: Icon & Machine Name & Subtitle */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xl shrink-0">{theme.icon}</span>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-stone-800 font-sans truncate leading-tight">
+                        {label}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[8.5px] font-bold text-stone-400">
+                        <span>{mData.count} owned · {mData.active} active</span>
+                        {isProcuring && (
+                          <span className="text-amber-700 bg-amber-50 border border-amber-300 px-1 py-0.2 rounded text-[7.5px] font-bold flex items-center gap-0.5 animate-pulse">
+                            🚚 +{inTransit} in transit
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    {/* Transit badge */}
-                    {isProcuring && (
-                      <span className="text-[8px] font-extrabold bg-white/20 border border-white/40 text-white px-1.5 py-0.5 rounded-full animate-pulse flex items-center gap-0.5">
-                        🚚 +{inTransit} in transit
-                      </span>
-                    )}
-                    {/* Active indicator */}
-                    <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 ${
-                      mData.active > 0
-                        ? 'bg-white/25 text-white border border-white/40'
-                        : 'bg-black/20 text-white/60 border border-white/20'
-                    }`}>
-                      <span className={`size-1.5 rounded-full ${mData.active > 0 ? 'bg-white animate-pulse' : 'bg-white/40'}`} />
-                      {mData.active > 0 ? 'RUNNING' : 'IDLE'}
-                    </span>
+
+                  {/* Right: Stepper controls */}
+                  <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-xs">
+                    {isController ? (
+                      <button
+                        type="button"
+                        disabled={state <= 0}
+                        onClick={() => {
+                          const newVal = Math.max(0, state - 1);
+                          setter(newVal);
+                          updateSingle(type, newVal);
+                        }}
+                        title={state <= 0 ? `No active ${label} machines` : `Deactivate one ${label}`}
+                        className={`w-7 h-7 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-sm flex items-center justify-center transition-all border-none select-none leading-none ${
+                          state <= 0 ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                        }`}
+                      >
+                        −
+                      </button>
+                    ) : null}
+                    <div
+                      className="px-2 h-7 bg-white text-[#1c1917] text-xs font-extrabold flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none min-w-[50px]"
+                      title={`${state} active / ${totalCount} total (${mData.count} floor${isProcuring ? `, ${inTransit} transit` : ''})`}
+                    >
+                      {state} : {totalCount}
+                    </div>
+                    {isController ? (
+                      <button
+                        type="button"
+                        disabled={state >= mData.count}
+                        onClick={() => {
+                          const newVal = Math.min(mData.count, state + 1);
+                          setter(newVal);
+                          updateSingle(type, newVal);
+                        }}
+                        title={
+                          state >= mData.count
+                            ? isProcuring
+                              ? `Cannot activate: purchased machine is still in transit`
+                              : `All available ${label} machines are active`
+                            : `Activate one more ${label}`
+                        }
+                        className={`w-7 h-7 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-sm flex items-center justify-center transition-all border-none select-none leading-none ${
+                          state >= mData.count ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                        }`}
+                      >
+                        +
+                      </button>
+                    ) : null}
                   </div>
                 </div>
 
-                {/* ── Card body: 3 columns ── */}
-                <div className="grid grid-cols-[1fr_auto_auto] gap-0 divide-x divide-stone-100">
-
-                  {/* Col 1: Capacity stats + stepper */}
-                  <div className="p-2 flex flex-col gap-1.5">
-                    {/* Machine count pill */}
-                    <div className="flex items-center gap-1 text-[9px] text-stone-500 font-bold">
-                      <span className={`size-1.5 rounded-full ${theme.dot}`} />
-                      <span className="font-mono">{mData.count} owned · {mData.active} active</span>
+                {/* ── Bottom Half: Available Capacity Box + Operating Capacity Box + BUY Button ── */}
+                <div className="flex items-center gap-1.5 pt-1 border-t border-dashed border-stone-100">
+                  {/* Available Capacity Box */}
+                  <div className="flex-1 rounded-xl bg-emerald-50/80 border border-emerald-200/90 px-2 py-1 flex flex-col justify-center items-center text-center shadow-xs">
+                    <div className="text-[7.5px] font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-0.5 leading-none">
+                      <Zap className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                      <span>AVAILABLE</span>
                     </div>
-
-                    {/* Stats row: Available & Operating */}
-                    <div className="grid grid-cols-2 gap-1">
-                      {/* Available Capacity */}
-                      <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-1.5 py-1 text-center">
-                        <div className="text-[7px] font-extrabold text-emerald-600 uppercase tracking-wider flex items-center justify-center gap-0.5 mb-0.5">
-                          <Zap className="w-2 h-2" /> AVAILABLE
-                        </div>
-                        <div className="text-[13px] font-black text-emerald-700 leading-none">
-                          {availableCapacity}
-                        </div>
-                        <div className="text-[6.5px] text-emerald-500 font-bold mt-0.5 uppercase tracking-wider">units/day</div>
-                      </div>
-
-                      {/* Operating Capacity */}
-                      <div className="rounded-lg bg-purple-50 border border-purple-100 px-1.5 py-1 text-center">
-                        <div className="text-[7px] font-extrabold text-purple-600 uppercase tracking-wider flex items-center justify-center gap-0.5 mb-0.5">
-                          <Activity className="w-2 h-2" /> OPERATING
-                        </div>
-                        <div className="text-[13px] font-black text-purple-700 leading-none">
-                          {operatingCapacity}
-                        </div>
-                        <div className="text-[6.5px] text-purple-500 font-bold mt-0.5 uppercase tracking-wider">units/day</div>
-                      </div>
+                    <div className="text-xs font-black text-emerald-800 font-mono mt-0.5 leading-none">
+                      {availableCapacity}
                     </div>
-
-                    {/* Utilization mini-bar */}
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex-1 h-1 bg-stone-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{ width: `${utilPct}%`, background: theme.utilColor }}
-                        />
-                      </div>
-                      <span className="text-[8px] font-bold text-stone-500 font-mono w-7 text-right">{utilPct}%</span>
+                    <div className="text-[6.5px] font-bold text-emerald-600/80 uppercase tracking-tight mt-0.5 leading-none">
+                      units/day
                     </div>
                   </div>
 
-                  {/* Col 2: Active / Total Stepper */}
-                  <div className="flex flex-col items-center justify-center px-2 gap-0.5 bg-stone-50/60">
-                    <span className="text-[7px] font-extrabold text-stone-400 uppercase tracking-widest mb-0.5">Active</span>
-                    <div className="flex items-center rounded-lg border border-[#d8ccbb] overflow-hidden bg-white shadow-xs">
-                      {isController ? (
-                        <button
-                          type="button"
-                          disabled={state <= 0}
-                          onClick={() => { const v = Math.max(0, state - 1); setter(v); updateSingle(type, v); }}
-                          title={state <= 0 ? `No active ${label} machines` : `Deactivate one ${label}`}
-                          className={`w-7 h-7 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-sm flex items-center justify-center transition-all border-none select-none leading-none ${
-                            state <= 0 ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-80'
-                          }`}
-                        >−</button>
-                      ) : null}
-                      <div
-                        className="px-1.5 h-7 bg-white text-[#1c1917] text-[10px] font-extrabold flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none min-w-[42px]"
-                        title={`${state} active / ${displayTotal} total (${mData.count} floor${isProcuring ? `, ${inTransit} transit` : ''})`}
-                      >
-                        {state} : {displayTotal}
-                      </div>
-                      {isController ? (
-                        <button
-                          type="button"
-                          disabled={state >= mData.count}
-                          onClick={() => { const v = Math.min(mData.count, state + 1); setter(v); updateSingle(type, v); }}
-                          title={
-                            state >= mData.count
-                              ? isProcuring
-                                ? 'Cannot activate: machine in transit'
-                                : `All ${label} machines are active`
-                              : `Activate one more ${label}`
-                          }
-                          className={`w-7 h-7 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-sm flex items-center justify-center transition-all border-none select-none leading-none ${
-                            state >= mData.count ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-80'
-                          }`}
-                        >+</button>
-                      ) : null}
+                  {/* Operating Capacity Box */}
+                  <div className="flex-1 rounded-xl bg-purple-50/80 border border-purple-200/90 px-2 py-1 flex flex-col justify-center items-center text-center shadow-xs">
+                    <div className="text-[7.5px] font-extrabold text-purple-700 uppercase tracking-wider flex items-center gap-0.5 leading-none">
+                      <Activity className="w-2.5 h-2.5 text-purple-600 shrink-0" />
+                      <span>OPERATING</span>
                     </div>
-                    <span className="text-[6.5px] text-stone-400 font-bold mt-0.5">of {totalCount} owned</span>
+                    <div className="text-xs font-black text-purple-800 font-mono mt-0.5 leading-none">
+                      {operatingCapacity}
+                    </div>
+                    <div className="text-[6.5px] font-bold text-purple-600/80 uppercase tracking-tight mt-0.5 leading-none">
+                      units/day
+                    </div>
                   </div>
 
-                  {/* Col 3: BUY button */}
-                  <div className="flex flex-col items-center justify-center px-2 bg-stone-50/40">
+                  {/* BUY / ORDERED Button (Horizontal pill matching previous design) */}
+                  <div className="shrink-0 flex items-center">
                     {isController ? (
                       isProcuring ? (
                         <button
                           type="button"
                           disabled
-                          title={`A ${label} is already ordered and in transit. Wait for delivery.`}
-                          className="flex flex-col items-center gap-0.5 px-2.5 py-2 bg-amber-50 border border-amber-200 text-amber-700 rounded-xl cursor-not-allowed select-none"
+                          title={`A ${label} machine is currently ordered and in transit! You cannot buy another until this one arrives.`}
+                          className="h-8 px-2.5 bg-amber-50 border border-amber-300 text-amber-800 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 cursor-not-allowed shadow-xs select-none"
                         >
-                          <span className="text-sm">🚚</span>
-                          <span className="text-[8px] font-extrabold tracking-wider">ORDERED</span>
+                          <span className="text-xs">🚚</span>
+                          <span>ORDERED</span>
                         </button>
                       ) : (
                         <button
@@ -375,31 +347,25 @@ function MachinePanel() {
                           onClick={() => handleBuy(type)}
                           title={
                             !canAfford
-                              ? `Need ₹${cost.toLocaleString()} — You have ₹${teamState.cash.toLocaleString()}`
-                              : `Buy additional ${label} for ₹${cost.toLocaleString()}`
+                              ? `Need ₹${cost.toLocaleString()} (Cash: ₹${teamState.cash.toLocaleString()})`
+                              : `Procure additional ${label} machine for ₹${cost.toLocaleString()}`
                           }
-                          className={`flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl border-none transition-all active:scale-95 select-none ${
-                            !canAfford || isBuying === type
-                              ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
-                              : `bg-gradient-to-b ${theme.gradient} text-white cursor-pointer shadow-sm hover:opacity-90`
+                          className={`h-8 px-3.5 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm border-none shrink-0 select-none ${
+                            !canAfford || isBuying === type ? 'opacity-40 cursor-not-allowed' : ''
                           }`}
                         >
-                          <ShoppingCart className="w-4 h-4" />
-                          <span className="text-[8px] font-extrabold tracking-wider">
-                            {isBuying === type ? '...' : 'BUY'}
-                          </span>
-                          <span className="text-[6px] font-bold opacity-80">₹{(cost / 1000).toFixed(0)}K</span>
+                          <ShoppingCart className="w-3.5 h-3.5" />
+                          <span>{isBuying === type ? 'ORDERING...' : 'BUY'}</span>
                         </button>
                       )
                     ) : (
-                      <div className="flex flex-col items-center gap-0.5 px-2.5 py-2">
-                        <Info className="w-4 h-4 text-stone-300" />
-                        <span className="text-[7px] text-stone-400 font-bold uppercase">Locked</span>
+                      <div className="h-8 w-14 bg-stone-100 rounded-xl flex items-center justify-center text-[8px] text-stone-400 font-bold uppercase shrink-0">
+                        Locked
                       </div>
                     )}
                   </div>
-
                 </div>
+
               </div>
             );
           })}
