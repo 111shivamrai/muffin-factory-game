@@ -21,13 +21,49 @@ export default function InstructorLoginPage({ navigate }: InstructorLoginPagePro
     setError('');
     setLoading(true);
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
     try {
-      const res = await fetch(`${API_URL}/api/auth/login`, {
+      let res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
       });
-      const data = await res.json();
+      let data = await res.json();
+
+      // If backend returns error, check local admin_licenses for seamless auto-provisioning
+      if (data.error) {
+        try {
+          const rawLicenses = localStorage.getItem('admin_licenses');
+          if (rawLicenses) {
+            const parsed = JSON.parse(rawLicenses);
+            const matchedLic = parsed.find((l: any) => 
+              (l.instructorEmail || '').trim().toLowerCase() === cleanEmail &&
+              (l.instructorPassword || '').trim() === cleanPassword
+            );
+            if (matchedLic) {
+              const syncRes = await fetch(`${API_URL}/api/auth/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name: `Instructor (${matchedLic.customerName || 'Faculty'})`,
+                  email: cleanEmail,
+                  password: cleanPassword,
+                  role: 'instructor'
+                })
+              });
+              const syncData = await syncRes.json();
+              if (syncData.token && syncData.user) {
+                data = syncData;
+              }
+            }
+          }
+        } catch (syncErr) {
+          console.error('License local auto-sync error:', syncErr);
+        }
+      }
+
       setLoading(false);
 
       if (data.error) {

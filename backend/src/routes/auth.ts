@@ -16,24 +16,41 @@ router.post('/signup', async (req, res) => {
     return;
   }
 
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanPassword = password.trim();
+
   if (!['admin', 'instructor', 'operator'].includes(role)) {
     res.status(400).json({ error: 'Invalid user role' });
     return;
   }
 
   try {
-    const existing = await db.getUserByEmail(email);
+    const existing = await db.getUserByEmail(cleanEmail);
+    const passwordHash = await bcrypt.hash(cleanPassword, 10);
+
+    // If user already exists (e.g. instructor license created or updated), update password & role so login works immediately
     if (existing) {
-      res.status(400).json({ error: 'User with this email already exists' });
-      return;
+      const updatedUser: User & { passwordHash: string } = {
+        id: existing.id,
+        name: name || existing.name,
+        email: cleanEmail,
+        role: role as any,
+        createdAt: existing.createdAt || new Date(),
+        passwordHash
+      };
+      await db.saveUserRaw(updatedUser);
+      const token = jwt.sign({ id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role }, JWT_SECRET, { expiresIn: '365d' });
+      return res.status(200).json({
+        token,
+        user: { id: updatedUser.id, name: updatedUser.name, email: updatedUser.email, role: updatedUser.role }
+      });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
     const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     const user: User & { passwordHash: string } = {
       id: userId,
       name,
-      email,
+      email: cleanEmail,
       role: role as any,
       createdAt: new Date(),
       passwordHash
@@ -62,14 +79,17 @@ router.post('/login', async (req, res) => {
     return;
   }
 
+  const cleanEmail = (email || '').trim().toLowerCase();
+  const cleanPassword = (password || '').trim();
+
   try {
-    const user = await db.getUserByEmail(email);
+    const user = await db.getUserByEmail(cleanEmail);
     if (!user) {
       res.status(401).json({ error: 'Invalid email or password' });
       return;
     }
 
-    const isValid = await bcrypt.compare(password, user.passwordHash);
+    const isValid = await bcrypt.compare(cleanPassword, user.passwordHash);
     if (!isValid) {
       res.status(401).json({ error: 'Invalid email or password' });
       return;

@@ -285,7 +285,7 @@ export function registerSocketHandler(io: Server) {
 
               if (shouldOrder && !hasTransitPO) {
                 const baseLeadTimes = scenario.leadTimes;
-                const activeEvents = room.events || [];
+                const activeEvents = (room as any).events || (team.activeEvents || []);
                 const rawMaterialLeadTimeModifier = activeEvents
                   .filter((ev: any) => ev.active && ev.targetVariable === 'lead_time')
                   .reduce((sum: number, ev: any) => sum + ev.modifier, 0) || 0;
@@ -296,9 +296,9 @@ export function registerSocketHandler(io: Server) {
                 const leadTime = Math.max(1, baseLT + rawMaterialLeadTimeModifier);
                 const poId = `po_${room.currentDay}_${materialType}_${Math.random().toString(36).substr(2, 5)}`;
 
-                const currentMaterialCosts = scenario.materialCosts;
-                const rawCost = inv.orderQty * currentMaterialCosts[materialType === 'base_mix' ? 'base_mix' : 'packaging_material'];
-                const orderingFee = currentMaterialCosts.order_cost;
+                const currentMaterialCosts: any = (scenario as any).materialCosts || (scenario as any).rawMaterialCosts || {};
+                const rawCost = inv.orderQty * (currentMaterialCosts[materialType === 'base_mix' ? 'base_mix' : 'packaging_material'] ?? currentMaterialCosts[materialType === 'base_mix' ? 'baseMix' : 'packaging'] ?? 0);
+                const orderingFee = currentMaterialCosts.order_cost ?? currentMaterialCosts.orderCost ?? 0;
                 const totalOrderCost = rawCost + orderingFee;
 
                 const newPO: PurchaseOrder = {

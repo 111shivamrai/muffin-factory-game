@@ -336,8 +336,9 @@ class DatabaseManager {
 
   // USERS CRUD
   async getUserByEmail(email: string): Promise<(User & { passwordHash: string }) | null> {
+    const cleanEmail = (email || '').trim().toLowerCase();
     if (this.isPostgres && this.pool) {
-      const res = await this.pool.query('SELECT * FROM users WHERE email = $1', [email]);
+      const res = await this.pool.query('SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER($1)', [cleanEmail]);
       if (res.rows.length === 0) return null;
       const row = res.rows[0];
       return {
@@ -350,7 +351,7 @@ class DatabaseManager {
       };
     } else {
       const db = this.readJsonDb();
-      const user = db.users.find(u => u.email === email) as (User & { passwordHash: string }) | undefined;
+      const user = db.users.find(u => (u.email || '').trim().toLowerCase() === cleanEmail) as (User & { passwordHash: string }) | undefined;
       return user || null;
     }
   }
