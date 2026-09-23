@@ -92,6 +92,43 @@ export default function App() {
     };
   }, []);
 
+  // Derive game completion state
+  const isCompleted = isTeamSimulationCompleted(room, teamState);
+  const completionReason = getCompletionReason(room, teamState);
+
+  // Helper to compute letter grade from academic score
+  const getLetterGrade = (score?: number) => {
+    if (score === undefined || score === null) return '–';
+    if (score >= 90) return 'A+';
+    if (score >= 80) return 'A';
+    if (score >= 70) return 'B';
+    if (score >= 60) return 'C';
+    if (score >= 50) return 'D';
+    return 'F';
+  };
+
+  // Derive rank from live cohort leaderboard (must be at top level with all hooks)
+  const leaderboardRank = useMemo(() => {
+    if (!leaderboard || !teamState) return null;
+    const entry = leaderboard.find((t) => t.teamId === teamState.id);
+    return entry ? entry.rank : null;
+  }, [leaderboard, teamState?.id]);
+
+  const handleDownloadPdf = async () => {
+    if (!teamState) return;
+    setIsGeneratingPdf(true);
+    setPdfSuccessMessage(null);
+    try {
+      await generateTeamReportPDF(room, teamState, leaderboardRank);
+      setPdfSuccessMessage('Report downloaded successfully!');
+      setTimeout(() => setPdfSuccessMessage(null), 4000);
+    } catch (err) {
+      console.error('Failed to generate PDF report:', err);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   // Route 1: Admin Panel Dashboard or Login
   if (path === '/saas-admin' || path === '/admin') {
     return (
@@ -125,43 +162,6 @@ export default function App() {
     // Default Route: Always render the natural Landing Page
     return <LandingPage navigate={navigate} />;
   }
-
-  // Derive game completion state
-  const isCompleted = isTeamSimulationCompleted(room, teamState);
-  const completionReason = getCompletionReason(room, teamState);
-
-  // Helper to compute letter grade from academic score
-  const getLetterGrade = (score?: number) => {
-    if (score === undefined || score === null) return '–';
-    if (score >= 90) return 'A+';
-    if (score >= 80) return 'A';
-    if (score >= 70) return 'B';
-    if (score >= 60) return 'C';
-    if (score >= 50) return 'D';
-    return 'F';
-  };
-
-  // Derive rank from live cohort leaderboard
-  const leaderboardRank = useMemo(() => {
-    if (!leaderboard || !teamState) return null;
-    const entry = leaderboard.find((t) => t.teamId === teamState.id);
-    return entry ? entry.rank : null;
-  }, [leaderboard, teamState?.id]);
-
-  const handleDownloadPdf = async () => {
-    if (!teamState) return;
-    setIsGeneratingPdf(true);
-    setPdfSuccessMessage(null);
-    try {
-      await generateTeamReportPDF(room, teamState, leaderboardRank);
-      setPdfSuccessMessage('Report downloaded successfully!');
-      setTimeout(() => setPdfSuccessMessage(null), 4000);
-    } catch (err) {
-      console.error('Failed to generate PDF report:', err);
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
 
   // 5. Operator is in a running room -> Render full Operations Dashboard spanning full screen width and height
   return (
