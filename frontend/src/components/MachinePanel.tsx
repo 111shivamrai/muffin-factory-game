@@ -157,6 +157,14 @@ function MachinePanel() {
     );
   }
 
+  // Default capacity constants per machine type (units per day)
+  const CAPACITY_PER_MACHINE: Record<MachineType, number> = {
+    mixing: 100,
+    baking: 80,
+    icing: 120,
+    packaging: 150,
+  };
+
   return (
     <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '37rem' }}>
       {/* Header */}
@@ -171,8 +179,8 @@ function MachinePanel() {
         {/* Machine Rows */}
         <div className="space-y-2.5 shrink-0">
           {[
-            { type: 'mixing' as MachineType, label: 'Mixer', state: mixActive, setter: setMixActive, mData: mixing, cost: 2000, icon: '🥣' },
-            { type: 'baking' as MachineType, label: 'Oven', state: bakeActive, setter: setBakeActive, mData: baking, cost: 3000, icon: '🥧' },
+            { type: 'mixing' as MachineType, label: 'Mixer Machine', state: mixActive, setter: setMixActive, mData: mixing, cost: 2000, icon: '🥣' },
+            { type: 'baking' as MachineType, label: 'Oven Machine', state: bakeActive, setter: setBakeActive, mData: baking, cost: 3000, icon: '🥧' },
             { type: 'icing' as MachineType, label: 'Icing Machine', state: iceActive, setter: setIceActive, mData: icing, cost: 1500, icon: '🍦' },
             { type: 'packaging' as MachineType, label: 'Packaging Machine', state: packActive, setter: setPackActive, mData: packaging, cost: 1000, icon: '🎁' },
           ].map(({ type, label, state, setter, mData, cost, icon }, idx) => {
@@ -180,22 +188,37 @@ function MachinePanel() {
             const totalCount = mData.count + inTransit;
             const canAfford = teamState.cash >= cost;
             const isProcuring = inTransit > 0;
+            const capPerMachine = CAPACITY_PER_MACHINE[type];
+            const availableCapacity = mData.count * capPerMachine;
+            const operatingCapacity = mData.active * capPerMachine;
+
 
             return (
               <div key={type} className={`flex items-center justify-between pb-2 ${idx < 3 ? 'border-b border-dashed border-stone-200/60' : ''}`}>
                 
                 {/* Process Info */}
-                <div className="flex flex-col justify-center w-24 shrink-0 min-w-0">
+                <div className="flex flex-col justify-center w-28 shrink-0 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xl shrink-0">{icon}</span>
-                    <span className="text-xs font-extrabold text-stone-700 font-sans truncate">{label}</span>
+                    <span className="text-[10px] font-extrabold text-stone-700 font-sans leading-tight">{label}</span>
+                  </div>
+                  <div className="mt-0.5 space-y-0">
+                    <div className="text-[7px] font-bold text-stone-400 tracking-wider uppercase flex items-center gap-1">
+                      <span className="text-emerald-600">✓</span>
+                      <span>AVAIL: <span className="text-emerald-700 font-extrabold">{availableCapacity}</span>/day</span>
+                    </div>
+                    <div className="text-[7px] font-bold text-stone-400 tracking-wider uppercase flex items-center gap-1">
+                      <span className="text-purple-600">▶</span>
+                      <span>OPER: <span className="text-purple-700 font-extrabold">{operatingCapacity}</span>/day</span>
+                    </div>
                   </div>
                   {isProcuring && (
-                    <span className="text-[8.5px] font-bold text-amber-700 bg-amber-50 border border-amber-300/80 px-1 py-0.2 rounded mt-0.5 inline-flex items-center gap-0.5 w-fit animate-pulse">
-                      🚚 +{inTransit} in transit
+                    <span className="text-[8px] font-bold text-amber-700 bg-amber-50 border border-amber-300/80 px-1 py-0.2 rounded mt-0.5 inline-flex items-center gap-0.5 w-fit animate-pulse">
+                      🚚 +{inTransit} transit
                     </span>
                   )}
                 </div>
+
 
                 {/* Stepper controls */}
                 <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-xs">

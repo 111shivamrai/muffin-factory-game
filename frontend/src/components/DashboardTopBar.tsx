@@ -28,7 +28,7 @@ function DashboardTopBar() {
   // Filter visible contracts based on currentDay
   // 1. Only show contracts whose startDay <= currentDay (future contracts are hidden until startDay arrives)
   // 2. Contracts that have passed endDay are collapsed / closed out
-  const currentDay = room?.currentDay ?? 0;
+  const currentDay = Math.max(1, room?.currentDay ?? 1);
   
   const visibleContracts = teamState.contracts.filter(c => {
     // If contract has not arrived yet, hide it
@@ -142,7 +142,7 @@ function DashboardTopBar() {
               LIVE DAY COUNT
             </div>
             <div className="text-base font-black truncate text-stone-900 font-mono tracking-tight">
-              Day {room.currentDay ?? 0}
+              Day {currentDay}
             </div>
           </div>
         </div>
@@ -305,7 +305,7 @@ function DashboardTopBar() {
               <div className="min-w-0">
                 <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Live Day Count</div>
                 <div className="text-sm font-black truncate text-stone-900 font-mono">
-                  Day {room.currentDay ?? 0}
+                  Day {currentDay}
                 </div>
               </div>
             </div>

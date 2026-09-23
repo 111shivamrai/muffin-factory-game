@@ -1727,67 +1727,90 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                   </h4>
                   <div className="grid grid-cols-2 gap-4 font-semibold text-xs text-[#2c1a0a]">
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Scenario Title</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Scenario Title <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         value={scName}
                         onChange={e => setScName(e.target.value)}
-                        placeholder="Muffin Experience Preset"
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
+                        placeholder="Enter scenario title"
+                        className={`w-full p-2 bg-white border rounded font-mono text-xs text-[#1c1917] ${!scName.trim() ? 'border-red-300 focus:border-red-500' : 'border-muffin-brown/20'}`}
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Description Brief</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Description Brief <span className="text-stone-400 font-medium normal-case">(optional)</span></label>
                       <input
                         type="text"
                         value={scDesc}
                         onChange={e => setScDesc(e.target.value)}
-                        placeholder="Custom crafted baking operations scenario"
+                        placeholder="Enter a brief description"
                         className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Number of Simulated Days</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Number of Simulated Days <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         value={scMaxDays}
-                        onChange={e => setScMaxDays(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                        placeholder="30"
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setScMaxDays(val as any);
+                        }}
+                        min={1}
+                        placeholder="Number of simulated days"
+                        className={`w-full p-2 bg-white border rounded font-mono text-xs text-[#1c1917] ${scMaxDays === '' ? 'border-red-300' : 'border-muffin-brown/20'}`}
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Real-time Length of One Session (Minutes)</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Session Length (Minutes) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         value={scRealTime}
-                        onChange={e => setScRealTime(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                        placeholder="15"
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setScRealTime(val as any);
+                        }}
+                        min={1}
+                        placeholder="Enter session length (minutes)"
+                        className={`w-full p-2 bg-white border rounded font-mono text-xs text-[#1c1917] ${scRealTime === '' ? 'border-red-300' : 'border-muffin-brown/20'}`}
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Raw materials Purchase cost (₹)</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Raw Materials Purchase Cost (₹) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         value={scBaseMixCost}
-                        onChange={e => setScBaseMixCost(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                        placeholder="5.0"
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseFloat(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setScBaseMixCost(val as any);
+                        }}
+                        min={0}
+                        step={0.1}
+                        placeholder="Raw material cost per unit (₹)"
+                        className={`w-full p-2 bg-white border rounded font-mono text-xs text-[#1c1917] ${scBaseMixCost === '' ? 'border-red-300' : 'border-muffin-brown/20'}`}
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Retail Sales Value (₹)</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Retail Sales Value (₹) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
                         value={scSellingPrice}
-                        onChange={e => setScSellingPrice(e.target.value === '' ? '' : parseFloat(e.target.value) || 0)}
-                        placeholder="20.0"
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseFloat(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setScSellingPrice(val as any);
+                        }}
+                        min={0}
+                        step={0.1}
+                        placeholder="Retail selling price per unit (₹)"
+                        className={`w-full p-2 bg-white border rounded font-mono text-xs text-[#1c1917] ${scSellingPrice === '' ? 'border-red-300' : 'border-muffin-brown/20'}`}
                       />
                     </div>
                   </div>
+                  {/* Required fields note */}
+                  {(!scName.trim() || scMaxDays === '' || scRealTime === '' || scBaseMixCost === '' || scSellingPrice === '') && (
+                    <p className="text-[9px] text-red-500 font-bold">* Required fields must be filled before proceeding</p>
+                  )}
                 </div>
+
               )}
 
               {/* Step 2: Wholesale Contracts */}
@@ -2197,15 +2220,31 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
               >
                 ← Previous Step
               </button>
-              {wizardStep < 6 ? (
-                <button
-                  type="button"
-                  onClick={() => { playTone(260, 'sine', 0.05); setWizardStep(prev => Math.min(6, prev + 1)); }}
-                  className="px-5 py-2 bg-[#2c1a0a] text-white rounded-lg font-sans font-black uppercase text-[10px] tracking-wider hover:bg-slate-900 cursor-pointer shadow-md"
-                >
-                  Next Step →
-                </button>
-              ) : (
+              {wizardStep < 6 ? (() => {
+                // Per-step validation
+                const step1Valid = wizardStep !== 1 || (
+                  scName.trim() !== '' &&
+                  scMaxDays !== '' && typeof scMaxDays === 'number' && scMaxDays > 0 &&
+                  scRealTime !== '' && typeof scRealTime === 'number' && scRealTime > 0 &&
+                  scBaseMixCost !== '' && typeof scBaseMixCost === 'number' && scBaseMixCost >= 0 &&
+                  scSellingPrice !== '' && typeof scSellingPrice === 'number' && scSellingPrice >= 0
+                );
+                return (
+                  <button
+                    type="button"
+                    disabled={!step1Valid}
+                    onClick={() => {
+                      if (!step1Valid) return;
+                      playTone(260, 'sine', 0.05);
+                      setWizardStep(prev => Math.min(6, prev + 1));
+                    }}
+                    title={!step1Valid ? 'Please fill all required fields before proceeding' : ''}
+                    className={`px-5 py-2 rounded-lg font-sans font-black uppercase text-[10px] tracking-wider shadow-md transition-all ${step1Valid ? 'bg-[#2c1a0a] text-white hover:bg-slate-900 cursor-pointer' : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'}`}
+                  >
+                    Next Step →
+                  </button>
+                );
+              })() : (
                 <button
                   type="button"
                   onClick={handleSaveScenario}
