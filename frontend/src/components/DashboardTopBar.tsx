@@ -255,12 +255,12 @@ function DashboardTopBar() {
           </div>
         </div>
 
-        {/* TEAM FACTORY */}
+        {/* TEAM */}
         <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2 min-w-fit shrink-0">
           <div className="text-xl shrink-0" role="img" aria-label="Muffin">🧁</div>
           <div className="min-w-0">
             <div className="text-[8px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight whitespace-nowrap">
-              TEAM FACTORY
+              TEAM
             </div>
             <div className="text-xs font-extrabold text-stone-800 font-sans mt-0.5 whitespace-nowrap" title={displayTeamName}>
               {displayTeamName}
@@ -397,12 +397,12 @@ function DashboardTopBar() {
             </div>
           </div>
 
-          {/* Team Factory & Settings */}
+          {/* Team & Settings */}
           <div className="rounded-xl border border-rose-100 p-3 bg-rose-50/10 space-y-3">
             <div className="flex items-center gap-2">
               <div className="text-xl shrink-0" role="img" aria-label="Muffin">🧁</div>
               <div className="min-w-0">
-                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Team Factory</div>
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Team</div>
                 <div className="text-xs font-bold text-stone-800 truncate" title={displayTeamName}>
                   {displayTeamName}
                 </div>

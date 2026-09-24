@@ -507,14 +507,18 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
           repairCost: 150
         }
       },
-      contracts: scContracts.map(c => ({
-        name: c.name,
-        startDay: c.beginsAtDay,
-        endDay: c.endsAtDay,
-        dailyQuantity: c.dailyDemand,
-        priceMultiplier: c.pricePerUnit / (typeof scSellingPrice === 'number' && scSellingPrice > 0 ? scSellingPrice : 20.0),
-        penalty: c.fillRatePenalty
-      })),
+      contracts: scContracts.map(c => {
+        const clampedStart = Math.min(Math.max(1, c.beginsAtDay), Math.max(1, maxDaysVal - 1));
+        const clampedEnd = Math.min(Math.max(clampedStart + 1, c.endsAtDay), maxDaysVal);
+        return {
+          name: c.name,
+          startDay: clampedStart,
+          endDay: clampedEnd,
+          dailyQuantity: c.dailyDemand,
+          priceMultiplier: c.pricePerUnit / (typeof scSellingPrice === 'number' && scSellingPrice > 0 ? scSellingPrice : 20.0),
+          penalty: c.fillRatePenalty
+        };
+      }),
       starsThresholds: [
         typeof scStarsThreshold1 === 'number' ? scStarsThreshold1 : 85000,
         typeof scStarsThreshold2 === 'number' ? scStarsThreshold2 : 120000,
@@ -1896,32 +1900,44 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     </div>
                     <div className="space-y-1">
                       <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">
-                        Start Day <span className="text-red-500">*</span>
+                        Start Day (Max: {scMaxDays || 30}) <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
                         value={newConStart}
                         onChange={e => {
+                          const maxD = typeof scMaxDays === 'number' && scMaxDays > 0 ? scMaxDays : 999;
                           const val = e.target.value === '' ? '' : parseInt(e.target.value);
-                          if (val === '' || (typeof val === 'number' && val >= 0)) setNewConStart(val as any);
+                          if (val === '') {
+                            setNewConStart('');
+                          } else if (typeof val === 'number' && val >= 1 && val <= maxD) {
+                            setNewConStart(val);
+                          }
                         }}
                         min={1}
+                        max={typeof scMaxDays === 'number' && scMaxDays > 0 ? scMaxDays : undefined}
                         placeholder="Enter contract start day"
                         className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917] placeholder:text-stone-400 font-mono focus:border-purple-500 outline-none"
                       />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">
-                        End Day <span className="text-red-500">*</span>
+                        End Day (Max: {scMaxDays || 30}) <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
                         value={newConEnd}
                         onChange={e => {
+                          const maxD = typeof scMaxDays === 'number' && scMaxDays > 0 ? scMaxDays : 999;
                           const val = e.target.value === '' ? '' : parseInt(e.target.value);
-                          if (val === '' || (typeof val === 'number' && val >= 0)) setNewConEnd(val as any);
+                          if (val === '') {
+                            setNewConEnd('');
+                          } else if (typeof val === 'number' && val >= 1 && val <= maxD) {
+                            setNewConEnd(val);
+                          }
                         }}
                         min={1}
+                        max={typeof scMaxDays === 'number' && scMaxDays > 0 ? scMaxDays : undefined}
                         placeholder="Enter contract end day"
                         className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917] placeholder:text-stone-400 font-mono focus:border-purple-500 outline-none"
                       />
@@ -1942,15 +1958,29 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917] placeholder:text-stone-400 font-mono focus:border-purple-500 outline-none"
                       />
                     </div>
+                    <p className="text-[9px] text-[#44403c] font-bold col-span-3 mt-0.5">
+                      ⚠️ Note: Contract duration is bounded by total scenario duration (Day 1 to Day {scMaxDays || 30}).
+                    </p>
                     <button
                       type="button"
                       onClick={() => {
                         if (!newConName.trim()) return;
+                        const maxD = typeof scMaxDays === 'number' && scMaxDays > 0 ? scMaxDays : 30;
                         const dVal = typeof newConDemand === 'number' && newConDemand > 0 ? newConDemand : 40;
                         const rVal = typeof newConRate === 'number' && newConRate >= 0 ? newConRate : 30;
                         const sVal = typeof newConStart === 'number' && newConStart > 0 ? newConStart : 10;
-                        const eVal = typeof newConEnd === 'number' && newConEnd > 0 ? newConEnd : 25;
+                        const eVal = typeof newConEnd === 'number' && newConEnd > 0 ? newConEnd : Math.min(25, maxD);
                         const pVal = typeof newConPenalty === 'number' && newConPenalty >= 0 ? newConPenalty : 5;
+
+                        if (sVal > maxD || eVal > maxD) {
+                          alert(`Contract days cannot exceed the total scenario duration (${maxD} days).`);
+                          return;
+                        }
+                        if (sVal >= eVal) {
+                          alert(`Contract start day (${sVal}) must be strictly less than end day (${eVal}).`);
+                          return;
+                        }
+
                         setScContracts([...scContracts, {
                           id: `contract_${Date.now()}`,
                           name: newConName.trim(),

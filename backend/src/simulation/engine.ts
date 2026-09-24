@@ -232,7 +232,61 @@ export function runSimDay(
   nextState.purchaseOrders = nextState.purchaseOrders.filter(po => po.status !== 'delivered');
   nextState.machineOrders = nextState.machineOrders.filter(mo => mo.status !== 'delivered');
 
-  // 6. Evaluate Reorder Conditions & 7. Place Automatic Orders
+  // 6. Calculate Available Capacity
+  // Capacity = Running Machines (active minus broken) * Capacity per machine
+  const runningMixers = Math.max(0, nextState.machines.mixing.active - brokenCounts.mixing);
+  const mixingCapacity = runningMixers * mConfigs.mixing.capacityPerMachine;
+
+  const runningBakers = Math.max(0, nextState.machines.baking.active - brokenCounts.baking);
+  const bakingCapacity = runningBakers * mConfigs.baking.capacityPerMachine;
+
+  const runningIcers = Math.max(0, nextState.machines.icing.active - brokenCounts.icing);
+  const icingCapacity = runningIcers * mConfigs.icing.capacityPerMachine;
+
+  const runningPackagers = Math.max(0, nextState.machines.packaging.active - brokenCounts.packaging);
+  const packagingCapacity = runningPackagers * mConfigs.packaging.capacityPerMachine;
+
+  const capacities: Record<MachineType, number> = {
+    mixing: mixingCapacity,
+    baking: bakingCapacity,
+    icing: icingCapacity,
+    packaging: packagingCapacity
+  };
+
+  // 7. Calculate Bottleneck
+  // Find bottleneck stage
+  let bottleneckStage: MachineType = 'mixing';
+  let minCapacity = mixingCapacity;
+
+  (Object.keys(capacities) as MachineType[]).forEach(mType => {
+    if (capacities[mType] < minCapacity) {
+      minCapacity = capacities[mType];
+      bottleneckStage = mType;
+    }
+  });
+
+  nextState.currentBottleneck = {
+    stage: bottleneckStage.charAt(0).toUpperCase() + bottleneckStage.slice(1),
+    capacity: minCapacity
+  };
+
+  // 8. Consume Raw Materials & 9. Produce Finished Goods
+  // 1 muffin requires 1 mix + 1 packaging material
+  const baseMixOnHand = Math.max(0, nextState.inventory.base_mix.onHand);
+  const packagingOnHand = Math.max(0, nextState.inventory.packaging_material.onHand);
+
+  // Maximum production is limited by raw materials and bottleneck capacity
+  const rawMaterialLimit = Math.min(baseMixOnHand, packagingOnHand);
+  const actualProduction = rawMaterialLimit <= 0 ? 0 : Math.max(0, Math.min(rawMaterialLimit, minCapacity));
+
+  // Consume materials and produce muffins only if actual production occurred
+  if (actualProduction > 0) {
+    nextState.inventory.base_mix.onHand = Math.max(0, nextState.inventory.base_mix.onHand - actualProduction);
+    nextState.inventory.packaging_material.onHand = Math.max(0, nextState.inventory.packaging_material.onHand - actualProduction);
+    nextState.inventory.finished_muffin.onHand += actualProduction;
+  }
+
+  // 10. Evaluate Reorder Conditions & Place Automatic Orders (Evaluated on current post-consumption inventory)
   (Object.keys(nextState.inventory) as MaterialType[]).forEach(matType => {
     if (matType === 'finished_muffin') return; // Muffins aren't purchased raw materials
 
@@ -273,61 +327,6 @@ export function runSimDay(
       }
     }
   });
-
-  // 8. Calculate Available Capacity
-  // Capacity = Running Machines (active minus broken) * Capacity per machine
-  const runningMixers = Math.max(0, nextState.machines.mixing.active - brokenCounts.mixing);
-  const mixingCapacity = runningMixers * mConfigs.mixing.capacityPerMachine;
-
-  const runningBakers = Math.max(0, nextState.machines.baking.active - brokenCounts.baking);
-  const bakingCapacity = runningBakers * mConfigs.baking.capacityPerMachine;
-
-  const runningIcers = Math.max(0, nextState.machines.icing.active - brokenCounts.icing);
-  const icingCapacity = runningIcers * mConfigs.icing.capacityPerMachine;
-
-  const runningPackagers = Math.max(0, nextState.machines.packaging.active - brokenCounts.packaging);
-  const packagingCapacity = runningPackagers * mConfigs.packaging.capacityPerMachine;
-
-  const capacities: Record<MachineType, number> = {
-    mixing: mixingCapacity,
-    baking: bakingCapacity,
-    icing: icingCapacity,
-    packaging: packagingCapacity
-  };
-
-  // 9. Calculate Bottleneck
-  // Find bottleneck stage
-  let bottleneckStage: MachineType = 'mixing';
-  let minCapacity = mixingCapacity;
-
-  (Object.keys(capacities) as MachineType[]).forEach(mType => {
-    if (capacities[mType] < minCapacity) {
-      minCapacity = capacities[mType];
-      bottleneckStage = mType;
-    }
-  });
-
-  nextState.currentBottleneck = {
-    stage: bottleneckStage.charAt(0).toUpperCase() + bottleneckStage.slice(1),
-    capacity: minCapacity
-  };
-
-  // 10. Consume Raw Materials & 11. Produce Finished Goods
-  // 10. Consume Raw Materials & 11. Produce Finished Goods
-  // 1 muffin requires 1 mix + 1 packaging material
-  const baseMixOnHand = Math.max(0, nextState.inventory.base_mix.onHand);
-  const packagingOnHand = Math.max(0, nextState.inventory.packaging_material.onHand);
-
-  // Maximum production is limited by raw materials and bottleneck capacity
-  const rawMaterialLimit = Math.min(baseMixOnHand, packagingOnHand);
-  const actualProduction = rawMaterialLimit <= 0 ? 0 : Math.max(0, Math.min(rawMaterialLimit, minCapacity));
-
-  // Consume materials and produce muffins only if actual production occurred
-  if (actualProduction > 0) {
-    nextState.inventory.base_mix.onHand = Math.max(0, nextState.inventory.base_mix.onHand - actualProduction);
-    nextState.inventory.packaging_material.onHand = Math.max(0, nextState.inventory.packaging_material.onHand - actualProduction);
-    nextState.inventory.finished_muffin.onHand += actualProduction;
-  }
 
   // 12. Allocate to Contracts & 13. Allocate to Market Demand
   // Gather active contract targets

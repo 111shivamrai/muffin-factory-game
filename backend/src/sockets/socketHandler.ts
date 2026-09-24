@@ -284,14 +284,14 @@ export function registerSocketHandler(io: Server) {
                 inv.reorderPoint = Math.max(0, parseInt(reorderPoint) || 0);
               }
 
-              // Place replenishment order if none currently in transit and orderQty > 0,
-              // or if inventory position is at/below reorder point
+              // Place replenishment order if none currently in transit, orderQty > 0,
+              // and current inventory position (onHand + inTransit) is at or below reorder point
               const hasTransitPO = (team.purchaseOrders || []).some(
                 (po: PurchaseOrder) => po.materialType === materialType && po.status === 'transit'
               );
               
               const inventoryPosition = inv.onHand + (inv.inTransit || 0);
-              const shouldOrder = (!hasTransitPO && inv.orderQty > 0) || (inventoryPosition <= inv.reorderPoint && inv.orderQty > 0);
+              const shouldOrder = !hasTransitPO && inv.orderQty > 0 && inventoryPosition <= inv.reorderPoint;
 
               if (shouldOrder && !hasTransitPO) {
                 const baseLeadTimes = scenario.leadTimes;
@@ -340,10 +340,6 @@ export function registerSocketHandler(io: Server) {
 
             if (team.cash < purchaseCost) {
               return callback({ error: 'Insufficient cash to buy machine' });
-            }
-
-            if ((team.machines[machineType as MachineType].inTransit || 0) > 0) {
-              return callback({ error: `A machine of this type is already in transit.` });
             }
 
             // Create Machine Order (In Transit)
