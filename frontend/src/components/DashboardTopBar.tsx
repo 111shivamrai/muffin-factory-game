@@ -96,6 +96,25 @@ function DashboardTopBar() {
     packaging: 'Packer',
   };
 
+  // Helper to format team name for top bar display:
+  // e.g. "Cups" -> "Team Cups"
+  // e.g. "Team Rangers" -> "Team Rangers"
+  // e.g. "Demo Team" / "Demo" -> "Team Muffin" (removes "Demo" completely)
+  const formatTeamDisplayName = (rawName?: string): string => {
+    if (!rawName) return 'Team Muffin';
+    const trimmed = rawName.trim();
+    if (!trimmed || trimmed.toLowerCase() === 'demo' || trimmed.toLowerCase() === 'demo team') {
+      return 'Team Muffin';
+    }
+    if (/^team\b/i.test(trimmed)) {
+      const rest = trimmed.replace(/^team\s*/i, '').trim();
+      return rest ? `Team ${rest}` : 'Team Muffin';
+    }
+    return `Team ${trimmed}`;
+  };
+
+  const displayTeamName = formatTeamDisplayName(teamState.name);
+
   return (
     <div className="flex items-center justify-between gap-2.5 select-none relative z-30 w-full">
       
@@ -236,15 +255,15 @@ function DashboardTopBar() {
           </div>
         </div>
 
-        {/* TEAM WORKSPACE */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5 min-w-0">
-          <div className="text-xl shrink-0">🧁</div>
-          <div className="min-w-0 flex-1">
-            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-tight uppercase leading-tight whitespace-nowrap">
-              TEAM WORKSPACE
+        {/* TEAM FACTORY */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2 min-w-fit shrink-0">
+          <div className="text-xl shrink-0" role="img" aria-label="Muffin">🧁</div>
+          <div className="min-w-0">
+            <div className="text-[8px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight whitespace-nowrap">
+              TEAM FACTORY
             </div>
-            <div className="text-xs font-extrabold truncate text-stone-800 font-sans mt-0.5" title={teamState.name}>
-              {teamState.name}
+            <div className="text-xs font-extrabold text-stone-800 font-sans mt-0.5 whitespace-nowrap" title={displayTeamName}>
+              {displayTeamName}
             </div>
           </div>
         </div>
@@ -378,14 +397,14 @@ function DashboardTopBar() {
             </div>
           </div>
 
-          {/* Workspace & Settings */}
+          {/* Team Factory & Settings */}
           <div className="rounded-xl border border-rose-100 p-3 bg-rose-50/10 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="text-xl">🧁</div>
+              <div className="text-xl shrink-0" role="img" aria-label="Muffin">🧁</div>
               <div className="min-w-0">
-                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Workspace</div>
-                <div className="text-xs font-bold text-stone-800 truncate">
-                  {teamState.name}
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Team Factory</div>
+                <div className="text-xs font-bold text-stone-800 truncate" title={displayTeamName}>
+                  {displayTeamName}
                 </div>
               </div>
             </div>

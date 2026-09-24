@@ -239,7 +239,7 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
       setIsLoginModalOpen(false);
 
       // 3. Automatically join the demo room
-      await joinRoom(code, 'Demo Team');
+      await joinRoom(code, 'Team Muffin');
     } catch (err: any) {
       setDemoError(err?.message || err || 'Connection failed. Is the server running?');
     } finally {
