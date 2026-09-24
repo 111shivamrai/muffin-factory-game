@@ -1816,67 +1816,144 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
               {/* Step 2: Wholesale Contracts */}
               {wizardStep === 2 && (
                 <div className="space-y-4 animate-[fadeIn_0.3s_ease-out] text-xs text-[#2c1a0a]">
-                  <h4 className="font-sans font-black text-[#2c1a0a] text-xs uppercase tracking-wider border-b border-muffin-brown/5 pb-1">
-                    Step 2: Wholesale Contracts
-                  </h4>
+                  <div className="flex justify-between items-center border-b border-muffin-brown/5 pb-1">
+                    <h4 className="font-sans font-black text-[#2c1a0a] text-xs uppercase tracking-wider">
+                      Step 2: Wholesale Contracts <span className="text-red-500">*</span>
+                    </h4>
+                    <span className="text-[10px] text-stone-500 font-bold">
+                      {scContracts.length} configured (Min 1 required)
+                    </span>
+                  </div>
                   <div className="space-y-2">
-                    <span className="text-[10px] uppercase font-extrabold text-[#1c1917] block">Custom Scenario Wholesale Contracts:</span>
+                    <span className="text-[10px] uppercase font-extrabold text-[#1c1917] block">
+                      Custom Scenario Wholesale Contracts <span className="text-red-500">*</span>:
+                    </span>
                     <div className="space-y-1 max-h-32 overflow-y-auto custom-scroll">
                       {scContracts.map((c, cidx) => (
                         <div key={c.id} className="flex justify-between items-center bg-white border border-muffin-brown/15 p-2 rounded-lg font-mono text-[9px] font-bold">
-                          <span>"{c.name}" Distributor: Demand {c.dailyDemand} un/day from Day {c.beginsAtDay}-{c.endsAtDay}</span>
+                          <span>"{c.name}" Distributor: Demand {c.dailyDemand} un/day from Day {c.beginsAtDay}-{c.endsAtDay} @ ₹{c.pricePerUnit} (Penalty: ₹{c.fillRatePenalty})</span>
                           <button
                             type="button"
                             onClick={() => setScContracts(scContracts.filter((_, idx) => idx !== cidx))}
-                            className="text-red-650 cursor-pointer font-sans"
+                            className="text-red-600 hover:text-red-800 cursor-pointer font-sans font-bold"
                           >
                             Delete
                           </button>
                         </div>
                       ))}
                       {scContracts.length === 0 && (
-                        <p className="text-gray-400 italic">No custom wholesale contracts configured yet.</p>
+                        <p className="text-amber-700 bg-amber-50 border border-amber-200 p-2 rounded text-[10px] font-bold italic">
+                          No custom wholesale contracts configured yet. Add at least one contract below to proceed.
+                        </p>
                       )}
                     </div>
                   </div>
 
                   <div className="border border-muffin-brown/15 p-3 rounded-xl bg-zinc-950/5 grid grid-cols-3 gap-2 font-semibold">
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Name</label>
-                      <input type="text" value={newConName} onChange={e => setNewConName(e.target.value)} placeholder="Distributor Name" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">
+                        Distributor Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={newConName}
+                        onChange={e => setNewConName(e.target.value)}
+                        placeholder="Enter distributor name"
+                        className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917] placeholder:text-stone-400 font-sans focus:border-purple-500 outline-none"
+                      />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Demand</label>
-                      <input type="number" value={newConDemand} onChange={e => setNewConDemand(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} placeholder="40" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">
+                        Contract Demand <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={newConDemand}
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setNewConDemand(val as any);
+                        }}
+                        min={1}
+                        placeholder="Enter contract demand"
+                        className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917] placeholder:text-stone-400 font-mono focus:border-purple-500 outline-none"
+                      />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Rate (₹)</label>
-                      <input type="number" value={newConRate} onChange={e => setNewConRate(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} placeholder="30" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">
+                        Contract Rate (₹) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={newConRate}
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setNewConRate(val as any);
+                        }}
+                        min={0}
+                        placeholder="Enter contract rate (₹)"
+                        className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917] placeholder:text-stone-400 font-mono focus:border-purple-500 outline-none"
+                      />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Start Day</label>
-                      <input type="number" value={newConStart} onChange={e => setNewConStart(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} placeholder="10" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">
+                        Start Day <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={newConStart}
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setNewConStart(val as any);
+                        }}
+                        min={1}
+                        placeholder="Enter contract start day"
+                        className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917] placeholder:text-stone-400 font-mono focus:border-purple-500 outline-none"
+                      />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">End Day</label>
-                      <input type="number" value={newConEnd} onChange={e => setNewConEnd(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} placeholder="25" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">
+                        End Day <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={newConEnd}
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setNewConEnd(val as any);
+                        }}
+                        min={1}
+                        placeholder="Enter contract end day"
+                        className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917] placeholder:text-stone-400 font-mono focus:border-purple-500 outline-none"
+                      />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Penalties (₹)</label>
-                      <input type="number" value={newConPenalty} onChange={e => setNewConPenalty(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} placeholder="5" className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917]" />
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">
+                        Penalties (₹) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={newConPenalty}
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setNewConPenalty(val as any);
+                        }}
+                        min={0}
+                        placeholder="Enter penalty per missed unit (₹)"
+                        className="w-full bg-white border border-muffin-brown/20 p-1.5 rounded text-xs text-[#1c1917] placeholder:text-stone-400 font-mono focus:border-purple-500 outline-none"
+                      />
                     </div>
                     <button
                       type="button"
                       onClick={() => {
-                        if (!newConName) return;
-                        const dVal = typeof newConDemand === 'number' ? newConDemand : 40;
-                        const rVal = typeof newConRate === 'number' ? newConRate : 30;
-                        const sVal = typeof newConStart === 'number' ? newConStart : 10;
-                        const eVal = typeof newConEnd === 'number' ? newConEnd : 25;
-                        const pVal = typeof newConPenalty === 'number' ? newConPenalty : 5;
+                        if (!newConName.trim()) return;
+                        const dVal = typeof newConDemand === 'number' && newConDemand > 0 ? newConDemand : 40;
+                        const rVal = typeof newConRate === 'number' && newConRate >= 0 ? newConRate : 30;
+                        const sVal = typeof newConStart === 'number' && newConStart > 0 ? newConStart : 10;
+                        const eVal = typeof newConEnd === 'number' && newConEnd > 0 ? newConEnd : 25;
+                        const pVal = typeof newConPenalty === 'number' && newConPenalty >= 0 ? newConPenalty : 5;
                         setScContracts([...scContracts, {
                           id: `contract_${Date.now()}`,
-                          name: newConName,
+                          name: newConName.trim(),
                           beginsAtDay: sVal,
                           endsAtDay: eVal,
                           dailyDemand: dVal,
@@ -1895,6 +1972,9 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       ➕ Add Wholesale Contract Offer
                     </button>
                   </div>
+                  {scContracts.length === 0 && (
+                    <p className="text-[9px] text-red-500 font-bold">* At least one wholesale contract is required to proceed to the next step</p>
+                  )}
                 </div>
               )}
 
@@ -1979,75 +2059,216 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
               {wizardStep === 4 && (
                 <div className="space-y-4 animate-[fadeIn_0.3s_ease-out] text-[#2c1a0a]">
                   <h4 className="font-sans font-black text-[#2c1a0a] text-xs uppercase tracking-wider border-b border-muffin-brown/5 pb-1">
-                    Step 4: Initial team starting parameters
+                    Step 4: Initial team starting parameters <span className="text-red-500">*</span>
                   </h4>
                   <div className="grid grid-cols-2 gap-4 font-semibold text-xs text-[#2c1a0a]">
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Starting Cash per team (₹)</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
+                        Starting Cash per team (₹) <span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="number"
                         value={scStartCash}
-                        onChange={e => setScStartCash(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                        placeholder="100000"
-                        className="w-full bg-white border border-muffin-brown/20 p-2.5 rounded font-mono text-xs text-[#1c1917]"
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setScStartCash(val as any);
+                        }}
+                        min={1}
+                        placeholder="Enter starting cash per team (₹)"
+                        className={`w-full bg-white border p-2.5 rounded font-mono text-xs text-[#1c1917] placeholder:text-stone-400 focus:border-purple-500 outline-none ${scStartCash === '' || scStartCash <= 0 ? 'border-red-300' : 'border-muffin-brown/20'}`}
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Starting Raw Materials (un)</label>
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
+                        Starting Raw Materials (un) <span className="text-red-500">*</span>
+                      </label>
                       <input
                         type="number"
                         value={scStartMaterials}
-                        onChange={e => setScStartMaterials(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                        placeholder="12000"
-                        className="w-full bg-white border border-muffin-brown/20 p-2.5 rounded font-mono text-xs text-[#1c1917]"
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setScStartMaterials(val as any);
+                        }}
+                        min={0}
+                        placeholder="Enter starting raw materials (units)"
+                        className={`w-full bg-white border p-2.5 rounded font-mono text-xs text-[#1c1917] placeholder:text-stone-400 focus:border-purple-500 outline-none ${scStartMaterials === '' ? 'border-red-300' : 'border-muffin-brown/20'}`}
                       />
                     </div>
                   </div>
                   <div className="pt-3 border-t border-muffin-brown/10 text-left">
-                    <span className="text-[10px] uppercase font-extrabold text-[#1c1917] block mb-2">Initial Starting machine assets</span>
+                    <span className="text-[10px] uppercase font-extrabold text-[#1c1917] block mb-2">
+                      Initial Starting Machine Assets <span className="text-red-500">*</span>
+                    </span>
                     <div className="grid grid-cols-4 gap-2 text-center text-xs font-semibold text-slate-700">
-                      <div className="bg-red-500/5 p-2 border border-muffin-brown/15 rounded-xl">
-                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block mb-1">Mixing lines</label>
-                        <input
-                          type="number"
-                          value={scStartMachinesMixing}
-                          onChange={e => setScStartMachinesMixing(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                          placeholder="1"
-                          className="w-12 bg-white border border-muffin-brown/20 p-1 text-center text-xs font-mono font-bold text-[#1c1917] mx-auto rounded block"
-                        />
+                      {/* Mixer Machine */}
+                      <div className="bg-red-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-1.5">
+                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block truncate">
+                          🥣 MIXER MACHINE <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex items-center justify-center rounded-xl border border-muffin-brown/25 overflow-hidden bg-white shadow-xs max-w-[110px] mx-auto">
+                          <button
+                            type="button"
+                            disabled={(typeof scStartMachinesMixing === 'number' ? scStartMachinesMixing : 0) <= 0}
+                            onClick={() => {
+                              const curr = typeof scStartMachinesMixing === 'number' ? scStartMachinesMixing : 0;
+                              setScStartMachinesMixing(Math.max(0, curr - 1));
+                            }}
+                            className="w-7 h-7 bg-stone-100 hover:bg-stone-200 text-stone-800 font-extrabold text-sm flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed select-none border-none"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            value={scStartMachinesMixing}
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScStartMachinesMixing(val as any);
+                            }}
+                            min={0}
+                            placeholder="1"
+                            className="w-10 h-7 text-center text-xs font-mono font-black text-[#1c1917] border-x border-muffin-brown/20 bg-white select-none focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const curr = typeof scStartMachinesMixing === 'number' ? scStartMachinesMixing : 0;
+                              setScStartMachinesMixing(curr + 1);
+                            }}
+                            className="w-7 h-7 bg-stone-100 hover:bg-stone-200 text-stone-800 font-extrabold text-sm flex items-center justify-center transition-all cursor-pointer select-none border-none"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <div className="bg-amber-500/5 p-2 border border-muffin-brown/15 rounded-xl">
-                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block mb-1">Baking lines</label>
-                        <input
-                          type="number"
-                          value={scStartMachinesBaking}
-                          onChange={e => setScStartMachinesBaking(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                          placeholder="1"
-                          className="w-12 bg-white border border-muffin-brown/20 p-1 text-center text-xs font-mono font-bold text-[#1c1917] mx-auto rounded block"
-                        />
+
+                      {/* Oven Machine */}
+                      <div className="bg-amber-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-1.5">
+                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block truncate">
+                          🥧 OVEN MACHINE <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex items-center justify-center rounded-xl border border-muffin-brown/25 overflow-hidden bg-white shadow-xs max-w-[110px] mx-auto">
+                          <button
+                            type="button"
+                            disabled={(typeof scStartMachinesBaking === 'number' ? scStartMachinesBaking : 0) <= 0}
+                            onClick={() => {
+                              const curr = typeof scStartMachinesBaking === 'number' ? scStartMachinesBaking : 0;
+                              setScStartMachinesBaking(Math.max(0, curr - 1));
+                            }}
+                            className="w-7 h-7 bg-stone-100 hover:bg-stone-200 text-stone-800 font-extrabold text-sm flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed select-none border-none"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            value={scStartMachinesBaking}
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScStartMachinesBaking(val as any);
+                            }}
+                            min={0}
+                            placeholder="1"
+                            className="w-10 h-7 text-center text-xs font-mono font-black text-[#1c1917] border-x border-muffin-brown/20 bg-white select-none focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const curr = typeof scStartMachinesBaking === 'number' ? scStartMachinesBaking : 0;
+                              setScStartMachinesBaking(curr + 1);
+                            }}
+                            className="w-7 h-7 bg-stone-100 hover:bg-stone-200 text-stone-800 font-extrabold text-sm flex items-center justify-center transition-all cursor-pointer select-none border-none"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <div className="bg-blue-500/5 p-2 border border-muffin-brown/15 rounded-xl">
-                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block mb-1">Icing lines</label>
-                        <input
-                          type="number"
-                          value={scStartMachinesIcing}
-                          onChange={e => setScStartMachinesIcing(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                          placeholder="1"
-                          className="w-12 bg-white border border-muffin-brown/20 p-1 text-center text-xs font-mono font-bold text-[#1c1917] mx-auto rounded block"
-                        />
+
+                      {/* Icing Machine */}
+                      <div className="bg-blue-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-1.5">
+                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block truncate">
+                          🍦 ICING MACHINE <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex items-center justify-center rounded-xl border border-muffin-brown/25 overflow-hidden bg-white shadow-xs max-w-[110px] mx-auto">
+                          <button
+                            type="button"
+                            disabled={(typeof scStartMachinesIcing === 'number' ? scStartMachinesIcing : 0) <= 0}
+                            onClick={() => {
+                              const curr = typeof scStartMachinesIcing === 'number' ? scStartMachinesIcing : 0;
+                              setScStartMachinesIcing(Math.max(0, curr - 1));
+                            }}
+                            className="w-7 h-7 bg-stone-100 hover:bg-stone-200 text-stone-800 font-extrabold text-sm flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed select-none border-none"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            value={scStartMachinesIcing}
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScStartMachinesIcing(val as any);
+                            }}
+                            min={0}
+                            placeholder="1"
+                            className="w-10 h-7 text-center text-xs font-mono font-black text-[#1c1917] border-x border-muffin-brown/20 bg-white select-none focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const curr = typeof scStartMachinesIcing === 'number' ? scStartMachinesIcing : 0;
+                              setScStartMachinesIcing(curr + 1);
+                            }}
+                            className="w-7 h-7 bg-stone-100 hover:bg-stone-200 text-stone-800 font-extrabold text-sm flex items-center justify-center transition-all cursor-pointer select-none border-none"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
-                      <div className="bg-emerald-500/5 p-2 border border-muffin-brown/15 rounded-xl">
-                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block mb-1">Packaging lines</label>
-                        <input
-                          type="number"
-                          value={scStartMachinesPackaging}
-                          onChange={e => setScStartMachinesPackaging(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                          placeholder="1"
-                          className="w-12 bg-white border border-muffin-brown/20 p-1 text-center text-xs font-mono font-bold text-[#1c1917] mx-auto rounded block"
-                        />
+
+                      {/* Packaging Machine */}
+                      <div className="bg-emerald-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-1.5">
+                        <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block truncate">
+                          🎁 PACKAGING MACHINE <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex items-center justify-center rounded-xl border border-muffin-brown/25 overflow-hidden bg-white shadow-xs max-w-[110px] mx-auto">
+                          <button
+                            type="button"
+                            disabled={(typeof scStartMachinesPackaging === 'number' ? scStartMachinesPackaging : 0) <= 0}
+                            onClick={() => {
+                              const curr = typeof scStartMachinesPackaging === 'number' ? scStartMachinesPackaging : 0;
+                              setScStartMachinesPackaging(Math.max(0, curr - 1));
+                            }}
+                            className="w-7 h-7 bg-stone-100 hover:bg-stone-200 text-stone-800 font-extrabold text-sm flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed select-none border-none"
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            value={scStartMachinesPackaging}
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScStartMachinesPackaging(val as any);
+                            }}
+                            min={0}
+                            placeholder="1"
+                            className="w-10 h-7 text-center text-xs font-mono font-black text-[#1c1917] border-x border-muffin-brown/20 bg-white select-none focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const curr = typeof scStartMachinesPackaging === 'number' ? scStartMachinesPackaging : 0;
+                              setScStartMachinesPackaging(curr + 1);
+                            }}
+                            className="w-7 h-7 bg-stone-100 hover:bg-stone-200 text-stone-800 font-extrabold text-sm flex items-center justify-center transition-all cursor-pointer select-none border-none"
+                          >
+                            +
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  {/* Step 4 validation note */}
+                  {(!scStartCash || scStartCash <= 0 || scStartMaterials === '' || scStartMachinesMixing === '' || scStartMachinesBaking === '' || scStartMachinesIcing === '' || scStartMachinesPackaging === '') && (
+                    <p className="text-[9px] text-red-500 font-bold mt-2">* All starting parameters and machine assets are required before proceeding</p>
+                  )}
                 </div>
               )}
 
@@ -2055,113 +2276,149 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
               {wizardStep === 5 && (
                 <div className="space-y-4 animate-[fadeIn_0.3s_ease-out] text-[#2c1a0a]">
                   <h4 className="font-sans font-black text-[#2c1a0a] text-xs uppercase tracking-wider border-b border-muffin-brown/5 pb-1">
-                    Step 5: Capacity speeds & Purchase Costs
+                    Step 5: Capacity speeds & Purchase Costs <span className="text-red-500">*</span>
                   </h4>
                   <div className="grid grid-cols-2 gap-3 text-xs font-semibold text-left">
                     <div className="border border-muffin-brown/15 bg-red-500/5 p-2.5 rounded-xl space-y-1">
-                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">🥣 MIX STATION</span>
+                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">🥣 MIXER MACHINE <span className="text-red-500">*</span></span>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day</label>
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day <span className="text-red-500">*</span></label>
                           <input
                             type="number"
                             value={scMixingCap}
-                            onChange={e => setScMixingCap(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                            placeholder="100"
-                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScMixingCap(val as any);
+                            }}
+                            min={1}
+                            placeholder="Enter daily capacity"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] placeholder:text-stone-400 rounded focus:border-purple-500 outline-none"
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost</label>
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost <span className="text-red-500">*</span></label>
                           <input
                             type="number"
                             value={scMixingCost}
-                            onChange={e => setScMixingCost(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                            placeholder="2000"
-                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScMixingCost(val as any);
+                            }}
+                            min={1}
+                            placeholder="Enter machine cost (₹)"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] placeholder:text-stone-400 rounded focus:border-purple-500 outline-none"
                           />
                         </div>
                       </div>
                     </div>
 
                     <div className="border border-muffin-brown/15 bg-amber-500/5 p-2.5 rounded-xl space-y-1">
-                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">🔥 OVEN STATION</span>
+                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">🥧 OVEN MACHINE <span className="text-red-500">*</span></span>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day</label>
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day <span className="text-red-500">*</span></label>
                           <input
                             type="number"
                             value={scBakingCap}
-                            onChange={e => setScBakingCap(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                            placeholder="80"
-                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScBakingCap(val as any);
+                            }}
+                            min={1}
+                            placeholder="Enter daily capacity"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] placeholder:text-stone-400 rounded focus:border-purple-500 outline-none"
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost</label>
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost <span className="text-red-500">*</span></label>
                           <input
                             type="number"
                             value={scBakingCost}
-                            onChange={e => setScBakingCost(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                            placeholder="3000"
-                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScBakingCost(val as any);
+                            }}
+                            min={1}
+                            placeholder="Enter machine cost (₹)"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] placeholder:text-stone-400 rounded focus:border-purple-500 outline-none"
                           />
                         </div>
                       </div>
                     </div>
 
                     <div className="border border-muffin-brown/15 bg-blue-500/5 p-2.5 rounded-xl space-y-1">
-                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">❄️ ICING STATION</span>
+                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">🍦 ICING MACHINE <span className="text-red-500">*</span></span>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day</label>
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day <span className="text-red-500">*</span></label>
                           <input
                             type="number"
                             value={scIcingCap}
-                            onChange={e => setScIcingCap(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                            placeholder="120"
-                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScIcingCap(val as any);
+                            }}
+                            min={1}
+                            placeholder="Enter daily capacity"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] placeholder:text-stone-400 rounded focus:border-purple-500 outline-none"
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost</label>
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost <span className="text-red-500">*</span></label>
                           <input
                             type="number"
                             value={scIcingCost}
-                            onChange={e => setScIcingCost(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                            placeholder="1500"
-                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScIcingCost(val as any);
+                            }}
+                            min={1}
+                            placeholder="Enter machine cost (₹)"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] placeholder:text-stone-400 rounded focus:border-purple-500 outline-none"
                           />
                         </div>
                       </div>
                     </div>
 
                     <div className="border border-muffin-brown/15 bg-emerald-500/5 p-2.5 rounded-xl space-y-1">
-                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">📦 PACKAGING STATION</span>
+                      <span className="text-[10px] text-[#1c1917] block font-extrabold border-b pb-1">🎁 PACKAGING MACHINE <span className="text-red-500">*</span></span>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day</label>
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Capacity/day <span className="text-red-500">*</span></label>
                           <input
                             type="number"
                             value={scPackagingCap}
-                            onChange={e => setScPackagingCap(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                            placeholder="150"
-                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScPackagingCap(val as any);
+                            }}
+                            min={1}
+                            placeholder="Enter daily capacity"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] placeholder:text-stone-400 rounded focus:border-purple-500 outline-none"
                           />
                         </div>
                         <div>
-                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost</label>
+                          <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block">Machine cost <span className="text-red-500">*</span></label>
                           <input
                             type="number"
                             value={scPackagingCost}
-                            onChange={e => setScPackagingCost(e.target.value === '' ? '' : parseInt(e.target.value) || 0)}
-                            placeholder="1000"
-                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] rounded"
+                            onChange={e => {
+                              const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                              if (val === '' || (typeof val === 'number' && val >= 0)) setScPackagingCost(val as any);
+                            }}
+                            min={1}
+                            placeholder="Enter machine cost (₹)"
+                            className="w-full bg-white border border-muffin-brown/20 p-1 font-mono text-[10px] text-[#1c1917] placeholder:text-stone-400 rounded focus:border-purple-500 outline-none"
                           />
                         </div>
                       </div>
                     </div>
                   </div>
+                  {/* Step 5 validation note */}
+                  {(!scMixingCap || !scMixingCost || !scBakingCap || !scBakingCost || !scIcingCap || !scIcingCost || !scPackagingCap || !scPackagingCost) && (
+                    <p className="text-[9px] text-red-500 font-bold mt-2">* All 4 machine capacities and costs are required before proceeding</p>
+                  )}
                 </div>
               )}
 
@@ -2229,17 +2486,42 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                   scBaseMixCost !== '' && typeof scBaseMixCost === 'number' && scBaseMixCost >= 0 &&
                   scSellingPrice !== '' && typeof scSellingPrice === 'number' && scSellingPrice >= 0
                 );
+
+                const step2Valid = wizardStep !== 2 || (scContracts.length >= 1);
+
+                const step4Valid = wizardStep !== 4 || (
+                  scStartCash !== '' && typeof scStartCash === 'number' && scStartCash > 0 &&
+                  scStartMaterials !== '' && typeof scStartMaterials === 'number' && scStartMaterials >= 0 &&
+                  scStartMachinesMixing !== '' && typeof scStartMachinesMixing === 'number' && scStartMachinesMixing >= 0 &&
+                  scStartMachinesBaking !== '' && typeof scStartMachinesBaking === 'number' && scStartMachinesBaking >= 0 &&
+                  scStartMachinesIcing !== '' && typeof scStartMachinesIcing === 'number' && scStartMachinesIcing >= 0 &&
+                  scStartMachinesPackaging !== '' && typeof scStartMachinesPackaging === 'number' && scStartMachinesPackaging >= 0
+                );
+
+                const step5Valid = wizardStep !== 5 || (
+                  scMixingCap !== '' && typeof scMixingCap === 'number' && scMixingCap > 0 &&
+                  scMixingCost !== '' && typeof scMixingCost === 'number' && scMixingCost > 0 &&
+                  scBakingCap !== '' && typeof scBakingCap === 'number' && scBakingCap > 0 &&
+                  scBakingCost !== '' && typeof scBakingCost === 'number' && scBakingCost > 0 &&
+                  scIcingCap !== '' && typeof scIcingCap === 'number' && scIcingCap > 0 &&
+                  scIcingCost !== '' && typeof scIcingCost === 'number' && scIcingCost > 0 &&
+                  scPackagingCap !== '' && typeof scPackagingCap === 'number' && scPackagingCap > 0 &&
+                  scPackagingCost !== '' && typeof scPackagingCost === 'number' && scPackagingCost > 0
+                );
+
+                const isCurrentStepValid = step1Valid && step2Valid && step4Valid && step5Valid;
+
                 return (
                   <button
                     type="button"
-                    disabled={!step1Valid}
+                    disabled={!isCurrentStepValid}
                     onClick={() => {
-                      if (!step1Valid) return;
+                      if (!isCurrentStepValid) return;
                       playTone(260, 'sine', 0.05);
                       setWizardStep(prev => Math.min(6, prev + 1));
                     }}
-                    title={!step1Valid ? 'Please fill all required fields before proceeding' : ''}
-                    className={`px-5 py-2 rounded-lg font-sans font-black uppercase text-[10px] tracking-wider shadow-md transition-all ${step1Valid ? 'bg-[#2c1a0a] text-white hover:bg-slate-900 cursor-pointer' : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'}`}
+                    title={!isCurrentStepValid ? 'Please fill all required fields before proceeding' : ''}
+                    className={`px-5 py-2 rounded-lg font-sans font-black uppercase text-[10px] tracking-wider shadow-md transition-all ${isCurrentStepValid ? 'bg-[#2c1a0a] text-white hover:bg-slate-900 cursor-pointer' : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'}`}
                   >
                     Next Step →
                   </button>
