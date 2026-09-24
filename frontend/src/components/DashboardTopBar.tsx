@@ -237,13 +237,13 @@ function DashboardTopBar() {
         </div>
 
         {/* TEAM WORKSPACE */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
-          <div className="text-2xl">🧁</div>
-          <div className="min-w-0">
-            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5 min-w-0">
+          <div className="text-xl shrink-0">🧁</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-tight uppercase leading-tight whitespace-nowrap">
               TEAM WORKSPACE
             </div>
-            <div className="text-sm font-extrabold truncate text-stone-800" title={teamState.name}>
+            <div className="text-xs font-extrabold truncate text-stone-800 font-sans mt-0.5" title={teamState.name}>
               {teamState.name}
             </div>
           </div>

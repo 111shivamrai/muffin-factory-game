@@ -3,11 +3,11 @@ import { useGameStore } from '../store/gameStore.js';
 import { useShallow } from 'zustand/react/shallow';
 import {
   Info, ShoppingCart, TrendingUp, Scale, FileCheck, Check,
-  Zap, Activity
+  Zap, Activity, Cog
 } from 'lucide-react';
 import { MachineType } from '../../../backend/src/types/index.js';
 
-// Capacity constants (units per day per machine)
+// Machine capacity constants (units produced/processed per day per machine)
 const CAPACITY_PER_MACHINE: Record<MachineType, number> = {
   mixing: 100,
   baking: 80,
@@ -15,49 +15,44 @@ const CAPACITY_PER_MACHINE: Record<MachineType, number> = {
   packaging: 150,
 };
 
-// Theme colours per machine type
-const MACHINE_THEME: Record<MachineType, {
-  border: string;
-  badge: string;
+// Theme colours and process descriptions per machine type
+const MACHINE_META: Record<MachineType, {
   icon: string;
-  accent: string;
-  dot: string;
+  processDesc: string;
+  accentColor: string;
+  badgeBg: string;
   utilColor: string;
   dotClass: string;
 }> = {
   mixing: {
-    border: 'border-violet-200',
-    badge: 'bg-violet-50 text-violet-700 border-violet-200',
     icon: '🥣',
-    accent: 'text-violet-600',
-    dot: 'bg-violet-400',
+    processDesc: 'Mixes flour, sugar & batter',
+    accentColor: '#7c3aed',
+    badgeBg: 'bg-purple-50 text-purple-700 border-purple-200',
     utilColor: '#c084fc',
     dotClass: 'bg-purple-400',
   },
   baking: {
-    border: 'border-orange-200',
-    badge: 'bg-orange-50 text-orange-700 border-orange-200',
     icon: '🥧',
-    accent: 'text-orange-600',
-    dot: 'bg-orange-400',
+    processDesc: 'Bakes batter into muffins',
+    accentColor: '#ea580c',
+    badgeBg: 'bg-orange-50 text-orange-700 border-orange-200',
     utilColor: '#fb923c',
     dotClass: 'bg-orange-400',
   },
   icing: {
-    border: 'border-emerald-200',
-    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     icon: '🍦',
-    accent: 'text-emerald-600',
-    dot: 'bg-emerald-400',
+    processDesc: 'Frosts & adds toppings',
+    accentColor: '#059669',
+    badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     utilColor: '#4ade80',
     dotClass: 'bg-green-400',
   },
   packaging: {
-    border: 'border-blue-200',
-    badge: 'bg-blue-50 text-blue-700 border-blue-200',
     icon: '🎁',
-    accent: 'text-blue-600',
-    dot: 'bg-blue-400',
+    processDesc: 'Boxes & wraps final muffins',
+    accentColor: '#2563eb',
+    badgeBg: 'bg-blue-50 text-blue-700 border-blue-200',
     utilColor: '#60a5fa',
     dotClass: 'bg-blue-400',
   },
@@ -176,7 +171,7 @@ function MachinePanel() {
   const { mixing, baking, icing, packaging } = teamState.machines;
   const currentStrategy = (teamState as any).allocationStrategy || 'contracts_first';
 
-  // ─── Machine definitions ───────────────────────────────────────────────────
+  // ─── Machine definitions in strict order: Mixer, Oven, Icing, Packaging ───────
   const machines: Array<{
     type: MachineType;
     label: string;
@@ -197,7 +192,7 @@ function MachinePanel() {
       {/* ── Panel Header ── */}
       <header className="px-4 py-2.5 bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white font-extrabold tracking-wide text-sm flex items-center gap-2 shrink-0">
         <span className="size-6 rounded-full bg-white/20 border border-white/40 flex items-center justify-center text-xs">⚙️</span>
-        FACTORY FLOOR
+        <span>FACTORY FLOOR</span>
         <span className="ml-auto text-[9px] font-bold bg-white/15 border border-white/30 rounded-full px-2 py-0.5 tracking-widest uppercase">
           {machines.filter(m => m.mData.active > 0).length} / {machines.length} Active
         </span>
@@ -206,40 +201,71 @@ function MachinePanel() {
       {/* ── Scrollable Content ── */}
       <div className="overflow-y-auto flex-1 flex flex-col min-h-0 p-2.5 gap-2.5">
 
-        {/* ══════════════ MACHINE CARDS ══════════════ */}
+        {/* ── Operations Navigation Header Strip ── */}
+        <div className="grid grid-cols-[1.25fr_1fr_1fr_0.9fr] gap-1 px-3 py-1.5 bg-rose-50/50 border border-rose-100 rounded-xl text-[7.5px] font-extrabold text-stone-500 uppercase tracking-wider text-center shrink-0">
+          <div className="text-left flex items-center gap-1">
+            <Cog className="w-2.5 h-2.5 text-stone-400" />
+            <span>MACHINE</span>
+          </div>
+          <div className="flex items-center justify-center gap-0.5 text-emerald-700">
+            <Zap className="w-2.5 h-2.5" />
+            <span>AVAILABLE CAP</span>
+          </div>
+          <div className="flex items-center justify-center gap-0.5 text-purple-700">
+            <Activity className="w-2.5 h-2.5" />
+            <span>OPERATING CAP</span>
+          </div>
+          <div className="text-right pr-2">
+            <span>BUY</span>
+          </div>
+        </div>
+
+        {/* ══════════════ 4 MACHINE CARDS (MIXER, OVEN, ICING, PACKAGING) ══════════════ */}
         <div className="space-y-2.5 shrink-0">
           {machines.map(({ type, label, state, setter, mData, cost }) => {
-            const theme        = MACHINE_THEME[type];
+            const meta         = MACHINE_META[type];
             const inTransit    = mData.inTransit || 0;
             const totalCount   = mData.count + inTransit;
             const canAfford    = teamState.cash >= cost;
             const isProcuring  = inTransit > 0;
+            const unitCapacity = CAPACITY_PER_MACHINE[type];
 
-            // ── Capacity formulas ──────────────────────────────────────────
-            // Available Capacity = owned machines × capacity/machine
-            const availableCapacity = mData.count * CAPACITY_PER_MACHINE[type];
-            // Operating Capacity = active machines × capacity/machine
-            const operatingCapacity = mData.active * CAPACITY_PER_MACHINE[type];
+            // ── Verified Capacity Formulas ────────────────────────────────
+            // 1. Available Capacity = Total Owned Floor Machines × Capacity Per Machine
+            const availableCapacity = mData.count * unitCapacity;
+
+            // 2. Operating Capacity = Running (Active - Broken) Machines × Capacity Per Machine
+            const brokenCount = teamState.breakdownStates?.find(b => b.machineType === type)?.brokenCount || 0;
+            const runningCount = Math.max(0, mData.active - brokenCount);
+            const operatingCapacity = runningCount * unitCapacity;
 
             return (
               <div
                 key={type}
-                className="rounded-2xl border border-stone-200/80 bg-white p-2.5 shadow-xs space-y-2 hover:border-purple-200 transition-colors"
+                className="rounded-2xl border border-stone-200/90 bg-white p-2.5 shadow-xs space-y-2 hover:border-purple-200 transition-all"
               >
-                {/* ── Top Half: Machine Info + Stepper ── */}
+                {/* ── Top Section: Machine Info Box + Stepper ── */}
                 <div className="flex items-center justify-between gap-2">
-                  {/* Left: Icon & Machine Name & Subtitle */}
+                  {/* Left: Icon & Machine Name & Details */}
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-xl shrink-0">{theme.icon}</span>
+                    <span className="text-2xl shrink-0">{meta.icon}</span>
                     <div className="min-w-0">
                       <div className="text-xs font-black text-stone-800 font-sans truncate leading-tight">
                         {label}
                       </div>
-                      <div className="flex items-center gap-1.5 mt-0.5 text-[8.5px] font-bold text-stone-400">
+                      <div className="text-[8px] font-semibold text-stone-400 font-sans truncate">
+                        {meta.processDesc}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[8.5px] font-bold text-stone-500 font-mono">
                         <span>{mData.count} owned · {mData.active} active</span>
                         {isProcuring && (
                           <span className="text-amber-700 bg-amber-50 border border-amber-300 px-1 py-0.2 rounded text-[7.5px] font-bold flex items-center gap-0.5 animate-pulse">
                             🚚 +{inTransit} in transit
+                          </span>
+                        )}
+                        {brokenCount > 0 && (
+                          <span className="text-red-700 bg-red-50 border border-red-200 px-1 py-0.2 rounded text-[7.5px] font-bold">
+                            ⚠️ {brokenCount} broken
                           </span>
                         )}
                       </div>
@@ -297,10 +323,13 @@ function MachinePanel() {
                   </div>
                 </div>
 
-                {/* ── Bottom Half: Available Capacity Box + Operating Capacity Box + BUY Button ── */}
-                <div className="flex items-center gap-1.5 pt-1 border-t border-dashed border-stone-100">
+                {/* ── Bottom Section: Available Capacity Box + Operating Capacity Box + Buy Button ── */}
+                <div className="flex items-center gap-1.5 pt-1.5 border-t border-dashed border-stone-100">
                   {/* Available Capacity Box */}
-                  <div className="flex-1 rounded-xl bg-emerald-50/80 border border-emerald-200/90 px-2 py-1 flex flex-col justify-center items-center text-center shadow-xs">
+                  <div
+                    className="flex-1 rounded-xl bg-emerald-50/80 border border-emerald-200/90 px-2 py-1 flex flex-col justify-center items-center text-center shadow-xs"
+                    title={`Available Capacity Formula: ${mData.count} owned machine(s) × ${unitCapacity} units/day = ${availableCapacity} units/day`}
+                  >
                     <div className="text-[7.5px] font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-0.5 leading-none">
                       <Zap className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
                       <span>AVAILABLE</span>
@@ -309,12 +338,15 @@ function MachinePanel() {
                       {availableCapacity}
                     </div>
                     <div className="text-[6.5px] font-bold text-emerald-600/80 uppercase tracking-tight mt-0.5 leading-none">
-                      units/day
+                      {mData.count} × {unitCapacity} un/d
                     </div>
                   </div>
 
                   {/* Operating Capacity Box */}
-                  <div className="flex-1 rounded-xl bg-purple-50/80 border border-purple-200/90 px-2 py-1 flex flex-col justify-center items-center text-center shadow-xs">
+                  <div
+                    className="flex-1 rounded-xl bg-purple-50/80 border border-purple-200/90 px-2 py-1 flex flex-col justify-center items-center text-center shadow-xs"
+                    title={`Operating Capacity Formula: ${runningCount} active running machine(s) × ${unitCapacity} units/day = ${operatingCapacity} units/day`}
+                  >
                     <div className="text-[7.5px] font-extrabold text-purple-700 uppercase tracking-wider flex items-center gap-0.5 leading-none">
                       <Activity className="w-2.5 h-2.5 text-purple-600 shrink-0" />
                       <span>OPERATING</span>
@@ -323,11 +355,11 @@ function MachinePanel() {
                       {operatingCapacity}
                     </div>
                     <div className="text-[6.5px] font-bold text-purple-600/80 uppercase tracking-tight mt-0.5 leading-none">
-                      units/day
+                      {runningCount} × {unitCapacity} un/d
                     </div>
                   </div>
 
-                  {/* BUY / ORDERED Button (Horizontal pill matching previous design) */}
+                  {/* Buy Button (Classic horizontal pill button, switches to ORDERED when in transit) */}
                   <div className="shrink-0 flex items-center">
                     {isController ? (
                       isProcuring ? (
@@ -348,7 +380,7 @@ function MachinePanel() {
                           title={
                             !canAfford
                               ? `Need ₹${cost.toLocaleString()} (Cash: ₹${teamState.cash.toLocaleString()})`
-                              : `Procure additional ${label} machine for ₹${cost.toLocaleString()}`
+                              : `Procure additional ${label} for ₹${cost.toLocaleString()}`
                           }
                           className={`h-8 px-3.5 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm border-none shrink-0 select-none ${
                             !canAfford || isBuying === type ? 'opacity-40 cursor-not-allowed' : ''
@@ -371,7 +403,7 @@ function MachinePanel() {
           })}
         </div>
 
-        {/* ══════════════ UTILIZATION ══════════════ */}
+        {/* ══════════════ UTILIZATION SECTION ══════════════ */}
         <div className="shrink-0">
           <div className="flex items-center gap-2 mb-1.5">
             <div className="h-px bg-stone-200 flex-1" />
@@ -380,7 +412,7 @@ function MachinePanel() {
           </div>
           <div className="rounded-xl border border-rose-100/50 bg-[#fffdfa] px-2 py-1.5 grid grid-cols-4 gap-1 text-center">
             {([ 'mixing', 'baking', 'icing', 'packaging' ] as MachineType[]).map((type) => {
-              const t = MACHINE_THEME[type];
+              const meta = MACHINE_META[type];
               const labels: Record<MachineType, string> = { mixing: 'Mixer', baking: 'Oven', icing: 'Icing', packaging: 'Packer' };
               const histUtil = teamState.history?.utilization?.[type];
               const currentUtil = histUtil && histUtil.length > 0 ? histUtil[histUtil.length - 1] : 0;
@@ -388,16 +420,16 @@ function MachinePanel() {
                 <div key={type} className="flex flex-col items-center justify-between min-w-0">
                   <span className="text-[8px] font-bold text-stone-600 truncate">{labels[type]}</span>
                   <div className="my-0.5 shrink-0">
-                    <ProgressRing value={currentUtil} color={t.utilColor} />
+                    <ProgressRing value={currentUtil} color={meta.utilColor} />
                   </div>
-                  <div className={`size-1.5 rounded-full ${t.dotClass}`} />
+                  <div className={`size-1.5 rounded-full ${meta.dotClass}`} />
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* ══════════════ OUTPUT ALLOCATION STRATEGY ══════════════ */}
+        {/* ══════════════ OUTPUT ALLOCATION STRATEGY SECTION ══════════════ */}
         <div className="flex-1 flex flex-col justify-between min-h-0">
           <div>
             <div className="flex items-center gap-2 mb-1.5">
