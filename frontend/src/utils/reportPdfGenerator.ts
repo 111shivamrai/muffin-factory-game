@@ -133,18 +133,39 @@ export async function generateTeamReportPDF(
     totalFulfilled = Math.round((report.fillRate / 100) * totalDemand);
   }
 
+  // Helper to draw clean vector Indian Rupee symbol glyph
+  const drawRupeeGlyph = (x: number, y: number, h: number, color: number[]) => {
+    doc.setDrawColor(color[0], color[1], color[2]);
+    doc.setLineWidth(0.26);
+    const w = h * 0.65;
+    // Top bar
+    doc.line(x, y, x + w, y);
+    // Second horizontal bar
+    const barY = y + h * 0.32;
+    doc.line(x, barY, x + w * 0.75, barY);
+    // Vertical stem down to mid
+    const midY = y + h * 0.54;
+    doc.line(x, y, x, midY);
+    // Upper loop curve
+    doc.line(x + w * 0.4, y, x + w * 0.8, y + h * 0.16);
+    doc.line(x + w * 0.8, y + h * 0.16, x + w * 0.8, barY + h * 0.08);
+    doc.line(x + w * 0.8, barY + h * 0.08, x, midY);
+    // Diagonal leg
+    doc.line(x + w * 0.25, midY, x + w * 0.88, y + h);
+  };
+
   const execKpis = [
     [
-      { label: 'Final Cash Balance', val: `₹${teamState.cash.toLocaleString()}`, color: teamState.cash >= 0 ? emeraldColor : [220, 38, 38] },
-      { label: 'Cumulative Revenue', val: `₹${(report.revenue || 0).toLocaleString()}`, color: slateDark },
-      { label: 'Total Operating Costs', val: `₹${(report.costs || 0).toLocaleString()}`, color: slateDark },
-      { label: 'Net Profit / Loss', val: `₹${(report.profit || 0).toLocaleString()}`, color: (report.profit || 0) >= 0 ? emeraldColor : [220, 38, 38] },
+      { label: 'Final Cash Balance', val: teamState.cash.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }), isCurrency: true, color: teamState.cash >= 0 ? emeraldColor : [220, 38, 38] },
+      { label: 'Cumulative Revenue', val: (report.revenue || 0).toLocaleString(), isCurrency: true, color: slateDark },
+      { label: 'Total Operating Costs', val: (report.costs || 0).toLocaleString(), isCurrency: true, color: slateDark },
+      { label: 'Net Profit / Loss', val: (report.profit || 0).toLocaleString(), isCurrency: true, color: (report.profit || 0) >= 0 ? emeraldColor : [220, 38, 38] },
     ],
     [
-      { label: 'Overall Fill Rate', val: `${report.fillRate || 0}%`, color: slateDark },
-      { label: 'Total Muffin Production', val: `${totalProduction.toLocaleString()} Units`, color: slateDark },
-      { label: 'Contract Deliveries', val: `${report.contractFulfillment || 0}%`, color: slateDark },
-      { label: 'Academic Grade', val: `${academic?.totalScore || 0} / 100 (Rank #${leaderboardRank || 1})`, color: primaryDark },
+      { label: 'Overall Fill Rate', val: `${report.fillRate || 0}%`, isCurrency: false, color: slateDark },
+      { label: 'Total Muffin Production', val: `${totalProduction.toLocaleString()} Units`, isCurrency: false, color: slateDark },
+      { label: 'Contract Deliveries', val: `${report.contractFulfillment || 0}%`, isCurrency: false, color: slateDark },
+      { label: 'Academic Grade', val: `${academic?.totalScore || 0} / 100 (Rank #${leaderboardRank || 1})`, isCurrency: false, color: primaryDark },
     ]
   ];
 
@@ -164,7 +185,12 @@ export async function generateTeamReportPDF(
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8.5);
       doc.setTextColor(item.color[0], item.color[1], item.color[2]);
-      doc.text(item.val, boxX + 2, currentY + 9.5);
+      if (item.isCurrency) {
+        drawRupeeGlyph(boxX + 2, currentY + 6.6, 2.9, item.color);
+        doc.text(item.val, boxX + 5.2, currentY + 9.5);
+      } else {
+        doc.text(item.val, boxX + 2, currentY + 9.5);
+      }
     });
     currentY += 14;
   });
@@ -245,7 +271,7 @@ export async function generateTeamReportPDF(
       ['Total Cumulative Demand', `${totalDemand.toLocaleString()} Muffins`, 'Total Production Output', `${totalProduction.toLocaleString()} Muffins`],
       ['Total Demand Fulfilled', `${totalFulfilled.toLocaleString()} Muffins`, 'Average Daily Production', `${avgDailyProd.toLocaleString()} Units/Day`],
       ['Unfulfilled Market Demand', `${unfulfilledDemand.toLocaleString()} Muffins`, 'Stockout Days', `${report.stockoutDays || 0} Days`],
-      ['Overall Fulfillment Rate', `${report.fillRate || 0}%`, 'Lost Sales Penalty Impact', `₹${(report.lostSales || 0).toLocaleString()}`],
+      ['Overall Fulfillment Rate', `${report.fillRate || 0}%`, 'Lost Sales Penalty Impact', `Rs. ${(report.lostSales || 0).toLocaleString()}`],
     ],
     theme: 'grid',
     headStyles: { fillColor: slateDark, textColor: [255, 255, 255], fontSize: 7.5 },
@@ -269,11 +295,11 @@ export async function generateTeamReportPDF(
     startY: currentY,
     head: [['Inventory Material', 'Closing On Hand', 'In Transit', 'Financial Line Item', 'Amount']],
     body: [
-      ['Raw Material (Base Mix)', `${rawOnHand.toLocaleString()} kg`, `${(invState.base_mix?.inTransit ?? 0).toLocaleString()} kg`, 'Starting Capital', '₹100,000'],
-      ['Packaging Material', `${pkgOnHand.toLocaleString()} boxes`, `${(invState.packaging_material?.inTransit ?? 0).toLocaleString()} boxes`, 'Gross Revenue', `₹${(report.revenue || 0).toLocaleString()}`],
-      ['Finished Muffins', `${fgOnHand.toLocaleString()} units`, '-', 'Total Operating Costs', `₹${(report.costs || 0).toLocaleString()}`],
-      ['Average Inventory Level', `${Math.round(report.averageInventory || 0).toLocaleString()}`, '-', 'Net Profit / Operating Margin', `₹${(report.profit || 0).toLocaleString()}`],
-      ['Inventory Turnover Ratio', `${(report.inventoryTurnover || 0).toFixed(2)}x`, '-', 'Ending Cash Balance', `₹${teamState.cash.toLocaleString()}`],
+      ['Raw Material (Base Mix)', `${rawOnHand.toLocaleString()} kg`, `${(invState.base_mix?.inTransit ?? 0).toLocaleString()} kg`, 'Starting Capital', 'Rs. 100,000'],
+      ['Packaging Material', `${pkgOnHand.toLocaleString()} boxes`, `${(invState.packaging_material?.inTransit ?? 0).toLocaleString()} boxes`, 'Gross Revenue', `Rs. ${(report.revenue || 0).toLocaleString()}`],
+      ['Finished Muffins', `${fgOnHand.toLocaleString()} units`, '-', 'Total Operating Costs', `Rs. ${(report.costs || 0).toLocaleString()}`],
+      ['Average Inventory Level', `${Math.round(report.averageInventory || 0).toLocaleString()}`, '-', 'Net Profit / Operating Margin', `Rs. ${(report.profit || 0).toLocaleString()}`],
+      ['Inventory Turnover Ratio', `${(report.inventoryTurnover || 0).toFixed(2)}x`, '-', 'Ending Cash Balance', `Rs. ${teamState.cash.toLocaleString()}`],
     ],
     theme: 'grid',
     headStyles: { fillColor: primaryDark, textColor: [255, 255, 255], fontSize: 7.5 },

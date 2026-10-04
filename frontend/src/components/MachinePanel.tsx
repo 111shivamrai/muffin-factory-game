@@ -235,7 +235,9 @@ function MachinePanel() {
             const availableCapacity = mData.count * unitCapacity;
 
             // 2. Operating Capacity = Running (Active - Broken) Machines × Capacity Per Machine
-            const brokenCount = teamState.breakdownStates?.find(b => b.machineType === type)?.brokenCount || 0;
+            const bState = teamState.breakdownStates?.find(b => b.machineType === type);
+            const brokenCount = bState?.brokenCount || 0;
+            const repairDays = bState?.daysRemaining?.[0] ?? 1;
             const runningCount = Math.max(0, mData.active - brokenCount);
             const operatingCapacity = runningCount * unitCapacity;
 
@@ -264,8 +266,10 @@ function MachinePanel() {
                           </span>
                         )}
                         {brokenCount > 0 && (
-                          <span className="text-red-700 bg-red-50 border border-red-200 px-1 py-0.2 rounded text-[7.5px] font-bold">
-                            ⚠️ {brokenCount} broken
+                          <span className="text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded text-[7.5px] font-bold inline-flex items-center gap-1 shadow-2xs">
+                            <span>⚠️ {brokenCount} broken</span>
+                            <span className="text-stone-300">|</span>
+                            <span className="text-red-600 font-extrabold">Repair in: {repairDays} {repairDays === 1 ? 'Day' : 'Days'}</span>
                           </span>
                         )}
                       </div>

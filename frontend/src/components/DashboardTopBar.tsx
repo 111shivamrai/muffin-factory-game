@@ -115,158 +115,200 @@ function DashboardTopBar() {
 
   const displayTeamName = formatTeamDisplayName(teamState.name);
 
+  // Resolve Live Daily Demand:
+  // 1. From history if recorded for currentDay or latest tick
+  // 2. Otherwise baseline standard market demand 1,200
+  let liveDailyDemand = 1200;
+  if (teamState.history?.demand && teamState.history.demand.length > 0) {
+    const dayIdx = teamState.history.days?.indexOf(currentDay);
+    if (dayIdx !== undefined && dayIdx >= 0 && teamState.history.demand[dayIdx] !== undefined) {
+      liveDailyDemand = teamState.history.demand[dayIdx];
+    } else {
+      liveDailyDemand = teamState.history.demand[teamState.history.demand.length - 1];
+    }
+  }
+
   return (
-    <div className="flex items-center justify-between gap-2.5 select-none relative z-30 w-full">
+    <div className="flex items-center justify-between gap-1.5 xl:gap-2 select-none relative z-30 w-full">
       
-      {/* Logo block */}
-      <div className="rounded-2xl bg-white border border-rose-200 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-3 shrink-0">
-        <div className="size-12 rounded-xl bg-rose-100 grid place-items-center text-2xl">
+      {/* Sleek, Compact Logo Branding Block */}
+      <div className="rounded-2xl bg-white border border-rose-200 shadow-[0_2px_0_#f5d4dc] px-2.5 py-1.5 flex items-center gap-2 shrink-0">
+        <div className="size-9 rounded-xl bg-rose-100 grid place-items-center text-xl shrink-0">
           🧁
         </div>
-        <div>
-          <div className="font-[Fredoka] text-2xl font-bold text-rose-500 leading-none tracking-wide">
+        <div className="leading-tight">
+          <div className="font-[Fredoka] text-base font-bold text-rose-500 leading-none tracking-wide">
             MUFFIN FACTORY
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-[10px] font-extrabold bg-rose-400 text-white px-2 py-0.5 rounded uppercase">
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-[8.5px] font-extrabold bg-rose-400 text-white px-1.5 py-0.2 rounded uppercase">
               {role === 'controller' ? 'CONTROLLER' : 'OBSERVER'}
             </span>
-            <span className="text-[10px] font-bold text-stone-500 font-mono">
-              ROOM CODE: {room.code}
+            <span className="text-[8.5px] font-bold text-stone-500 font-mono">
+              ROOM: {room.code}
             </span>
           </div>
         </div>
       </div>
 
-      {/* DESKTOP Stat Cards Grid (Hidden on mobile) */}
-      <div className="hidden lg:grid flex-1 grid-cols-8 gap-1.5 xl:gap-2 mx-1.5">
-        {/* TOTAL CASH */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-2">
-          <div className="text-2xl">🪙</div>
-          <div className="min-w-0">
-            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+      {/* DESKTOP Stat Cards Grid (9 Balanced Live Cards) */}
+      <div className="hidden lg:grid flex-1 grid-cols-9 gap-1 xl:gap-1.5 mx-1 min-w-0">
+        
+        {/* 1. TOTAL CASH (Zero unwanted truncation) */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0">
+          <div className="text-lg xl:text-xl shrink-0">🪙</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
               TOTAL CASH
             </div>
-            <div className="text-sm font-extrabold truncate text-emerald-600 font-mono">
-              ₹{teamState.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <div 
+              className="text-[11.5px] xl:text-[13px] font-black truncate text-emerald-600 font-mono leading-tight tracking-tight"
+              title={`Exact Balance: ₹${teamState.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            >
+              ₹{Math.round(teamState.cash).toLocaleString()}
+            </div>
+            <div className="text-[7px] font-bold text-stone-400 font-mono leading-none truncate">
+              {teamState.cash >= 0 ? 'Liquid Capital' : 'Deficit'}
             </div>
           </div>
         </div>
 
-        {/* LIVE DAY COUNT */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-2">
-          <div className="text-2xl">⏱️</div>
-          <div className="min-w-0">
-            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
-              LIVE DAY COUNT
+        {/* 2. DAILY DEMAND */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0">
+          <div className="text-lg xl:text-xl shrink-0">📈</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+              DAILY DEMAND
             </div>
-            <div className="text-base font-black truncate text-stone-900 font-mono tracking-tight">
+            <div className="text-[11.5px] xl:text-[13px] font-black truncate text-stone-900 font-mono leading-tight tracking-tight">
+              {liveDailyDemand.toLocaleString()}
+            </div>
+            <div className="text-[7px] font-bold text-stone-400 font-mono leading-none truncate">
+              Market Target
+            </div>
+          </div>
+        </div>
+
+        {/* 3. LIVE DAY COUNT */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0">
+          <div className="text-lg xl:text-xl shrink-0">⏱️</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+              LIVE DAY
+            </div>
+            <div className="text-[11.5px] xl:text-[13px] font-black truncate text-stone-900 font-mono leading-tight tracking-tight">
               Day {currentDay}
             </div>
+            <div className="text-[7px] font-bold text-stone-400 font-mono leading-none truncate">
+              of {room.maxDays || 30} Days
+            </div>
           </div>
         </div>
 
-        {/* RAW MATERIAL ARRIVAL TIME */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5">
-          <div className="text-xl shrink-0">🚚</div>
+        {/* 4. RAW MATERIAL ARRIVAL (Clean 3-Line Layout) */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0">
+          <div className="text-lg xl:text-xl shrink-0">🚚</div>
           <div className="min-w-0 flex-1">
-            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight whitespace-normal">
-              RAW MATERIAL<br />ARRIVAL TIME
+            <div className="text-[7px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight truncate">
+              RAW MATERIAL
             </div>
-            <div className="text-sm font-extrabold truncate text-stone-800 font-mono mt-0.5">
+            <div className="text-[7px] font-extrabold text-stone-400 tracking-wider uppercase leading-none truncate">
+              ARRIVAL
+            </div>
+            <div className="text-[11px] xl:text-xs font-black truncate text-stone-800 font-mono mt-0.5 leading-tight">
               {rawArrivalText}
             </div>
-            <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
-              {rawPoInTransit ? `Arrives Day ${rawPoInTransit.arrivalDay}` : 'No orders in transit'}
-            </div>
           </div>
         </div>
 
-        {/* PACKAGING MATERIAL ARRIVAL TIME */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5">
-          <div className="text-xl shrink-0">📦</div>
+        {/* 5. PACKAGING MATERIAL ARRIVAL (Clean 3-Line Layout) */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0">
+          <div className="text-lg xl:text-xl shrink-0">📦</div>
           <div className="min-w-0 flex-1">
-            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight whitespace-normal">
-              PACKAGING MATERIAL<br />ARRIVAL TIME
+            <div className="text-[7px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight truncate">
+              PACKAGING
             </div>
-            <div className="text-sm font-extrabold truncate text-stone-800 font-mono mt-0.5">
+            <div className="text-[7px] font-extrabold text-stone-400 tracking-wider uppercase leading-none truncate">
+              ARRIVAL
+            </div>
+            <div className="text-[11px] xl:text-xs font-black truncate text-stone-800 font-mono mt-0.5 leading-tight">
               {pkgArrivalText}
             </div>
-            <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
-              {pkgPoInTransit ? `Arrives Day ${pkgPoInTransit.arrivalDay}` : 'No orders in transit'}
-            </div>
           </div>
         </div>
 
-        {/* MACHINE ARRIVAL TIME */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5">
-          <div className="text-xl shrink-0">🏭</div>
+        {/* 6. MACHINE ARRIVAL (Clean 3-Line Layout) */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0">
+          <div className="text-lg xl:text-xl shrink-0">🏭</div>
           <div className="min-w-0 flex-1">
-            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight whitespace-normal">
-              MACHINE<br />ARRIVAL TIME
+            <div className="text-[7px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight truncate">
+              MACHINE
             </div>
-            <div className="text-sm font-extrabold truncate text-stone-800 font-mono mt-0.5">
+            <div className="text-[7px] font-extrabold text-stone-400 tracking-wider uppercase leading-none truncate">
+              ARRIVAL
+            </div>
+            <div className="text-[11px] xl:text-xs font-black truncate text-stone-800 font-mono mt-0.5 leading-tight">
               {machineArrivalText}
             </div>
-            <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
-              {machineInTransit ? `${machineTypeNames[machineInTransit.machineType] || 'Machine'} on Day ${machineInTransit.arrivalDay}` : 'No machines arriving'}
-            </div>
           </div>
         </div>
 
-        {/* CONTRACTS */}
+        {/* 7. CONTRACTS */}
         <div 
           onClick={() => setShowContractsModal(true)}
-          className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2.5 py-2 flex items-center gap-1.5 cursor-pointer hover:bg-rose-50/50 transition-colors relative"
+          className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0 cursor-pointer hover:bg-rose-50/50 transition-colors relative"
         >
-          <div className="text-xl shrink-0">📋</div>
+          <div className="text-lg xl:text-xl shrink-0">📋</div>
           <div className="min-w-0 flex-1">
-            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider uppercase flex items-center gap-1 leading-tight whitespace-normal">
-              CONTRACTS
+            <div className="text-[7px] font-extrabold text-stone-500 tracking-wider uppercase flex items-center gap-1 leading-tight truncate">
+              <span>CONTRACTS</span>
               {pendingOffers.length > 0 && (
-                <span className="px-1.5 py-0.2 bg-rose-100 text-rose-600 border border-rose-200 text-[6.5px] rounded-md font-bold">
-                  {pendingOffers.length} NEW
+                <span className="px-1 py-0.2 bg-rose-100 text-rose-600 border border-rose-200 text-[6.5px] rounded font-bold">
+                  {pendingOffers.length}
                 </span>
               )}
             </div>
-            <div className="text-sm font-extrabold truncate text-rose-500 font-mono mt-0.5">
+            <div className="text-[11.5px] xl:text-[13px] font-black truncate text-rose-500 font-mono mt-0.5 leading-tight">
               {activeContracts.length} Active
             </div>
-            <div className="text-[7.5px] font-bold truncate text-stone-400 font-mono leading-none">
-              {pendingOffers.length > 0 
-                ? `Offered Day ${pendingOffers[0].startDay}` 
-                : upcomingContracts.length > 0 
-                  ? `Next on Day ${upcomingContracts[0].startDay}`
-                  : 'All deals viewed'}
+            <div className="text-[7px] font-bold truncate text-stone-400 font-mono leading-none">
+              {pendingOffers.length > 0 ? `${pendingOffers.length} Offered` : 'View deals'}
             </div>
           </div>
         </div>
 
-        {/* RANK */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2">
-          <div className="text-2xl">🏆</div>
-          <div className="min-w-0">
-            <div className="text-[9px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+        {/* 8. RANK */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0">
+          <div className="text-lg xl:text-xl shrink-0">🏆</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
               RANK
             </div>
-            <div className="text-sm font-extrabold truncate text-amber-600 font-mono">
+            <div className="text-[11.5px] xl:text-[13px] font-black truncate text-amber-600 font-mono leading-tight tracking-tight">
               #{rank} / {totalTeams}
+            </div>
+            <div className="text-[7px] font-bold text-stone-400 font-mono leading-none truncate">
+              Leaderboard
             </div>
           </div>
         </div>
 
-        {/* TEAM */}
-        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-3 py-2 flex items-center gap-2 min-w-fit shrink-0">
-          <div className="text-xl shrink-0" role="img" aria-label="Muffin">🧁</div>
-          <div className="min-w-0">
-            <div className="text-[8px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight whitespace-nowrap">
+        {/* 9. TEAM */}
+        <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0 shrink-0">
+          <div className="text-lg xl:text-xl shrink-0" role="img" aria-label="Muffin">🧁</div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight truncate">
               TEAM
             </div>
-            <div className="text-xs font-extrabold text-stone-800 font-sans mt-0.5 whitespace-nowrap" title={displayTeamName}>
+            <div className="text-[11px] xl:text-xs font-black text-stone-800 font-sans mt-0.5 truncate" title={displayTeamName}>
               {displayTeamName}
+            </div>
+            <div className="text-[7px] font-bold text-stone-400 font-mono leading-none truncate">
+              Cohort Team
             </div>
           </div>
         </div>
+
       </div>
 
       {/* DESKTOP Settings block (Hidden on mobile) */}
@@ -311,9 +353,20 @@ function DashboardTopBar() {
             <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
               <div className="text-xl">🪙</div>
               <div className="min-w-0">
-                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Cash</div>
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Total Cash</div>
                 <div className="text-xs font-extrabold truncate text-emerald-600 font-mono">
                   ₹{teamState.cash.toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Daily Demand */}
+            <div className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20">
+              <div className="text-xl">📈</div>
+              <div className="min-w-0">
+                <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider">Daily Demand</div>
+                <div className="text-xs font-extrabold truncate text-stone-900 font-mono">
+                  {liveDailyDemand.toLocaleString()}
                 </div>
               </div>
             </div>

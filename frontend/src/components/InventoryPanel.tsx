@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { useShallow } from 'zustand/react/shallow';
-import { Info, Check } from 'lucide-react';
+import { Info, Check, Coins } from 'lucide-react';
+import { FinancesModal } from './FinancesModal.js';
 
 function InventoryPanel() {
   const { teamState, role, updateInventorySettings } = useGameStore(
@@ -17,6 +18,7 @@ function InventoryPanel() {
   const [mixROP,     setMixROP]     = useState(40);
   const [packQty,    setPackQty]    = useState(10);
   const [packROP,    setPackROP]    = useState(40);
+  const [showFinancesModal, setShowFinancesModal] = useState(false);
 
   const isController = role === 'controller';
 
@@ -165,6 +167,19 @@ function InventoryPanel() {
               <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Muffins</div>
             </div>
           </div>
+
+          {/* Action button: View Finances */}
+          <div className="mt-2.5 pt-2 border-t border-[#e8dfd3]/80 flex justify-center">
+            <button
+              type="button"
+              onClick={() => setShowFinancesModal(true)}
+              className="w-full py-1.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 active:scale-[0.98] text-white font-extrabold text-[10.5px] shadow-xs flex items-center justify-center gap-1.5 cursor-pointer border-none transition-all uppercase tracking-wider"
+              title="Inspect unit economics, ordering costs, and holding cost rates"
+            >
+              <Coins className="w-3.5 h-3.5" />
+              <span>FINANCES & UNIT ECONOMICS</span>
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -233,6 +248,9 @@ function InventoryPanel() {
         </div>
 
       </div>
+
+      {/* Finances & Unit Economics Modal */}
+      <FinancesModal isOpen={showFinancesModal} onClose={() => setShowFinancesModal(false)} />
     </div>
   );
 }
