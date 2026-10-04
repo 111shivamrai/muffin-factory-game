@@ -79,7 +79,7 @@ export interface ContractTemplate {
 export interface Contract extends ContractTemplate {
   id: string;
   active: boolean;
-  status?: 'offered' | 'accepted' | 'declined' | 'completed';
+  status?: 'offered' | 'accepted' | 'declined' | 'completed' | 'closed';
   fulfilledToday: number;
   totalFulfilled: number;
   totalTarget: number;

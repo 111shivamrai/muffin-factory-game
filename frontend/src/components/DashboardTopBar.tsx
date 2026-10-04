@@ -25,25 +25,31 @@ function DashboardTopBar() {
   const rank = rankEntry ? rankEntry.rank : '1';
   const totalTeams = leaderboard.length || 2;
 
-  // Filter visible contracts based on currentDay
-  // 1. Only show contracts whose startDay <= currentDay (future contracts are hidden until startDay arrives)
-  // 2. Contracts that have passed endDay are collapsed / closed out
+  // Filter contracts based on 10-day advance offer rule:
+  // 1. Each contract pops up for review 10 days before its startDay: [startDay - 10, startDay).
+  // 2. On startDay, if not accepted, the contract offer closes and cannot be taken.
+  // 3. If accepted, the contract runs from startDay to endDay.
   const currentDay = Math.max(1, room?.currentDay ?? 1);
   
   const visibleContracts = teamState.contracts.filter(c => {
-    // If contract has not arrived yet, hide it
-    if (c.startDay > currentDay) return false;
-    return true;
+    // Visible once 10-day advance offer window begins:
+    const offerStartDay = Math.max(1, c.startDay - 10);
+    return currentDay >= offerStartDay;
   });
 
-  const activeContracts = visibleContracts.filter(c => c.active && currentDay >= c.startDay && currentDay <= c.endDay);
+  const activeContracts = visibleContracts.filter(c => c.active && c.status === 'accepted' && currentDay >= c.startDay && currentDay <= c.endDay);
   
-  // Contracts that are offered and pending decision
-  const pendingOffers = visibleContracts.filter(c => (!c.status || c.status === 'offered') && currentDay >= c.startDay && currentDay <= c.endDay);
+  // Contracts that are currently offered and pending decision (open for 10 days before startDay, closes at startDay)
+  const pendingOffers = visibleContracts.filter(c => {
+    const offerStartDay = Math.max(1, c.startDay - 10);
+    const isOfferOpen = currentDay >= offerStartDay && currentDay < c.startDay;
+    return (!c.status || c.status === 'offered') && isOfferOpen;
+  });
+
   const [closedNoticeContractIds, setClosedNoticeContractIds] = useState<string[]>([]);
   const pendingNotificationContracts = pendingOffers.filter(c => !closedNoticeContractIds.includes(c.id));
   const contractBadgeCount = pendingNotificationContracts.length;
-  const upcomingContracts = teamState.contracts.filter(c => c.startDay > currentDay).sort((a, b) => a.startDay - b.startDay);
+  const upcomingContracts = teamState.contracts.filter(c => currentDay < Math.max(1, c.startDay - 10)).sort((a, b) => a.startDay - b.startDay);
 
   // Active lead time modifier from events
   const leadTimeMod = teamState.activeEvents
@@ -173,14 +179,14 @@ function DashboardTopBar() {
           </div>
         </div>
 
-        {/* 2. DAILY DEMAND */}
+        {/* 2. DAILY DEMAND (Fully visible, zero clipping) */}
         <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0">
           <div className="text-lg xl:text-xl shrink-0">📈</div>
           <div className="min-w-0 flex-1">
-            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider truncate uppercase">
+            <div className="text-[6.8px] xl:text-[7.5px] font-black text-stone-500 uppercase tracking-tight leading-none whitespace-nowrap">
               DAILY DEMAND
             </div>
-            <div className="text-[11.5px] xl:text-[13px] font-black truncate text-stone-900 font-mono leading-tight tracking-tight">
+            <div className="text-[11.5px] xl:text-[13px] font-black truncate text-stone-900 font-mono leading-tight tracking-tight mt-0.5">
               {liveDailyDemand.toLocaleString()}
             </div>
             <div className="text-[7px] font-bold text-stone-400 font-mono leading-none truncate">
@@ -297,10 +303,10 @@ function DashboardTopBar() {
         <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0 shrink-0">
           <div className="text-lg xl:text-xl shrink-0" role="img" aria-label="Muffin">🧁</div>
           <div className="min-w-0 flex-1">
-            <div className="text-[7.5px] font-extrabold text-stone-500 tracking-wider uppercase leading-tight truncate">
+            <div className="text-[7px] font-extrabold text-stone-500 tracking-wider uppercase leading-none">
               TEAM
             </div>
-            <div className="text-[11px] xl:text-xs font-black text-stone-800 font-sans mt-0.5 truncate" title={displayTeamName}>
+            <div className="text-[10px] xl:text-[11.5px] font-black text-stone-800 font-sans mt-0.5 truncate" title={displayTeamName}>
               {displayTeamName}
             </div>
             <div className="text-[7px] font-bold text-stone-400 font-mono leading-none truncate">
@@ -472,20 +478,20 @@ function DashboardTopBar() {
         </div>
       )}
 
-      {/* Floating Contract Notification Toast (appears when new contract unlocks on currentDay) */}
+      {/* Floating Contract Notification Toast (appears during 10-day advance decision window) */}
       {pendingNotificationContracts.length > 0 && !showContractsModal && (
         <div className="fixed top-16 right-6 z-50 animate-bounce">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3.5 rounded-2xl shadow-2xl border-2 border-white/50 flex items-center gap-3 max-w-sm">
             <div className="text-2xl bg-white/20 p-2 rounded-xl">📜</div>
             <div className="min-w-0 flex-1">
               <div className="text-[10px] uppercase font-mono tracking-widest text-blue-200 font-bold">
-                New Wholesale Deal Available!
+                Wholesale Deal Offer! (Closes Day {pendingNotificationContracts[0].startDay})
               </div>
               <div className="text-xs font-black truncate">
-                {pendingNotificationContracts[0].name} (Day {pendingNotificationContracts[0].startDay})
+                {pendingNotificationContracts[0].name} (Starts Day {pendingNotificationContracts[0].startDay})
               </div>
-              <div className="text-[9px] text-blue-100 opacity-90 font-mono mt-0.5">
-                Target: {pendingNotificationContracts[0].dailyQuantity} Muffins/day
+              <div className="text-[9px] text-amber-300 font-mono font-bold mt-0.5">
+                ⏳ Active {pendingNotificationContracts[0].startDay}-{pendingNotificationContracts[0].endDay} · Target: {pendingNotificationContracts[0].dailyQuantity} Muffins/day
               </div>
             </div>
             <div className="flex flex-col gap-1">
@@ -524,61 +530,72 @@ function DashboardTopBar() {
             </div>
 
             <p className="text-slate-500 text-[11px] leading-relaxed">
-              Contracts offer premium price multipliers but carry heavy daily penalties if you fail to deliver the targeted volume. Monitor active days closely.
+              Contracts offer premium price multipliers but carry heavy daily penalties if you fail to deliver. Offers appear 10 days in advance and close on the start day.
             </p>
 
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {visibleContracts.length === 0 ? (
-                <div className="text-center py-6 text-slate-400 italic">No wholesale contracts active or available on Day {currentDay}. Contracts will unlock as simulation days progress.</div>
+                <div className="text-center py-6 text-slate-400 italic">No wholesale contracts in offer window on Day {currentDay}. Contracts will pop up 10 days before their start day.</div>
               ) : (
                 visibleContracts.map(c => {
-                  const isExpired = currentDay > c.endDay;
-                  const isOfferPending = !c.status || c.status === 'offered';
+                  const offerStartDay = Math.max(1, c.startDay - 10);
+                  const isOfferWindowOpen = currentDay >= offerStartDay && currentDay < c.startDay;
+                  const isOfferPending = (!c.status || c.status === 'offered') && isOfferWindowOpen;
+                  const isOfferClosed = (!c.status || c.status === 'offered' || c.status === 'closed') && currentDay >= c.startDay;
+                  const isFinished = currentDay > c.endDay;
 
                   return (
                     <div 
                       key={c.id}
                       className={`p-3 rounded-xl border transition-all ${
-                        isExpired 
+                        isFinished 
                           ? 'bg-zinc-900 border-zinc-700 text-zinc-400 opacity-60' 
-                          : isOfferPending 
-                            ? 'bg-blue-50/70 border-blue-400 ring-2 ring-blue-300 shadow-sm' 
-                            : c.status === 'declined' 
-                              ? 'bg-red-50/50 border-red-200 text-slate-400 opacity-60' 
-                              : c.active 
-                                ? 'bg-pink-50/50 border-pink-300 text-slate-700' 
-                                : 'bg-slate-50 border-slate-200 text-slate-400'
+                          : isOfferClosed
+                            ? 'bg-stone-100 border-stone-300 text-stone-500 opacity-75'
+                            : isOfferPending 
+                              ? 'bg-blue-50/70 border-blue-400 ring-2 ring-blue-300 shadow-sm' 
+                              : c.status === 'declined' 
+                                ? 'bg-red-50/50 border-red-200 text-slate-400 opacity-60' 
+                                : c.active 
+                                  ? 'bg-pink-50/50 border-pink-300 text-slate-700' 
+                                  : 'bg-emerald-50/60 border-emerald-300 text-slate-700'
                       }`}
                     >
                       <div className="flex justify-between items-center mb-1">
-                        <span className={`font-bold font-mono ${isExpired ? 'text-zinc-300 line-through' : ''}`}>{c.name}</span>
+                        <span className={`font-bold font-mono ${isFinished || isOfferClosed ? 'line-through text-stone-500' : ''}`}>{c.name}</span>
                         <span className={`px-1.5 py-0.5 rounded text-[8px] font-pixel ${
-                          isExpired ? 'bg-zinc-800 text-zinc-400 border border-zinc-700' :
+                          isFinished ? 'bg-zinc-800 text-zinc-400 border border-zinc-700' :
+                          isOfferClosed ? 'bg-stone-200 text-stone-600 border border-stone-300' :
                           isOfferPending ? 'bg-blue-600 text-white animate-pulse' :
                           c.status === 'declined' ? 'bg-red-100 text-red-700' :
                           c.status === 'completed' ? 'bg-zinc-800 text-zinc-300' :
-                          c.active ? 'bg-pink-100 text-pink-700' : 'bg-slate-200 text-slate-500'
+                          c.active ? 'bg-pink-100 text-pink-700' : 'bg-emerald-100 text-emerald-800'
                         }`}>
-                          {isExpired ? 'COLLAPSED / EXPIRED' :
-                           isOfferPending ? 'NEW OFFER (DAY ' + c.startDay + ')' :
+                          {isFinished ? 'CONCLUDED / EXPIRED' :
+                           isOfferClosed ? 'OFFER CLOSED ON DAY ' + c.startDay :
+                           isOfferPending ? 'OFFER OPEN (CLOSES DAY ' + c.startDay + ')' :
                            c.status === 'declined' ? 'DECLINED' :
                            c.status === 'completed' ? 'COMPLETED' :
-                           c.active ? 'ACTIVE' : 'UPCOMING'}
+                           c.active ? 'ACTIVE (DAYS ' + c.startDay + '-' + c.endDay + ')' :
+                           c.status === 'accepted' ? 'ACCEPTED (STARTS DAY ' + c.startDay + ')' : 'UPCOMING'}
                         </span>
                       </div>
                       
                       <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
-                        <div>Arrived / Starts: <span className="font-bold text-stone-900">Day {c.startDay}</span></div>
-                        <div>Concludes: <span className="font-bold text-stone-900">Day {c.endDay}</span></div>
+                        <div>Offer Window: <span className="font-bold text-stone-900">Days {offerStartDay} - {c.startDay}</span></div>
+                        <div>Runs From / To: <span className="font-bold text-stone-900">Day {c.startDay} - Day {c.endDay}</span></div>
                         <div>Daily Target: {c.dailyQuantity} Muffins</div>
-                        <div className={isExpired ? 'text-zinc-400' : 'text-green-600'}>Price Multiplier: {c.priceMultiplier}x</div>
-                        <div className={isExpired ? 'text-zinc-500' : 'text-red-500 font-bold'}>Penalty: ₹{c.penalty}/missed</div>
+                        <div className={isFinished || isOfferClosed ? 'text-stone-400' : 'text-green-600'}>Price Multiplier: {c.priceMultiplier}x</div>
+                        <div className={isFinished || isOfferClosed ? 'text-stone-400' : 'text-red-500 font-bold'}>Penalty: ₹{c.penalty}/missed</div>
                       </div>
 
-                      {isOfferPending && !isExpired ? (
-                        <div className="mt-3 pt-2 border-t border-blue-200 flex justify-end gap-2">
+                      {isOfferPending ? (
+                        <div className="mt-3 pt-2 border-t border-blue-200 flex justify-between items-center">
+                          <span className="text-[9px] text-amber-700 font-bold font-mono">
+                            ⏳ Closes Day {c.startDay} ({Math.max(0, c.startDay - currentDay)} day(s) left)
+                          </span>
                           {role === 'controller' ? (
-                            <>
+                            <div className="flex gap-2">
                               <button
                                 onClick={() => updateContractStatus(c.id, 'declined')}
                                 className="px-3 py-1 bg-white hover:bg-red-50 text-red-600 rounded text-[9px] font-bold border border-red-200 cursor-pointer shadow-sm transition-colors"
@@ -591,14 +608,18 @@ function DashboardTopBar() {
                               >
                                 ACCEPT DEAL
                               </button>
-                            </>
+                            </div>
                           ) : (
                             <span className="text-[9px] text-blue-500 font-bold uppercase tracking-wider">Waiting for Controller</span>
                           )}
                         </div>
-                      ) : isExpired ? (
+                      ) : isOfferClosed ? (
+                        <div className="mt-2 pt-1 text-[9px] text-stone-500 font-mono italic">
+                          Contract offer closed on Day {c.startDay}. Was not accepted during the 10-day advance window.
+                        </div>
+                      ) : isFinished ? (
                         <div className="mt-2 pt-1 text-[9px] text-zinc-500 font-mono italic">
-                          Contract period concluded on Day {c.endDay}. Collapsed.
+                          Contract period concluded on Day {c.endDay}.
                         </div>
                       ) : c.status === 'declined' ? null : (c.active || c.status === 'completed' || c.status === 'accepted') ? (
                         <div className="mt-2 pt-2 border-t border-pink-200 flex justify-between text-[10px] text-pink-600 font-bold font-mono">

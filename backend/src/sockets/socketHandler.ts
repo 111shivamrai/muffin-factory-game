@@ -411,6 +411,10 @@ export function registerSocketHandler(io: Server) {
             if (contract.status !== 'offered') {
               return callback({ error: 'Contract already processed' });
             }
+            // Contracts close on startDay; player must accept before startDay
+            if (room.currentDay >= contract.startDay) {
+              return callback({ error: `Contract decision window closed on Day ${contract.startDay}` });
+            }
             contract.status = status;
             break;
           }

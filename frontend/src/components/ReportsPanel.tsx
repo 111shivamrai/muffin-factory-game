@@ -103,27 +103,31 @@ function ReportsPanel() {
               </button>
             </div>
 
-            {/* Clean Graph Tab Selectors */}
-            <div className="flex items-center gap-4 text-xs font-bold mb-2.5">
+            {/* Senior UI/UX Segmented Graph Tab Bar */}
+            <div className="p-1 rounded-2xl bg-white/90 border border-rose-200/80 shadow-2xs mb-3 flex items-center gap-1.5 overflow-x-auto">
               {[
-                { id: 'cash', label: 'Cash & Revenue' },
-                { id: 'demand', label: 'Demand vs Sales' },
-                { id: 'inventory', label: 'Inventory On Hand' },
-                { id: 'utilization', label: 'Machine Utilizations' }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setSelectedChart(tab.id as any)}
-                  className={`pb-1 cursor-pointer border-none bg-transparent transition-all ${
-                    selectedChart === tab.id
-                      ? 'text-rose-500 border-b-2 border-rose-400 font-extrabold'
-                      : 'text-stone-500 font-semibold hover:text-stone-700'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+                { id: 'cash', label: 'Cash & Revenue', icon: '🪙' },
+                { id: 'demand', label: 'Demand vs Sales', icon: '📈' },
+                { id: 'inventory', label: 'Inventory On Hand', icon: '📦' },
+                { id: 'utilization', label: 'Machine Utilizations', icon: '⚙️' }
+              ].map(tab => {
+                const isActive = selectedChart === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setSelectedChart(tab.id as any)}
+                    className={`flex-1 min-w-fit px-3 py-1.5 rounded-xl text-[11px] font-black flex items-center justify-center gap-1.5 cursor-pointer transition-all border select-none ${
+                      isActive
+                        ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white border-rose-600 shadow-sm shadow-rose-200/60 scale-[1.01]'
+                        : 'bg-transparent text-stone-600 border-transparent hover:bg-rose-50/60 hover:text-stone-900'
+                    }`}
+                  >
+                    <span className="text-xs shrink-0">{tab.icon}</span>
+                    <span className="whitespace-nowrap tracking-wide">{tab.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="h-56 w-full">

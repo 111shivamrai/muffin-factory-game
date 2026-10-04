@@ -121,6 +121,10 @@ export function runSimDay(
       }
     } else {
       c.active = false;
+      // Close contract offer if startDay is reached without acceptance (10-day advance offer window closes at startDay)
+      if (day >= c.startDay && (!c.status || c.status === 'offered')) {
+        c.status = 'closed';
+      }
     }
   });
 

@@ -132,10 +132,24 @@ function InventoryPanel() {
   return (
     <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0">
 
-      {/* Header */}
-      <header className="px-4 py-3 bg-[#0e8a43] text-white font-extrabold tracking-wide text-sm flex items-center gap-2.5 shrink-0 select-none">
-        <span className="size-6 rounded-md bg-white/20 grid place-items-center text-xs">📦</span>
-        RAW MATERIAL MANAGEMENT
+      {/* Header with High-Visibility Finances Pop-Up Box */}
+      <header className="px-3.5 py-2.5 bg-[#0e8a43] text-white font-extrabold tracking-wide text-xs sm:text-sm flex items-center justify-between gap-2 shrink-0 select-none">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="size-6 rounded-md bg-white/20 grid place-items-center text-xs shrink-0">📦</span>
+          <span className="truncate">RAW MATERIAL MANAGEMENT</span>
+        </div>
+        
+        {/* Prominent Finances Data / Hint Pop-Up Box */}
+        <button
+          type="button"
+          onClick={() => setShowFinancesModal(true)}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-stone-900 font-black text-[10px] tracking-wide shadow-md border border-amber-100 hover:scale-[1.03] active:scale-95 transition-all cursor-pointer shrink-0 animate-pulse"
+          title="Click to open Finances Data, unit economics, and cost rules"
+        >
+          <span className="text-xs">💡</span>
+          <span className="uppercase font-bold">FINANCES HINT</span>
+          <span className="bg-stone-900 text-amber-300 text-[8px] font-mono px-1 py-0.2 rounded font-black">OPEN</span>
+        </button>
       </header>
 
       {/* Content */}
@@ -166,19 +180,6 @@ function InventoryPanel() {
               <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{finishedOnHand}</div>
               <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Muffins</div>
             </div>
-          </div>
-
-          {/* Action button: View Finances */}
-          <div className="mt-2.5 pt-2 border-t border-[#e8dfd3]/80 flex justify-center">
-            <button
-              type="button"
-              onClick={() => setShowFinancesModal(true)}
-              className="w-full py-1.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 active:scale-[0.98] text-white font-extrabold text-[10.5px] shadow-xs flex items-center justify-center gap-1.5 cursor-pointer border-none transition-all uppercase tracking-wider"
-              title="Inspect unit economics, ordering costs, and holding cost rates"
-            >
-              <Coins className="w-3.5 h-3.5" />
-              <span>FINANCES & UNIT ECONOMICS</span>
-            </button>
           </div>
         </div>
 
