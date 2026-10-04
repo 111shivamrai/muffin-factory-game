@@ -19,6 +19,15 @@ function InventoryPanel() {
   const [packQty,    setPackQty]    = useState(10);
   const [packROP,    setPackROP]    = useState(40);
   const [showFinancesModal, setShowFinancesModal] = useState(false);
+  const [isAttentionActive, setIsAttentionActive] = useState(true);
+
+  // Soft attention highlight active only for the first 15 seconds to prevent eye fatigue
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsAttentionActive(false);
+    }, 15000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const isController = role === 'controller';
 
@@ -132,24 +141,41 @@ function InventoryPanel() {
   return (
     <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0">
 
-      {/* Header with High-Visibility Finances Pop-Up Box */}
+      {/* Header with Clean White Financial Hint Box */}
       <header className="px-3.5 py-2.5 bg-[#0e8a43] text-white font-extrabold tracking-wide text-xs sm:text-sm flex items-center justify-between gap-2 shrink-0 select-none">
         <div className="flex items-center gap-2 min-w-0">
           <span className="size-6 rounded-md bg-white/20 grid place-items-center text-xs shrink-0">📦</span>
           <span className="truncate">RAW MATERIAL MANAGEMENT</span>
         </div>
         
-        {/* Prominent Finances Data / Hint Pop-Up Box */}
-        <button
-          type="button"
-          onClick={() => setShowFinancesModal(true)}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-stone-900 font-black text-[10px] tracking-wide shadow-md border border-amber-100 hover:scale-[1.03] active:scale-95 transition-all cursor-pointer shrink-0 animate-pulse"
-          title="Click to open Finances Data, unit economics, and cost rules"
+        {/* Eye-Friendly White Financial Hint Box with Dedicated Open Button */}
+        <div
+          onClick={() => {
+            setShowFinancesModal(true);
+            setIsAttentionActive(false);
+          }}
+          className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-white text-stone-800 shadow-xs border border-emerald-100 cursor-pointer select-none transition-all hover:bg-stone-50 hover:shadow-sm active:scale-95 shrink-0 ${
+            isAttentionActive ? 'ring-2 ring-white/90 shadow-md scale-[1.02]' : ''
+          }`}
+          title="Click to view Financial Hint, unit economics, and cost rules"
         >
-          <span className="text-xs">💡</span>
-          <span className="uppercase font-bold">FINANCES HINT</span>
-          <span className="bg-stone-900 text-amber-300 text-[8px] font-mono px-1 py-0.2 rounded font-black">OPEN</span>
-        </button>
+          <div className="flex items-center gap-1.5 font-bold text-[10.5px]">
+            <span className="text-xs">💡</span>
+            <span className="font-extrabold text-stone-800 whitespace-nowrap">Financial Hint</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowFinancesModal(true);
+              setIsAttentionActive(false);
+            }}
+            className="px-2.5 py-0.5 rounded-lg bg-[#0e8a43] hover:bg-[#0b6e35] text-white font-black text-[9.5px] uppercase tracking-wider shadow-2xs transition-colors cursor-pointer border-none flex items-center"
+          >
+            Open
+          </button>
+        </div>
       </header>
 
       {/* Content */}
