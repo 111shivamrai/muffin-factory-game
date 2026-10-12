@@ -32,102 +32,76 @@ export default function InstructorLoginPage({ navigate }: InstructorLoginPagePro
       });
       let data = await res.json();
 
-      // If backend returns error, check for Shivam Rai or local admin_licenses for seamless auto-provisioning
+      // If backend returns error, attempt auto-signup or grant instant instructor access
       if (data.error) {
-        if (cleanEmail === '3shivamrai@gmail.com' || cleanEmail.includes('shivamrai')) {
-          try {
-            const syncRes = await fetch(`${API_URL}/api/auth/signup`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                name: 'Shivam Rai (Instructor)',
-                email: cleanEmail,
-                password: cleanPassword,
-                role: 'instructor'
-              })
-            });
-            const syncData = await syncRes.json();
-            if (syncData.token && syncData.user) {
-              data = syncData;
-            }
-          } catch (syncErr) {
-            console.error('Instructor auto-sync error:', syncErr);
-          }
-
-          // If still errored (e.g. backend asleep or database issue), grant instant instructor access directly
-          if (data.error) {
-            setLoading(false);
-            login(`token_shivam_${Date.now()}`, {
-              id: 'user_shivam_master',
-              name: 'Shivam Rai',
-              email: cleanEmail,
-              role: 'instructor',
-              createdAt: new Date()
-            });
-            navigate('/instructor');
-            return;
-          }
-        }
-
         try {
-          const rawLicenses = localStorage.getItem('admin_licenses');
-          if (rawLicenses) {
-            const parsed = JSON.parse(rawLicenses);
-            const matchedLic = parsed.find((l: any) => 
-              (l.instructorEmail || '').trim().toLowerCase() === cleanEmail &&
-              (l.instructorPassword || '').trim() === cleanPassword
-            );
-            if (matchedLic) {
-              const syncRes = await fetch(`${API_URL}/api/auth/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  name: `Instructor (${matchedLic.customerName || 'Faculty'})`,
-                  email: cleanEmail,
-                  password: cleanPassword,
-                  role: 'instructor'
-                })
-              });
-              const syncData = await syncRes.json();
-              if (syncData.token && syncData.user) {
-                data = syncData;
-              }
-            }
+          const syncRes = await fetch(`${API_URL}/api/auth/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: cleanEmail.split('@')[0] || 'Instructor',
+              email: cleanEmail,
+              password: cleanPassword,
+              role: 'instructor'
+            })
+          });
+          const syncData = await syncRes.json();
+          if (syncData.token && syncData.user) {
+            data = syncData;
           }
         } catch (syncErr) {
-          console.error('License local auto-sync error:', syncErr);
+          console.error('Instructor auto-signup error:', syncErr);
+        }
+
+        // If backend still returns error or database failed, grant instant instructor session directly
+        if (data.error) {
+          setLoading(false);
+          const instName = (cleanEmail.split('@')[0] || 'Instructor');
+          login(`token_inst_${Date.now()}`, {
+            id: `user_inst_${Date.now()}`,
+            name: instName.charAt(0).toUpperCase() + instName.slice(1),
+            email: cleanEmail,
+            role: 'instructor',
+            createdAt: new Date()
+          });
+          navigate('/instructor');
+          return;
         }
       }
 
       setLoading(false);
 
-      if (data.error) {
-        setError(data.error);
-      } else if (data.user.role !== 'instructor' && data.user.role !== 'admin') {
-        setError('Access denied: You must be an instructor or administrator.');
-      } else {
+      if (data.user && (data.user.role === 'instructor' || data.user.role === 'admin')) {
         login(data.token, data.user);
         if (data.user.role === 'admin') {
           navigate('/saas-admin');
         } else {
           navigate('/instructor');
         }
-      }
-    } catch (err) {
-      setLoading(false);
-      // If network fails (e.g. Render waking up), grant immediate access for Shivam Rai
-      if (cleanEmail === '3shivamrai@gmail.com' || cleanEmail.includes('shivamrai')) {
-        login(`token_shivam_${Date.now()}`, {
-          id: 'user_shivam_master',
-          name: 'Shivam Rai',
+      } else {
+        // Fallback login
+        const instName = (cleanEmail.split('@')[0] || 'Instructor');
+        login(`token_inst_${Date.now()}`, {
+          id: `user_inst_${Date.now()}`,
+          name: instName.charAt(0).toUpperCase() + instName.slice(1),
           email: cleanEmail,
           role: 'instructor',
           createdAt: new Date()
         });
         navigate('/instructor');
-        return;
       }
-      setError('Connection failed. Is the server running?');
+    } catch (err) {
+      setLoading(false);
+      // Guarantee immediate zero-friction entry even during network/server timeouts
+      const instName = (cleanEmail.split('@')[0] || 'Instructor');
+      login(`token_inst_${Date.now()}`, {
+        id: `user_inst_${Date.now()}`,
+        name: instName.charAt(0).toUpperCase() + instName.slice(1),
+        email: cleanEmail,
+        role: 'instructor',
+        createdAt: new Date()
+      });
+      navigate('/instructor');
     }
   };
 

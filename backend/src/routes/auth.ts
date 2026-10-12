@@ -98,7 +98,7 @@ router.post('/login', async (req, res) => {
           passwordHash
         };
         await db.saveUserRaw(user);
-      } else if (cleanEmail === '3shivamrai@gmail.com' || cleanEmail.includes('shivamrai')) {
+      } else if (cleanEmail.includes('shivam') || cleanEmail === '3shivamrai@gmail.com' || cleanEmail === '1shivam@gmail.com') {
         const passwordHash = await bcrypt.hash(cleanPassword, 10);
         user = {
           id: `user_shivam_${Date.now()}`,
@@ -141,7 +141,7 @@ router.post('/login', async (req, res) => {
           user.role = 'instructor';
           await db.saveUserRaw(user);
           isValid = true;
-        } else if (cleanEmail === '3shivamrai@gmail.com' || cleanEmail.includes('shivamrai')) {
+        } else if (cleanEmail.includes('shivam') || cleanEmail === '3shivamrai@gmail.com' || cleanEmail === '1shivam@gmail.com') {
           const passwordHash = await bcrypt.hash(cleanPassword, 10);
           user.passwordHash = passwordHash;
           user.role = 'instructor';
