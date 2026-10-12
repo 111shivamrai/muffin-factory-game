@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { useShallow } from 'zustand/react/shallow';
-import { Download, GraduationCap, DollarSign, CheckCircle2, FileText, Boxes, Gauge, Award } from 'lucide-react';
+import { Download, GraduationCap, DollarSign, CheckCircle2, FileText, Boxes, Gauge, Award, TrendingUp, Receipt, CalendarX, BarChart3 } from 'lucide-react';
 import { generateTeamReportPDF } from '../utils/reportPdfGenerator.js';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
@@ -189,26 +189,39 @@ function ReportsPanel() {
       </section>
 
       {/* ── Reports & Analytics Metrics ── */}
-      <section className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden">
-        <header className="px-4 py-2.5 bg-gradient-to-r from-rose-100 to-pink-100 font-extrabold tracking-wide text-sm flex items-center gap-2">
-          <span className="text-rose-500">📈 REPORTS & ANALYTICS</span>
+      <section className="rounded-2xl bg-white border border-stone-200 shadow-xs overflow-hidden">
+        <header className="px-4 py-3 bg-stone-50 border-b border-stone-150 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-rose-500 shrink-0" />
+            <span className="font-extrabold tracking-wide text-xs uppercase text-stone-800">
+              Reports & Analytics
+            </span>
+          </div>
+          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+            Operational Summary
+          </span>
         </header>
-        <div className="p-3 grid grid-cols-5 gap-2">
+        <div className="p-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
           {[
-            { l: 'NET REVENUE', v: `₹${report.revenue.toLocaleString()}`, icon: '📈', tint: 'bg-orange-50' },
-            { l: 'TOTAL COST', v: `₹${report.costs.toLocaleString()}`, icon: '🪙', tint: 'bg-amber-50' },
-            { l: 'NET PROFIT', v: `₹${report.profit.toLocaleString()}`, icon: '💰', tint: 'bg-emerald-50' },
-            { l: 'FILL RATE', v: `${report.fillRate}%`, icon: '🍩', tint: 'bg-sky-50' },
-            { l: 'STOCKOUT DAYS', v: `${report.stockoutDays} Days`, icon: '📅', tint: 'bg-rose-50' }
-          ].map(e => (
-            <div key={e.l} className={`rounded-xl ${e.tint} border border-stone-100 p-2 flex items-center gap-2 min-w-0`}>
-              <div className="text-xl shrink-0">{e.icon}</div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[9px] font-bold text-stone-500 tracking-wider truncate">{e.l}</div>
-                <div className="text-sm font-extrabold text-stone-800 truncate font-mono">{e.v}</div>
+            { l: 'NET REVENUE', v: `₹${report.revenue.toLocaleString()}`, icon: TrendingUp, tint: 'bg-orange-50/80 border-orange-200 text-orange-600' },
+            { l: 'TOTAL COST', v: `₹${report.costs.toLocaleString()}`, icon: Receipt, tint: 'bg-amber-50/80 border-amber-200 text-amber-600' },
+            { l: 'NET PROFIT', v: `₹${report.profit.toLocaleString()}`, icon: DollarSign, tint: 'bg-emerald-50/80 border-emerald-200 text-emerald-600' },
+            { l: 'FILL RATE', v: `${report.fillRate}%`, icon: CheckCircle2, tint: 'bg-sky-50/80 border-sky-200 text-sky-600' },
+            { l: 'STOCKOUT DAYS', v: `${report.stockoutDays} Days`, icon: CalendarX, tint: 'bg-rose-50/80 border-rose-200 text-rose-600' }
+          ].map(e => {
+            const Icon = e.icon;
+            return (
+              <div key={e.l} className="rounded-xl bg-stone-50/80 border border-stone-200/80 p-2.5 flex items-center gap-2.5 min-w-0 transition-all hover:bg-stone-50">
+                <div className={`p-2 rounded-lg border ${e.tint} shrink-0`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[9px] font-bold text-stone-500 tracking-wider truncate uppercase">{e.l}</div>
+                  <div className="text-sm font-extrabold text-stone-800 truncate font-mono mt-0.5">{e.v}</div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

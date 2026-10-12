@@ -133,27 +133,24 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
     loadRooms();
   }, []);
 
-  // Default scenario selector to Beginner preset if unset
-  useEffect(() => {
-    if (!selectedScenarioId && beginnerSc) {
-      setSelectedScenarioId(beginnerSc.id);
-      setRoomDifficulty(beginnerSc.difficulty);
-      setRoomTickRate(beginnerSc.tickRate);
-      setRoomMaxDays(beginnerSc.maxDays);
-      prevScenarioRef.current = beginnerSc.id;
-    }
-  }, [scenarios, selectedScenarioId, beginnerSc]);
-
-  // Deduplicate active session rooms
+  // Deduplicate active session rooms and exclude demo rooms
   const uniqueRooms = useMemo(() => {
     const map = new Map<string, Room>();
     for (const r of roomsList) {
-      if (r && r.id && !map.has(r.id)) {
+      if (
+        r && 
+        r.id && 
+        r.id !== 'room_demo_001' && 
+        !r.name?.toLowerCase().includes('demo') && 
+        r.code !== 'DEMO12' &&
+        (!user || user.role === 'admin' || r.createdBy === user.id) &&
+        !map.has(r.id)
+      ) {
         map.set(r.id, r);
       }
     }
     return Array.from(map.values());
-  }, [roomsList]);
+  }, [roomsList, user]);
 
   // Sync elapsed clocks and tickers client-side
   useEffect(() => {
@@ -348,17 +345,21 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   // Launch Room / Start Line
   const handleInitializeLobby = () => {
     playTone(587.33, 'triangle', 0.1);
-    if (!roomName) {
-      alert('Session title / section name is required');
+    if (!roomName.trim()) {
+      alert('Session title / section name is required.');
       return;
     }
-    const finalScenarioId = selectedScenarioId || scenarios[0]?.id;
+    if (!selectedScenarioId || selectedScenarioId === 'CREATE_CUSTOM') {
+      alert('Please select a scenario calibrator before initializing the classroom lobby.');
+      return;
+    }
+    const finalScenarioId = selectedScenarioId;
     const selectedSc = scenarios.find(s => s.id === finalScenarioId);
     const diff = selectedSc ? selectedSc.difficulty : roomDifficulty;
     const rate = selectedSc ? selectedSc.tickRate : roomTickRate;
     const days = selectedSc ? selectedSc.maxDays : roomMaxDays;
 
-    createRoom(roomName, diff, rate, days, finalScenarioId || undefined).then(created => {
+    createRoom(roomName.trim(), diff, rate, days, finalScenarioId || undefined).then(created => {
       joinRoom(created.code);
     }).catch(err => alert(err.message || 'Failed to create room'));
   };
@@ -575,8 +576,8 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   const handleCloseWizard = () => {
     playTone(220, 'sawtooth', 0.1);
     setWizardOpen(false);
-    if (selectedScenarioId === 'CREATE_CUSTOM' || !selectedScenarioId) {
-      const fallbackId = prevScenarioRef.current || beginnerSc?.id || scenarios[0]?.id || '';
+    if (selectedScenarioId === 'CREATE_CUSTOM') {
+      const fallbackId = prevScenarioRef.current && prevScenarioRef.current !== 'CREATE_CUSTOM' ? prevScenarioRef.current : '';
       setSelectedScenarioId(fallbackId);
       const sc = scenarios.find(s => s.id === fallbackId);
       if (sc) {
@@ -820,6 +821,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         }}
                         className="w-full bg-white dark:bg-zinc-900 border border-muffin-brown/20 p-2.5 font-mono text-xs rounded outline-none focus:border-muffin-gold text-dynamic-text"
                       >
+                        <option value="">-- Select Scenario Calibrator --</option>
                         {beginnerSc && (
                           <option value={beginnerSc.id}>
                             1. Beginner Muffin Operations ({beginnerSc.maxDays} Days)
@@ -846,26 +848,28 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       </select>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 mt-2 p-2.5 bg-muffin-brown/5 dark:bg-zinc-800/50 rounded-lg border border-muffin-brown/10 text-left">
-                      <div>
-                        <span className="text-[8px] uppercase text-gray-500 block font-bold">Difficulty</span>
-                        <span className="text-[11px] font-mono font-black uppercase text-muffin-brown dark:text-muffin-cream capitalize">
-                          {roomDifficulty}
-                        </span>
+                    {selectedScenarioId && selectedScenarioId !== 'CREATE_CUSTOM' && (
+                      <div className="grid grid-cols-3 gap-2 mt-2 p-2.5 bg-muffin-brown/5 dark:bg-zinc-800/50 rounded-lg border border-muffin-brown/10 text-left animate-in fade-in duration-200">
+                        <div>
+                          <span className="text-[8px] uppercase text-gray-500 block font-bold">Difficulty</span>
+                          <span className="text-[11px] font-mono font-black uppercase text-muffin-brown dark:text-muffin-cream capitalize">
+                            {roomDifficulty}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] uppercase text-gray-500 block font-bold">Speed</span>
+                          <span className="text-[11px] font-mono font-black text-muffin-brown dark:text-muffin-cream">
+                            {roomTickRate}s / day
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[8px] uppercase text-gray-500 block font-bold">Days Limit</span>
+                          <span className="text-[11px] font-mono font-black text-muffin-brown dark:text-muffin-cream">
+                            {roomMaxDays} Days
+                          </span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-[8px] uppercase text-gray-500 block font-bold">Speed</span>
-                        <span className="text-[11px] font-mono font-black text-muffin-brown dark:text-muffin-cream">
-                          {roomTickRate}s / day
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[8px] uppercase text-gray-500 block font-bold">Days Limit</span>
-                        <span className="text-[11px] font-mono font-black text-muffin-brown dark:text-muffin-cream">
-                          {roomMaxDays} Days
-                        </span>
-                      </div>
-                    </div>
+                    )}
                   </div>
                   <button
                     onClick={handleInitializeLobby}

@@ -76,8 +76,12 @@ router.get('/active-demo', async (req, res) => {
 // Get all rooms (Admin and Instructors)
 router.get('/', authenticateJWT, authorizeRoles(['admin', 'instructor']), async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const rooms = await db.getRooms();
+    const allRooms = await db.getRooms();
     const scenarios = await db.getScenarios();
+    // Exclude demo rooms from regular session rooms list
+    const rooms = (req.user?.role === 'instructor')
+      ? allRooms.filter(r => r.id !== 'room_demo_001' && !r.name.toLowerCase().includes('demo') && r.code !== 'DEMO12' && r.createdBy === req.user?.id)
+      : allRooms.filter(r => r.id !== 'room_demo_001' && !r.name.toLowerCase().includes('demo') && r.code !== 'DEMO12');
     const enriched = rooms.map(r => {
       const sc = r.scenarioId 
         ? scenarios.find(s => s.id === r.scenarioId)
