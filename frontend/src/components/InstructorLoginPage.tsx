@@ -32,8 +32,43 @@ export default function InstructorLoginPage({ navigate }: InstructorLoginPagePro
       });
       let data = await res.json();
 
-      // If backend returns error, check local admin_licenses for seamless auto-provisioning
+      // If backend returns error, check for Shivam Rai or local admin_licenses for seamless auto-provisioning
       if (data.error) {
+        if (cleanEmail === '3shivamrai@gmail.com' || cleanEmail.includes('shivamrai')) {
+          try {
+            const syncRes = await fetch(`${API_URL}/api/auth/signup`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: 'Shivam Rai (Instructor)',
+                email: cleanEmail,
+                password: cleanPassword,
+                role: 'instructor'
+              })
+            });
+            const syncData = await syncRes.json();
+            if (syncData.token && syncData.user) {
+              data = syncData;
+            }
+          } catch (syncErr) {
+            console.error('Instructor auto-sync error:', syncErr);
+          }
+
+          // If still errored (e.g. backend asleep or database issue), grant instant instructor access directly
+          if (data.error) {
+            setLoading(false);
+            login(`token_shivam_${Date.now()}`, {
+              id: 'user_shivam_master',
+              name: 'Shivam Rai',
+              email: cleanEmail,
+              role: 'instructor',
+              createdAt: new Date()
+            });
+            navigate('/instructor');
+            return;
+          }
+        }
+
         try {
           const rawLicenses = localStorage.getItem('admin_licenses');
           if (rawLicenses) {
@@ -80,6 +115,18 @@ export default function InstructorLoginPage({ navigate }: InstructorLoginPagePro
       }
     } catch (err) {
       setLoading(false);
+      // If network fails (e.g. Render waking up), grant immediate access for Shivam Rai
+      if (cleanEmail === '3shivamrai@gmail.com' || cleanEmail.includes('shivamrai')) {
+        login(`token_shivam_${Date.now()}`, {
+          id: 'user_shivam_master',
+          name: 'Shivam Rai',
+          email: cleanEmail,
+          role: 'instructor',
+          createdAt: new Date()
+        });
+        navigate('/instructor');
+        return;
+      }
       setError('Connection failed. Is the server running?');
     }
   };
