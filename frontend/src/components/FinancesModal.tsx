@@ -18,17 +18,19 @@ export function FinancesModal({ isOpen, onClose }: FinancesModalProps) {
 
   if (!isOpen) return null;
 
-  // Resolve active scenario or use defaults
-  const matchedScenario = scenarios?.find(
+  // Resolve authoritative active scenario from room.scenarioConfig, or match from scenarios catalog
+  const activeScenario = (room as any)?.scenarioConfig || scenarios?.find(
     (s) => s.id === room?.scenarioId || s.difficulty === room?.difficulty
   );
 
-  const muffinRate = 20.0; // standard wholesale baseline rate
-  const rawMaterialCost = matchedScenario?.rawMaterialCosts?.baseMix ?? 5.0;
-  const packagingCost = matchedScenario?.rawMaterialCosts?.packaging ?? 1.0;
-  const orderingCost = matchedScenario?.rawMaterialCosts?.orderCost ?? 150.0;
-  const holdingRatePct = (matchedScenario?.holdingCostRate ?? 0.02) * 100;
-  const rawHoldingCostPerDay = rawMaterialCost * (matchedScenario?.holdingCostRate ?? 0.02);
+  const muffinRate = activeScenario?.sellingPrice ?? 20.0;
+  const rawMaterialCost = activeScenario?.rawMaterialCosts?.baseMix ?? (room?.difficulty === 'advanced' ? 6.0 : 5.0);
+  const packagingCost = activeScenario?.rawMaterialCosts?.packaging ?? (room?.difficulty === 'advanced' ? 1.2 : 1.0);
+  const orderingCost = activeScenario?.rawMaterialCosts?.orderCost ?? (
+    room?.difficulty === 'beginner' ? 100.0 : room?.difficulty === 'advanced' ? 200.0 : 150.0
+  );
+  const holdingRatePct = (activeScenario?.holdingCostRate ?? 0.02) * 100;
+  const rawHoldingCostPerDay = rawMaterialCost * (activeScenario?.holdingCostRate ?? 0.02);
 
   const totalDirectMaterialCost = rawMaterialCost + packagingCost;
   const grossContributionMargin = muffinRate - totalDirectMaterialCost;

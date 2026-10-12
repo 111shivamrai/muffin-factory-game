@@ -77,7 +77,14 @@ router.get('/active-demo', async (req, res) => {
 router.get('/', authenticateJWT, authorizeRoles(['admin', 'instructor']), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const rooms = await db.getRooms();
-    res.json(rooms);
+    const scenarios = await db.getScenarios();
+    const enriched = rooms.map(r => {
+      const sc = r.scenarioId 
+        ? scenarios.find(s => s.id === r.scenarioId)
+        : scenarios.find(s => s.difficulty === r.difficulty);
+      return { ...r, scenarioConfig: sc || undefined };
+    });
+    res.json(enriched);
   } catch (err) {
     console.error('Error listing rooms:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -94,6 +101,22 @@ router.post('/', authenticateJWT, authorizeRoles(['admin', 'instructor']), async
   }
 
   try {
+    // Check instructor license expiration
+    if (req.user?.role === 'instructor') {
+      const user = await db.getUserById(req.user.id);
+      if (user && user.email) {
+        const license = await db.getLicenseByInstructorEmail(user.email);
+        if (license && db.isLicenseExpired(license)) {
+          res.status(403).json({ error: 'Your institution license has expired. Room creation disabled.' });
+          return;
+        }
+        if (license && license.status === 'suspended') {
+          res.status(403).json({ error: 'Your institution license is suspended. Room creation disabled.' });
+          return;
+        }
+      }
+    }
+
     // Generate unique room code and verify it doesn't exist
     let code = generateRoomCode();
     let existing = await db.getRoomByCode(code);
@@ -105,6 +128,10 @@ router.post('/', authenticateJWT, authorizeRoles(['admin', 'instructor']), async
     const roomId = `room_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     const creatorId = req.user!.id;
 
+    const scenario = scenarioId 
+      ? await db.getScenarioById(scenarioId) 
+      : (await db.getScenarios()).find(s => s.difficulty === difficulty);
+
     const newRoom: Room = {
       id: roomId,
       code,
@@ -115,6 +142,7 @@ router.post('/', authenticateJWT, authorizeRoles(['admin', 'instructor']), async
       currentDay: 0,
       maxDays,
       scenarioId: scenarioId || undefined,
+      scenarioConfig: scenario || undefined,
       createdBy: creatorId,
       createdAt: new Date()
     };

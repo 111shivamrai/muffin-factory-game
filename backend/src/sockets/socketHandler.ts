@@ -122,6 +122,19 @@ export function registerSocketHandler(io: Server) {
           return callback({ error: 'Scenario configuration missing' });
         }
 
+        room.scenarioConfig = scenario;
+
+        // Check creator license expiration (except demo / admin)
+        if (room.createdBy && !room.createdBy.includes('admin') && room.id !== 'room_demo_001') {
+          const creator = await db.getUserById(room.createdBy);
+          if (creator && creator.email) {
+            const creatorLicense = await db.getLicenseByInstructorEmail(creator.email);
+            if (creatorLicense && db.isLicenseExpired(creatorLicense)) {
+              return callback({ error: 'License expired: Access to this session is no longer active.' });
+            }
+          }
+        }
+
         // If user is instructor or admin, they join the room but do not need a team
         if (currentUser!.role === 'instructor' || currentUser!.role === 'admin') {
           socket.join(`room_${room.id}`);
@@ -789,6 +802,7 @@ async function executeDayTick(io: Server, roomId: string) {
   }));
 
   // Broadcast updates
+  room.scenarioConfig = scenario;
   io.to(`room_${room.id}`).emit('room_updated', room);
   io.to(`room_${room.id}`).emit('leaderboard_updated', formattedLeaderboard);
   io.to(`room_${room.id}`).emit('instructor_teams_list', updatedStates);

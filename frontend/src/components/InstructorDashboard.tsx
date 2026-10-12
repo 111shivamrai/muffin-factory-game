@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { 
   Play, Pause, StepForward, Settings, Radio, Sparkles, LogOut, Plus, Trash2, 
@@ -119,10 +119,41 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState('00:00');
 
+  // Pre-computed Scenario presets and custom scenarios
+  const beginnerSc = useMemo(() => scenarios.find(s => s.id === 'scenario_beginner_preset' || s.difficulty === 'beginner'), [scenarios]);
+  const interSc = useMemo(() => scenarios.find(s => s.id === 'scenario_intermediate_preset' || s.difficulty === 'intermediate'), [scenarios]);
+  const advSc = useMemo(() => scenarios.find(s => s.id === 'scenario_advanced_preset' || s.difficulty === 'advanced'), [scenarios]);
+  const customScs = useMemo(() => scenarios.filter(s => s.id !== beginnerSc?.id && s.id !== interSc?.id && s.id !== advSc?.id && !s.creatorId?.includes('admin') && !s.id?.includes('preset')), [scenarios, beginnerSc, interSc, advSc]);
+
+  // Keep a ref of previously chosen scenario so cancellation doesn't corrupt it
+  const prevScenarioRef = useRef<string>('');
+
   useEffect(() => {
     loadScenarios();
     loadRooms();
   }, []);
+
+  // Default scenario selector to Beginner preset if unset
+  useEffect(() => {
+    if (!selectedScenarioId && beginnerSc) {
+      setSelectedScenarioId(beginnerSc.id);
+      setRoomDifficulty(beginnerSc.difficulty);
+      setRoomTickRate(beginnerSc.tickRate);
+      setRoomMaxDays(beginnerSc.maxDays);
+      prevScenarioRef.current = beginnerSc.id;
+    }
+  }, [scenarios, selectedScenarioId, beginnerSc]);
+
+  // Deduplicate active session rooms
+  const uniqueRooms = useMemo(() => {
+    const map = new Map<string, Room>();
+    for (const r of roomsList) {
+      if (r && r.id && !map.has(r.id)) {
+        map.set(r.id, r);
+      }
+    }
+    return Array.from(map.values());
+  }, [roomsList]);
 
   // Sync elapsed clocks and tickers client-side
   useEffect(() => {
@@ -359,6 +390,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   // Wizard Helper: Initialize wizard fields for a scenario (new, copy or edit)
   const openScenarioWizard = (sc?: SavedScenario | null) => {
     playTone(440, 'sine', 0.05);
+    prevScenarioRef.current = selectedScenarioId;
     if (sc) {
       setEditingScenarioId(sc.id);
       setScName(sc.name);
@@ -527,10 +559,32 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       events: []
     };
 
-    useGameStore.getState().createScenario(scenarioData).then(() => {
+    useGameStore.getState().createScenario(scenarioData).then((saved: any) => {
       alert("Scenario saved successfully!");
       setWizardOpen(false);
+      if (saved && saved.id) {
+        setSelectedScenarioId(saved.id);
+        setRoomDifficulty(saved.difficulty);
+        setRoomTickRate(saved.tickRate);
+        setRoomMaxDays(saved.maxDays);
+        prevScenarioRef.current = saved.id;
+      }
     }).catch(err => alert(err.message || "Failed to save scenario"));
+  };
+
+  const handleCloseWizard = () => {
+    playTone(220, 'sawtooth', 0.1);
+    setWizardOpen(false);
+    if (selectedScenarioId === 'CREATE_CUSTOM' || !selectedScenarioId) {
+      const fallbackId = prevScenarioRef.current || beginnerSc?.id || scenarios[0]?.id || '';
+      setSelectedScenarioId(fallbackId);
+      const sc = scenarios.find(s => s.id === fallbackId);
+      if (sc) {
+        setRoomDifficulty(sc.difficulty);
+        setRoomTickRate(sc.tickRate);
+        setRoomMaxDays(sc.maxDays);
+      }
+    }
   };
 
   const handleDuplicateScenario = (sc: SavedScenario) => {
@@ -748,8 +802,16 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       <select
                         value={selectedScenarioId}
                         onChange={e => {
-                          setSelectedScenarioId(e.target.value);
-                          const sc = scenarios.find(s => s.id === e.target.value);
+                          const val = e.target.value;
+                          if (val === 'CREATE_CUSTOM') {
+                            prevScenarioRef.current = selectedScenarioId;
+                            setSelectedScenarioId('CREATE_CUSTOM');
+                            openScenarioWizard(null);
+                            return;
+                          }
+                          setSelectedScenarioId(val);
+                          prevScenarioRef.current = val;
+                          const sc = scenarios.find(s => s.id === val);
                           if (sc) {
                             setRoomDifficulty(sc.difficulty);
                             setRoomTickRate(sc.tickRate);
@@ -758,49 +820,52 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         }}
                         className="w-full bg-white dark:bg-zinc-900 border border-muffin-brown/20 p-2.5 font-mono text-xs rounded outline-none focus:border-muffin-gold text-dynamic-text"
                       >
-                        <option value="">Choose Scenario Configuration</option>
-                        {scenarios.map(sc => (
+                        {beginnerSc && (
+                          <option value={beginnerSc.id}>
+                            1. Beginner Muffin Operations ({beginnerSc.maxDays} Days)
+                          </option>
+                        )}
+                        {interSc && (
+                          <option value={interSc.id}>
+                            2. Intermediate Supply Chain Challenge ({interSc.maxDays} Days)
+                          </option>
+                        )}
+                        {advSc && (
+                          <option value={advSc.id}>
+                            3. Advanced Operations Crisis ({advSc.maxDays} Days)
+                          </option>
+                        )}
+                        {customScs.map(sc => (
                           <option key={sc.id} value={sc.id}>
-                            {sc.name} ({sc.maxDays} Days)
+                            Custom: {sc.name} ({sc.maxDays} Days)
                           </option>
                         ))}
+                        <option value="CREATE_CUSTOM">
+                          4. Create Custom Scenario...
+                        </option>
                       </select>
                     </div>
 
-                    {!selectedScenarioId && (
-                      <div className="grid grid-cols-3 gap-2 mt-2">
-                        <div className="space-y-1">
-                          <label className="text-[8px] uppercase text-gray-500 block">Difficulty</label>
-                          <select
-                            value={roomDifficulty}
-                            onChange={e => setRoomDifficulty(e.target.value as any)}
-                            className="w-full bg-white dark:bg-zinc-900 border border-muffin-brown/20 p-1.5 font-mono text-[10px] rounded"
-                          >
-                            <option value="beginner">Beginner</option>
-                            <option value="intermediate">Intermediate</option>
-                            <option value="advanced">Advanced</option>
-                          </select>
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[8px] uppercase text-gray-500 block">Speed (s/day)</label>
-                          <input
-                            type="number"
-                            value={roomTickRate}
-                            onChange={e => setRoomTickRate(Math.max(1, parseInt(e.target.value) || 8))}
-                            className="w-full bg-white dark:bg-zinc-900 border border-muffin-brown/20 p-1.5 font-mono text-[10px] rounded"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[8px] uppercase text-gray-500 block">Days Limit</label>
-                          <input
-                            type="number"
-                            value={roomMaxDays}
-                            onChange={e => setRoomMaxDays(Math.max(1, parseInt(e.target.value) || 30))}
-                            className="w-full bg-white dark:bg-zinc-900 border border-muffin-brown/20 p-1.5 font-mono text-[10px] rounded"
-                          />
-                        </div>
+                    <div className="grid grid-cols-3 gap-2 mt-2 p-2.5 bg-muffin-brown/5 dark:bg-zinc-800/50 rounded-lg border border-muffin-brown/10 text-left">
+                      <div>
+                        <span className="text-[8px] uppercase text-gray-500 block font-bold">Difficulty</span>
+                        <span className="text-[11px] font-mono font-black uppercase text-muffin-brown dark:text-muffin-cream capitalize">
+                          {roomDifficulty}
+                        </span>
                       </div>
-                    )}
+                      <div>
+                        <span className="text-[8px] uppercase text-gray-500 block font-bold">Speed</span>
+                        <span className="text-[11px] font-mono font-black text-muffin-brown dark:text-muffin-cream">
+                          {roomTickRate}s / day
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[8px] uppercase text-gray-500 block font-bold">Days Limit</span>
+                        <span className="text-[11px] font-mono font-black text-muffin-brown dark:text-muffin-cream">
+                          {roomMaxDays} Days
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   <button
                     onClick={handleInitializeLobby}
@@ -1364,49 +1429,57 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                   <h2 className="font-sans font-black text-xs uppercase tracking-wider text-muffin-brown dark:text-muffin-cream border-b border-muffin-brown/10 pb-2 text-left">
                     Existing Active Session Rooms
                   </h2>
-                  {roomsList.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400 font-mono text-xs italic">
-                      No active sessions found. Initialize one using the lobby creator.
+                  {uniqueRooms.length === 0 ? (
+                    <div className="text-center py-12 px-4 border border-dashed border-muffin-brown/20 rounded-xl bg-zinc-950/2 dark:bg-white/2 space-y-2">
+                      <div className="text-2xl select-none">📋</div>
+                      <div className="font-sans font-bold text-xs text-dynamic-text">No Active Session Rooms</div>
+                      <div className="text-gray-400 font-mono text-[10px]">
+                        Select a scenario calibrator on the left and click "Initialize Classroom Lobby" to launch a live cohort.
+                      </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {roomsList.map(r => (
-                        <div key={r.id} className="border border-muffin-brown/15 p-4 rounded-xl bg-zinc-950/5 dark:bg-white/5 flex flex-col justify-between space-y-3">
-                          <div className="text-left space-y-1">
-                            <div className="flex justify-between items-start">
-                              <h3 className="font-sans font-black text-sm text-dynamic-text truncate uppercase">{r.name}</h3>
-                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase ${
-                                r.difficulty === 'beginner' ? 'bg-green-150 text-green-700 border border-green-300' :
-                                r.difficulty === 'intermediate' ? 'bg-orange-150 text-orange-700 border border-orange-300' :
-                                'bg-red-150 text-red-700 border border-red-300'
-                              }`}>
-                                {r.difficulty}
-                              </span>
+                      {uniqueRooms.map(r => {
+                        const scenarioName = r.scenarioConfig?.name || scenarios.find(s => s.id === r.scenarioId)?.name || (r.difficulty ? `${r.difficulty.charAt(0).toUpperCase() + r.difficulty.slice(1)} Operations` : 'Custom Operations');
+                        return (
+                          <div key={r.id} className="border border-muffin-brown/15 p-4 rounded-xl bg-zinc-950/5 dark:bg-white/5 flex flex-col justify-between space-y-3">
+                            <div className="text-left space-y-1">
+                              <div className="flex justify-between items-start">
+                                <h3 className="font-sans font-black text-sm text-dynamic-text truncate uppercase">{r.name}</h3>
+                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase ${
+                                  r.difficulty === 'beginner' ? 'bg-green-150 text-green-700 border border-green-300' :
+                                  r.difficulty === 'intermediate' ? 'bg-orange-150 text-orange-700 border border-orange-300' :
+                                  'bg-red-150 text-red-700 border border-red-300'
+                                }`}>
+                                  {r.difficulty}
+                                </span>
+                              </div>
+                              <div className="font-mono text-[10px] text-gray-500 space-y-0.5">
+                                <div>Scenario: <span className="font-bold text-dynamic-text">{scenarioName}</span></div>
+                                <div>Day: <span className="font-bold text-dynamic-text">{r.currentDay} / {r.maxDays}</span></div>
+                                <div>Tick speed: <span className="font-bold text-dynamic-text">{r.tickRate}s/day</span></div>
+                                <div>Status: <span className="font-bold text-emerald-600 uppercase">{r.status}</span></div>
+                              </div>
                             </div>
-                            <div className="font-mono text-[10px] text-gray-500 space-y-0.5">
-                              <div>Day: <span className="font-bold text-dynamic-text">{r.currentDay} / {r.maxDays}</span></div>
-                              <div>Tick speed: <span className="font-bold text-dynamic-text">{r.tickRate}s/day</span></div>
-                              <div>Status: <span className="font-bold text-emerald-600 uppercase">{r.status}</span></div>
+                            <div className="flex gap-2 justify-end pt-2 border-t border-muffin-brown/10">
+                              <button
+                                onClick={() => { playTone(587.33, 'triangle', 0.1); joinRoom(r.code); }}
+                                className="px-3 py-1 bg-emerald-650 hover:bg-emerald-700 text-white rounded-lg text-[9px] font-black uppercase inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm"
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span>Monitor Room [{r.code}]</span>
+                              </button>
+                              <button
+                                onClick={() => { playTone(220, 'sawtooth', 0.1); deleteRoom(r.id); }}
+                                className="p-1 bg-red-500/5 text-red-650 hover:bg-red-650 hover:text-white border border-red-500/10 rounded-lg cursor-pointer"
+                                title="Delete Session"
+                              >
+                                <Trash className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
-                          <div className="flex gap-2 justify-end pt-2 border-t border-muffin-brown/10">
-                            <button
-                              onClick={() => { playTone(587.33, 'triangle', 0.1); joinRoom(r.code); }}
-                              className="px-3 py-1 bg-emerald-650 hover:bg-emerald-700 text-white rounded-lg text-[9px] font-black uppercase inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm"
-                            >
-                              <Eye className="w-3 h-3" />
-                              <span>Monitor Room [{r.code}]</span>
-                            </button>
-                            <button
-                              onClick={() => { playTone(220, 'sawtooth', 0.1); deleteRoom(r.id); }}
-                              className="p-1 bg-red-500/5 text-red-650 hover:bg-red-650 hover:text-white border border-red-500/10 rounded-lg cursor-pointer"
-                              title="Delete Session"
-                            >
-                              <Trash className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </section>
@@ -1695,7 +1768,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
             <div className="absolute inset-0 bg-[radial-gradient(#120d07_0.15px,transparent_1px)] [background-size:12px_12px] opacity-[0.03] pointer-events-none"></div>
             
             <button
-              onClick={() => { playTone(200, 'sine', 0.05); setWizardOpen(false); }}
+              onClick={handleCloseWizard}
               className="absolute top-4 right-4 text-zinc-500 hover:text-black font-black cursor-pointer text-sm font-sans z-[100] border-none bg-transparent hover:scale-110 duration-200 transition-all select-none"
             >
               ✕
@@ -2499,14 +2572,24 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
 
             {/* Wizard Navigation */}
             <div className="flex justify-between items-center pt-3 border-t border-muffin-brown/15 z-50 relative mt-6">
-              <button
-                type="button"
-                disabled={wizardStep === 1}
-                onClick={() => { playTone(260, 'sine', 0.05); setWizardStep(prev => Math.max(1, prev - 1)); }}
-                className="px-4 py-2 border border-muffin-brown/30 text-[#6b4e30] font-sans font-black uppercase text-[10px] tracking-wider rounded-lg hover:bg-slate-50 disabled:opacity-40 cursor-pointer transition-all"
-              >
-                ← Previous Step
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCloseWizard}
+                  className="px-3.5 py-2 border border-muffin-brown/25 text-stone-600 font-sans font-black uppercase text-[10px] tracking-wider rounded-lg hover:bg-stone-100 cursor-pointer transition-all"
+                >
+                  Cancel
+                </button>
+                {wizardStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => { playTone(260, 'sine', 0.05); setWizardStep(prev => Math.max(1, prev - 1)); }}
+                    className="px-4 py-2 border border-muffin-brown/30 text-[#6b4e30] font-sans font-black uppercase text-[10px] tracking-wider rounded-lg hover:bg-slate-50 cursor-pointer transition-all"
+                  >
+                    ← Previous Step
+                  </button>
+                )}
+              </div>
               {wizardStep < 6 ? (() => {
                 // Per-step validation
                 const step1Valid = wizardStep !== 1 || (

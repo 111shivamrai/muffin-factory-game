@@ -43,6 +43,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
   const [newLicCustomer, setNewLicCustomer] = useState('');
   const [newLicEmail, setNewLicEmail] = useState('');
   const [newLicSeats, setNewLicSeats] = useState<number | ''>('');
+  const [newLicValidityDays, setNewLicValidityDays] = useState<number | ''>('');
   const [newLicInstructorEmail, setNewLicInstructorEmail] = useState('');
   const [newLicInstructorPassword, setNewLicInstructorPassword] = useState('');
   const [selectedLicenseForCreds, setSelectedLicenseForCreds] = useState<any | null>(null);
@@ -65,24 +66,32 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
     return () => clearInterval(timer);
   }, []);
 
-  // Initial Data Load
-  useEffect(() => {
-    loadRooms();
-    loadScenarios();
+  // Load licenses from backend API or local storage
+  const loadLicenses = async () => {
+    try {
+      const token = useGameStore.getState().token || localStorage.getItem('muffin_token');
+      const res = await fetch(`${API_URL}/api/licenses`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setLicenses(data);
+          localStorage.setItem('admin_licenses', JSON.stringify(data));
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Could not fetch licenses from backend API, using local storage:', err);
+    }
 
-    // Load Licenses from localStorage or set defaults
     const storedLic = localStorage.getItem('admin_licenses');
     if (storedLic) {
-      // Migrate: strip old student arrays if they exist in cache
       const parsed = JSON.parse(storedLic);
       const migrated = parsed.map((l: any) => {
         const { students, ...rest } = l;
         return rest;
       });
-      // Only re-save if migration was needed
-      if (parsed.some((l: any) => l.students !== undefined)) {
-        localStorage.setItem('admin_licenses', JSON.stringify(migrated));
-      }
       setLicenses(migrated);
     } else {
       const defaults = [
@@ -123,6 +132,13 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
       setLicenses(defaults);
       localStorage.setItem('admin_licenses', JSON.stringify(defaults));
     }
+  };
+
+  // Initial Data Load
+  useEffect(() => {
+    loadRooms();
+    loadScenarios();
+    loadLicenses();
 
     // Load Broadcast settings
     const storedBc = localStorage.getItem('admin_broadcast');
@@ -153,71 +169,140 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
     setTheme(t => t === 'light' ? 'dark' : 'light');
   };
 
+  // Helper to test if a license is currently expired
+  const isLicenseExpired = (l: any) => {
+    if (l.status === 'expired') return true;
+    const now = currentTime.getTime();
+    if (l.expiresAt) {
+      return now >= new Date(l.expiresAt).getTime();
+    }
+    if (l.endDate) {
+      return now >= new Date(l.endDate).getTime();
+    }
+    return false;
+  };
+
   // License Handlers
   const handleCreateLicense = async (e: React.FormEvent) => {
     e.preventDefault();
     setLicSuccessMsg('');
     setLicErrorMsg('');
 
-    const code = 'LIC-' + Math.random().toString(36).substr(2, 6).toUpperCase();
     const instEmail = newLicInstructorEmail.trim().toLowerCase();
     const instPass = newLicInstructorPassword.trim();
+    const customer = newLicCustomer.trim();
+    const billingEmail = newLicEmail.trim();
 
-    if (!newLicCustomer.trim() || !newLicEmail.trim() || !instEmail || !instPass) {
+    if (!customer || !billingEmail || !instEmail || !instPass) {
       setLicErrorMsg('All fields are required.');
       return;
     }
 
-    if (licenses.some(l => l.id === code)) {
-      setLicErrorMsg(`License "${code}" already exists.`);
+    // Strict validation for License Validity (Days)
+    const validityDaysNum = Number(newLicValidityDays);
+    if (
+      newLicValidityDays === '' ||
+      isNaN(validityDaysNum) ||
+      !Number.isInteger(validityDaysNum) ||
+      validityDaysNum <= 0
+    ) {
+      setLicErrorMsg('License Validity (Days) must be a positive whole number (e.g., 10).');
+      return;
+    }
+
+    // Strict validation for Max Seats
+    const seatsNum = Number(newLicSeats);
+    if (
+      newLicSeats === '' ||
+      isNaN(seatsNum) ||
+      !Number.isInteger(seatsNum) ||
+      seatsNum <= 0
+    ) {
+      setLicErrorMsg('Max Student Logins must be a positive whole number.');
       return;
     }
 
     const today = new Date();
-    const expiry = new Date();
-    expiry.setFullYear(today.getFullYear() + 1);
+    const expiry = new Date(today.getTime() + validityDaysNum * 24 * 60 * 60 * 1000);
+    const token = useGameStore.getState().token;
 
-    // Register instructor in backend database
     try {
-      await fetch(`${API_URL}/api/auth/signup`, {
+      const res = await fetch(`${API_URL}/api/licenses`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
-          name: `Instructor (${newLicCustomer.trim()})`,
-          email: instEmail,
-          password: instPass,
-          role: 'instructor'
+          customerName: customer,
+          email: billingEmail,
+          maxSeats: seatsNum,
+          validityDays: validityDaysNum,
+          instructorEmail: instEmail,
+          instructorPassword: instPass
         })
       });
+      const data = await res.json();
+      if (data.error) {
+        setLicErrorMsg(data.error);
+        return;
+      }
+      if (data.license) {
+        const updated = [data.license, ...licenses.filter(l => l.id !== data.license.id)];
+        setLicenses(updated);
+        localStorage.setItem('admin_licenses', JSON.stringify(updated));
+        setLicSuccessMsg(`License "${data.license.id}" created! Valid for ${validityDaysNum} day(s) until ${expiry.toLocaleDateString()}. Instructor credentials ready.`);
+        setNewLicCustomer('');
+        setNewLicEmail('');
+        setNewLicSeats(40);
+        setNewLicValidityDays('');
+        setNewLicInstructorEmail('');
+        setNewLicInstructorPassword('');
+        return;
+      }
     } catch (err) {
-      console.error('Failed to register instructor on backend:', err);
+      console.warn('Backend license creation failed, falling back to local creation:', err);
     }
 
+    // Fallback if backend API unavailable
+    const code = 'LIC-' + Math.random().toString(36).substr(2, 6).toUpperCase();
     const newLic = {
       id: code,
-      customerName: newLicCustomer.trim(),
-      email: newLicEmail.trim(),
-      maxSeats: newLicSeats,
+      customerName: customer,
+      email: billingEmail,
+      maxSeats: seatsNum,
+      validityDays: validityDaysNum,
       status: "active",
+      createdAt: today.toISOString(),
+      expiresAt: expiry.toISOString(),
       startDate: today.toISOString().split('T')[0],
       endDate: expiry.toISOString().split('T')[0],
-      instructorEmail: instEmail,
-      instructorPassword: instPass
+      instructorEmail: instEmail
     };
 
-    const updated = [...licenses, newLic];
+    const updated = [newLic, ...licenses.filter(l => l.id !== code)];
     setLicenses(updated);
     localStorage.setItem('admin_licenses', JSON.stringify(updated));
 
-    setLicSuccessMsg(`License "${code}" created! Instructor credentials ready. The instructor can now log in to create a room and generate the student join code.`);
+    setLicSuccessMsg(`License "${code}" created! Valid for ${validityDaysNum} day(s) until ${expiry.toLocaleDateString()}.`);
     setNewLicCustomer('');
     setNewLicEmail('');
     setNewLicSeats(40);
+    setNewLicValidityDays('');
     setNewLicInstructorEmail('');
     setNewLicInstructorPassword('');
   };
 
-  const handleToggleLicenseStatus = (id: string) => {
+  const handleToggleLicenseStatus = async (id: string) => {
+    try {
+      const token = useGameStore.getState().token || localStorage.getItem('muffin_token');
+      await fetch(`${API_URL}/api/licenses/${id}/toggle`, {
+        method: 'PATCH',
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+    } catch (err) {
+      console.warn('Backend license toggle failed, updating locally:', err);
+    }
     const updated = licenses.map(l => {
       if (l.id === id) {
         return { ...l, status: l.status === 'active' ? 'suspended' : 'active' };
@@ -228,8 +313,17 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
     localStorage.setItem('admin_licenses', JSON.stringify(updated));
   };
 
-  const handleDeleteLicense = (id: string) => {
+  const handleDeleteLicense = async (id: string) => {
     if (confirm(`Delete license ${id}? This will lock out all users on this key.`)) {
+      try {
+        const token = useGameStore.getState().token || localStorage.getItem('muffin_token');
+        await fetch(`${API_URL}/api/licenses/${id}`, {
+          method: 'DELETE',
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+      } catch (err) {
+        console.warn('Backend license delete failed, updating locally:', err);
+      }
       const updated = licenses.filter(l => l.id !== id);
       setLicenses(updated);
       localStorage.setItem('admin_licenses', JSON.stringify(updated));
@@ -285,9 +379,11 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
 
   const filteredLicenses = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (!q) return licenses;
-    return licenses.filter(l => l.id.toLowerCase().includes(q) || l.customerName.toLowerCase().includes(q) || l.email.toLowerCase().includes(q));
-  }, [licenses, searchQuery]);
+    // Automatically remove expired licenses from active registry archive
+    const activeArchive = licenses.filter(l => !isLicenseExpired(l));
+    if (!q) return activeArchive;
+    return activeArchive.filter(l => l.id.toLowerCase().includes(q) || l.customerName.toLowerCase().includes(q) || l.email.toLowerCase().includes(q));
+  }, [licenses, searchQuery, currentTime]);
 
   const filteredLogs = useMemo(() => {
     if (logFilter === 'all') return logs;
@@ -300,12 +396,12 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
   }, [roomsList]);
 
   const totalSeats = useMemo(() => {
-    return licenses.reduce((sum, l) => sum + l.maxSeats, 0);
-  }, [licenses]);
+    return licenses.filter(l => !isLicenseExpired(l)).reduce((sum, l) => sum + l.maxSeats, 0);
+  }, [licenses, currentTime]);
 
   const activeLicensesCount = useMemo(() => {
-    return licenses.filter(l => l.status === 'active').length;
-  }, [licenses]);
+    return licenses.filter(l => l.status === 'active' && !isLicenseExpired(l)).length;
+  }, [licenses, currentTime]);
 
   const activeErrorsCount = useMemo(() => {
     return logs.filter(l => l.severity === 'error' || l.severity === 'fatal').length;
@@ -746,7 +842,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Billing Email *</label>
                       <input
@@ -758,16 +854,42 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                         className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white font-mono transition-all"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Max Student Logins *</label>
-                      <input
-                        type="number"
-                        min="1"
-                        required
-                        value={newLicSeats}
-                        onChange={e => setNewLicSeats(e.target.value === '' ? '' : Number(e.target.value))}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
-                      />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Max Logins *</label>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          required
+                          value={newLicSeats}
+                          onChange={e => {
+                            const val = e.target.value;
+                            if (val === '' || /^\d+$/.test(val)) {
+                              setNewLicSeats(val === '' ? '' : Number(val));
+                            }
+                          }}
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Validity (Days) *</label>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          required
+                          placeholder="e.g. 10"
+                          value={newLicValidityDays}
+                          onChange={e => {
+                            const val = e.target.value;
+                            if (val === '' || /^\d+$/.test(val)) {
+                              setNewLicValidityDays(val === '' ? '' : Number(val));
+                            }
+                          }}
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -844,7 +966,12 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                               <div className="font-extrabold text-slate-800 dark:text-white">{l.customerName}</div>
                               <div className="text-[10px] text-slate-400 font-mono mt-0.5 leading-none">{l.email}</div>
                             </td>
-                            <td className="p-3 font-mono text-[11px] tracking-wide text-indigo-600 dark:text-indigo-400 uppercase select-all">{l.id}</td>
+                            <td className="p-3 font-mono text-[11px] tracking-wide text-indigo-600 dark:text-indigo-400 uppercase select-all">
+                              {l.id}
+                              <div className="text-[9px] text-slate-400 font-sans font-normal mt-0.5">
+                                Expires: {l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : (l.endDate || 'Active')}
+                              </div>
+                            </td>
                             <td className="p-3 text-center font-mono">{l.maxSeats === 999 ? "∞" : l.maxSeats}</td>
                             <td className="p-3 text-center">
                               <button

@@ -8,6 +8,7 @@ import { db } from './db/db.js';
 import authRoutes from './routes/auth.js';
 import scenarioRoutes from './routes/scenarios.js';
 import roomRoutes from './routes/rooms.js';
+import licenseRoutes from './routes/licenses.js';
 import { registerSocketHandler } from './sockets/socketHandler.js';
 
 // Load environment variables
@@ -38,7 +39,7 @@ const corsOptions = {
     }
     return callback(null, true); // Permissive for now — lock down in prod
   },
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
@@ -50,6 +51,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/scenarios', scenarioRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/licenses', licenseRoutes);
 
 // Simple healthcheck
 app.get('/health', (req, res) => {

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Pool } from 'pg';
-import { User, Room, TeamState, SavedScenario, UserRole } from '../types/index.js';
+import { User, Room, TeamState, SavedScenario, UserRole, LicenseRecord } from '../types/index.js';
 
 // Setup file paths for the JSON fallback database
 const DATA_DIR = path.resolve(process.cwd(), 'data');
@@ -19,6 +19,7 @@ interface Schema {
   teams: { id: string; roomId: string; name: string; controllerId: string; status: 'active' | 'bankrupt'; cash: number; stateJson: string }[];
   roomMembers: { id: string; roomId: string; teamId: string; userId: string; joinedAt: string }[];
   scenarios: SavedScenario[];
+  licenses: LicenseRecord[];
 }
 
 const initialSchema: Schema = {
@@ -26,7 +27,8 @@ const initialSchema: Schema = {
   rooms: [],
   teams: [],
   roomMembers: [],
-  scenarios: []
+  scenarios: [],
+  licenses: []
 };
 
 // If JSON file doesn't exist, create it
@@ -135,6 +137,24 @@ class DatabaseManager {
           config_json TEXT NOT NULL,
           creator_id VARCHAR(255) NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      // Create licenses table
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS licenses (
+          id VARCHAR(255) PRIMARY KEY,
+          customer_name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          max_seats INTEGER NOT NULL,
+          validity_days INTEGER NOT NULL,
+          status VARCHAR(50) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          expires_at TIMESTAMP NOT NULL,
+          start_date VARCHAR(50),
+          end_date VARCHAR(50),
+          instructor_email VARCHAR(255) NOT NULL,
+          instructor_password VARCHAR(255)
         );
       `);
 
@@ -316,6 +336,40 @@ class DatabaseManager {
         await this.saveScenario(sc);
       }
       console.log('Seeded default scenarios (Beginner, Intermediate, Advanced).');
+
+      // Seed default licenses if empty
+      const existingLics = await this.getLicenses();
+      if (existingLics.length === 0) {
+        const today = new Date();
+        const oneYear = new Date(today.getTime() + 365 * 24 * 60 * 60 * 1000);
+        await this.saveLicense({
+          id: 'MIT-SLOAN-2026',
+          customerName: 'MIT Sloan School of Management',
+          email: 'sloan@mit.edu',
+          maxSeats: 100,
+          validityDays: 365,
+          status: 'active',
+          createdAt: today.toISOString(),
+          expiresAt: oneYear.toISOString(),
+          startDate: today.toISOString().split('T')[0],
+          endDate: oneYear.toISOString().split('T')[0],
+          instructorEmail: 'instructor_mit@factory.com'
+        });
+        await this.saveLicense({
+          id: 'STANFORD-GSB',
+          customerName: 'Stanford Graduate School of Business',
+          email: 'operations@stanford.edu',
+          maxSeats: 40,
+          validityDays: 365,
+          status: 'active',
+          createdAt: today.toISOString(),
+          expiresAt: oneYear.toISOString(),
+          startDate: today.toISOString().split('T')[0],
+          endDate: oneYear.toISOString().split('T')[0],
+          instructorEmail: 'instructor_stanford@factory.com'
+        });
+        console.log('Seeded default institutional licenses (MIT, Stanford).');
+      }
     }
   }
 
@@ -323,7 +377,9 @@ class DatabaseManager {
   private readJsonDb(): Schema {
     try {
       const content = fs.readFileSync(JSON_DB_PATH, 'utf-8');
-      return JSON.parse(content);
+      const parsed = JSON.parse(content);
+      if (!parsed.licenses) parsed.licenses = [];
+      return parsed;
     } catch {
       return initialSchema;
     }
@@ -800,6 +856,105 @@ class DatabaseManager {
     } else {
       const db = this.readJsonDb();
       db.scenarios = db.scenarios.filter(s => s.id !== id);
+      this.writeJsonDb(db);
+    }
+  }
+
+  // LICENSES CRUD & EXPIRATION
+  isLicenseExpired(lic: LicenseRecord): boolean {
+    if (lic.status === 'expired') return true;
+    const now = Date.now();
+    if (lic.expiresAt) {
+      return now >= new Date(lic.expiresAt).getTime();
+    }
+    if (lic.endDate) {
+      return now >= new Date(lic.endDate).getTime();
+    }
+    return false;
+  }
+
+  async getLicenses(): Promise<LicenseRecord[]> {
+    if (this.isPostgres && this.pool) {
+      const res = await this.pool.query('SELECT * FROM licenses ORDER BY created_at DESC');
+      const list: LicenseRecord[] = res.rows.map(row => ({
+        id: row.id,
+        customerName: row.customer_name,
+        email: row.email,
+        maxSeats: row.max_seats,
+        validityDays: row.validity_days,
+        status: row.status,
+        createdAt: new Date(row.created_at).toISOString(),
+        expiresAt: new Date(row.expires_at).toISOString(),
+        startDate: row.start_date,
+        endDate: row.end_date,
+        instructorEmail: row.instructor_email,
+        instructorPassword: row.instructor_password
+      }));
+      for (const lic of list) {
+        if (lic.status !== 'expired' && this.isLicenseExpired(lic)) {
+          lic.status = 'expired';
+          await this.pool.query('UPDATE licenses SET status = $1 WHERE id = $2', ['expired', lic.id]);
+        }
+      }
+      return list;
+    } else {
+      const db = this.readJsonDb();
+      let changed = false;
+      for (const lic of db.licenses) {
+        if (lic.status !== 'expired' && this.isLicenseExpired(lic)) {
+          lic.status = 'expired';
+          changed = true;
+        }
+      }
+      if (changed) this.writeJsonDb(db);
+      return db.licenses;
+    }
+  }
+
+  async getActiveLicenses(): Promise<LicenseRecord[]> {
+    const all = await this.getLicenses();
+    return all.filter(lic => lic.status === 'active' && !this.isLicenseExpired(lic));
+  }
+
+  async getLicenseById(id: string): Promise<LicenseRecord | null> {
+    const cleanId = (id || '').trim().toUpperCase();
+    const all = await this.getLicenses();
+    return all.find(l => l.id.toUpperCase() === cleanId) || null;
+  }
+
+  async getLicenseByInstructorEmail(email: string): Promise<LicenseRecord | null> {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const all = await this.getLicenses();
+    return all.find(l => (l.instructorEmail || '').trim().toLowerCase() === cleanEmail) || null;
+  }
+
+  async saveLicense(lic: LicenseRecord): Promise<void> {
+    if (this.isPostgres && this.pool) {
+      await this.pool.query(
+        `INSERT INTO licenses (id, customer_name, email, max_seats, validity_days, status, created_at, expires_at, start_date, end_date, instructor_email, instructor_password)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+         ON CONFLICT (id) DO UPDATE
+         SET customer_name = $2, email = $3, max_seats = $4, validity_days = $5, status = $6, expires_at = $8, start_date = $9, end_date = $10, instructor_email = $11, instructor_password = $12`,
+        [lic.id, lic.customerName, lic.email, lic.maxSeats, lic.validityDays, lic.status, new Date(lic.createdAt), new Date(lic.expiresAt), lic.startDate, lic.endDate, lic.instructorEmail, lic.instructorPassword]
+      );
+    } else {
+      const db = this.readJsonDb();
+      const idx = db.licenses.findIndex(l => l.id === lic.id);
+      if (idx >= 0) {
+        db.licenses[idx] = lic;
+      } else {
+        db.licenses.unshift(lic);
+      }
+      this.writeJsonDb(db);
+    }
+  }
+
+  async deleteLicense(id: string): Promise<void> {
+    if (this.isPostgres && this.pool) {
+      await this.pool.query('DELETE FROM licenses WHERE id = $1', [id]);
+    } else {
+      const db = this.readJsonDb();
+      db.licenses = db.licenses.filter(l => l.id !== id);
       this.writeJsonDb(db);
     }
   }

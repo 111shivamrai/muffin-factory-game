@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { useShallow } from 'zustand/react/shallow';
-import { Download } from 'lucide-react';
+import { Download, GraduationCap, DollarSign, CheckCircle2, FileText, Boxes, Gauge, Award } from 'lucide-react';
 import { generateTeamReportPDF } from '../utils/reportPdfGenerator.js';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
@@ -213,40 +213,67 @@ function ReportsPanel() {
       </section>
 
       {/* ── Academic Performance Score ── */}
-      <section className="rounded-2xl bg-gradient-to-r from-violet-50 to-pink-50 border border-violet-100 shadow-[0_2px_0_#e9d5ff] overflow-hidden">
-        <header className="px-4 py-2.5 font-extrabold tracking-wide text-sm flex items-center gap-2">
-          <span className="text-violet-500">🧁 ACADEMIC PERFORMANCE SCORE</span>
-        </header>
-        <div className="p-3 grid grid-cols-[1fr_auto] gap-3">
-          <div>
-            <p className="text-[10px] text-stone-500 leading-snug max-w-xs mb-2">
-              Indicators evaluate operational analysis based on a weighted academic rubric. This score strengthens leaderboard call balance.
-            </p>
-            <div className="grid grid-cols-5 gap-2">
-              {[
-                { l: 'CASH (40%)', v: `${academicScore.cashPerformance}%`, icon: '💵' },
-                { l: 'FILL RATE (20%)', v: `${academicScore.fillRateScore}%`, icon: '🍩' },
-                { l: 'CONTRACT (15%)', v: `${academicScore.contractScore}%`, icon: '🧁' },
-                { l: 'INVENTORY (15%)', v: `${academicScore.inventoryScore}%`, icon: '🧁' },
-                { l: 'CAPACITY (10%)', v: `${academicScore.capacityScore}%`, icon: '🧁' }
-              ].map(e => (
-                <div key={e.l} className="rounded-xl bg-white/70 border border-violet-100 p-2 text-center">
-                  <div className="text-[9px] font-bold text-stone-500 tracking-wider">{e.l}</div>
-                  <div className="mt-1 text-lg">{e.icon}</div>
-                  <div className="text-sm font-extrabold text-stone-800 mt-0.5 font-mono">{e.v}</div>
-                </div>
-              ))}
-            </div>
+      <section className="rounded-2xl bg-white border border-stone-200 shadow-xs overflow-hidden">
+        <header className="px-4 py-3 bg-stone-50 border-b border-stone-150 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span className="font-extrabold tracking-wide text-xs uppercase text-stone-800">
+              Academic Performance Score
+            </span>
           </div>
+          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+            Evaluation Rubric
+          </span>
+        </header>
 
-          {/* Weighted Academic Grade Score Box */}
-          <div className="rounded-xl bg-white border border-violet-100 p-3 flex flex-col items-center justify-center min-w-[180px]">
-            <div className="text-[10px] font-extrabold text-stone-500 tracking-wider">WEIGHTED ACADEMIC GRADE</div>
-            <div className="text-3xl font-extrabold text-rose-500 leading-none mt-1">SCORE:</div>
-            <div className="text-3xl font-extrabold text-rose-500 leading-none mt-1 font-mono">
-              {academicScore.totalScore >= 1 ? academicScore.totalScore : `.${Math.round(academicScore.totalScore * 100)}`} / 100
+        <div className="p-4 space-y-3">
+          <p className="text-xs text-stone-600 leading-relaxed">
+            Your academic score measures financial performance, customer demand fulfillment, contract execution, inventory control, and production capacity using a weighted evaluation rubric.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
+            {/* 5 Categories Grid */}
+            <div className="md:col-span-8 lg:col-span-9 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+              {[
+                { l: 'Cash', w: '40%', v: `${academicScore.cashPerformance}%`, icon: DollarSign, color: 'text-emerald-600 bg-emerald-50 border-emerald-150' },
+                { l: 'Fill Rate', w: '20%', v: `${academicScore.fillRateScore}%`, icon: CheckCircle2, color: 'text-sky-600 bg-sky-50 border-sky-150' },
+                { l: 'Contract', w: '15%', v: `${academicScore.contractScore}%`, icon: FileText, color: 'text-indigo-600 bg-indigo-50 border-indigo-150' },
+                { l: 'Inventory', w: '15%', v: `${academicScore.inventoryScore}%`, icon: Boxes, color: 'text-amber-600 bg-amber-50 border-amber-150' },
+                { l: 'Capacity', w: '10%', v: `${academicScore.capacityScore}%`, icon: Gauge, color: 'text-purple-600 bg-purple-50 border-purple-150' }
+              ].map(e => {
+                const Icon = e.icon;
+                return (
+                  <div key={e.l} className="rounded-xl bg-stone-50/80 border border-stone-200/80 p-2.5 flex flex-col justify-between text-center transition-all hover:bg-stone-50">
+                    <div className="flex items-center justify-between gap-1 mb-1.5">
+                      <div className={`p-1 rounded-md border ${e.color}`}>
+                        <Icon className="w-3 h-3" />
+                      </div>
+                      <span className="text-[9px] font-mono font-bold text-stone-400">{e.w}</span>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-extrabold text-stone-600 uppercase tracking-tight">{e.l}</div>
+                      <div className="text-base font-black text-stone-800 font-mono mt-0.5">{e.v}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            <div className="text-2xl mt-1">🧁</div>
+
+            {/* Final Weighted Grade Box */}
+            <div className="md:col-span-4 lg:col-span-3 rounded-xl bg-gradient-to-br from-indigo-50 via-white to-stone-50 border border-indigo-150 p-3.5 flex flex-col items-center justify-center text-center shadow-2xs">
+              <div className="flex items-center gap-1.5 text-[9px] font-extrabold text-indigo-700 uppercase tracking-wider mb-1">
+                <Award className="w-3.5 h-3.5" />
+                <span>Weighted Academic Grade</span>
+              </div>
+              <div className="text-[11px] font-bold text-stone-500 uppercase tracking-tight">Composite Score</div>
+              <div className="text-3xl font-black text-indigo-600 font-mono tracking-tight my-0.5">
+                {academicScore.totalScore >= 1 ? academicScore.totalScore : `.${Math.round(academicScore.totalScore * 100)}`}
+                <span className="text-sm font-bold text-stone-400 font-sans ml-1">/ 100</span>
+              </div>
+              <div className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full mt-1">
+                {academicScore.totalScore >= 80 ? 'Distinction' : academicScore.totalScore >= 60 ? 'Satisfactory' : 'Needs Review'}
+              </div>
+            </div>
           </div>
         </div>
       </section>

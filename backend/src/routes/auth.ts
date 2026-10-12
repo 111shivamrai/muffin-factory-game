@@ -95,6 +95,19 @@ router.post('/login', async (req, res) => {
       return;
     }
 
+    // Enforce license validity if instructor
+    if (user.role === 'instructor') {
+      const license = await db.getLicenseByInstructorEmail(cleanEmail);
+      if (license && db.isLicenseExpired(license)) {
+        res.status(403).json({ error: 'Your institution license has expired. Access is disabled. Please contact your administrator.' });
+        return;
+      }
+      if (license && license.status === 'suspended') {
+        res.status(403).json({ error: 'Your institution license is currently suspended.' });
+        return;
+      }
+    }
+
     // Sign JWT
     const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '365d' });
 
@@ -122,6 +135,18 @@ router.post('/student-login', async (req, res) => {
     if (!room) {
       res.status(404).json({ error: `Room code "${cleanRoomCode}" not found or room inactive` });
       return;
+    }
+
+    // Verify creator license validity
+    if (room.createdBy && !room.createdBy.includes('admin') && room.id !== 'room_demo_001') {
+      const creator = await db.getUserById(room.createdBy);
+      if (creator && creator.email) {
+        const creatorLicense = await db.getLicenseByInstructorEmail(creator.email);
+        if (creatorLicense && db.isLicenseExpired(creatorLicense)) {
+          res.status(403).json({ error: 'License expired: Access to this session is no longer active.' });
+          return;
+        }
+      }
     }
 
     const sanitizedName = name.trim();

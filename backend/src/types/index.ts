@@ -178,6 +178,21 @@ export interface TeamState {
   }[];
 }
 
+export interface LicenseRecord {
+  id: string; // e.g. 'LIC-ABC123'
+  customerName: string;
+  email: string;
+  maxSeats: number;
+  validityDays: number;
+  status: 'active' | 'suspended' | 'expired';
+  createdAt: string; // ISO string
+  expiresAt: string; // ISO string
+  startDate?: string;
+  endDate?: string;
+  instructorEmail: string;
+  instructorPassword?: string;
+}
+
 export interface Room {
   id: string;
   code: string;
@@ -188,6 +203,7 @@ export interface Room {
   currentDay: number;
   maxDays: number;
   scenarioId?: string;
+  scenarioConfig?: SavedScenario;
   createdAt: Date;
   createdBy: string;
 }
@@ -204,6 +220,7 @@ export interface SavedScenario {
   startCash: number;
   holdingCostRate: number;
   lostSalesPenaltyRate: number;
+  sellingPrice?: number;
   rawMaterialCosts: {
     baseMix: number;
     packaging: number;
