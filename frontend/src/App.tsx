@@ -6,13 +6,12 @@ import DashboardTopBar from './components/DashboardTopBar.tsx';
 import FactoryVisualization from './components/FactoryVisualization.tsx';
 import InventoryPanel from './components/InventoryPanel.tsx';
 import MachinePanel from './components/MachinePanel.tsx';
-import ReportsPanel from './components/ReportsPanel.tsx';
 import OperationsAdvisor from './components/OperationsAdvisor.tsx';
 import { AlertCircle, Lock, ShieldAlert, Trophy, Download, CheckCircle, X, Award, TrendingUp, Sparkles, AlertTriangle } from 'lucide-react';
 import { isTeamSimulationCompleted, getCompletionReason } from './utils/gameLifecycleTracker.js';
-import { generateTeamReportPDF } from './utils/reportPdfGenerator.js';
 
-// Route-level code splitting for heavy admin/instructor dashboards and auth views
+// Route-level and component code splitting for heavy admin/instructor dashboards, auth views, and reports
+const ReportsPanel = React.lazy(() => import('./components/ReportsPanel.tsx'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard.tsx'));
 const InstructorDashboard = React.lazy(() => import('./components/InstructorDashboard.tsx'));
 const AdminLoginPage = React.lazy(() => import('./components/AdminLoginPage.tsx'));
@@ -119,6 +118,7 @@ export default function App() {
     setIsGeneratingPdf(true);
     setPdfSuccessMessage(null);
     try {
+      const { generateTeamReportPDF } = await import('./utils/reportPdfGenerator.js');
       await generateTeamReportPDF(room, teamState, leaderboardRank);
       setPdfSuccessMessage('Report downloaded successfully!');
       setTimeout(() => setPdfSuccessMessage(null), 4000);
@@ -188,7 +188,9 @@ export default function App() {
 
           {/* Reports, Analytics & Score */}
           <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3">
-            <ReportsPanel />
+            <React.Suspense fallback={<div className="h-48 flex items-center justify-center text-xs text-stone-400">Loading reports & analytics...</div>}>
+              <ReportsPanel />
+            </React.Suspense>
           </div>
 
         </div>
@@ -245,7 +247,7 @@ export default function App() {
               </div>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="font-extrabold text-lg text-stone-900 tracking-tight">SIMULATION COMPLETED</h2>
+                  <h2 className="font-extrabold text-lg text-stone-900 tracking-tight">FACTORY SIMULATION COMPLETE</h2>
                   <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
                     {completionReason === 'MAX_DAYS_REACHED'
                       ? 'Max Days Reached'
@@ -254,8 +256,11 @@ export default function App() {
                       : 'Simulation Ended'}
                   </span>
                 </div>
+                <p className="text-xs text-stone-700 mt-1 font-semibold">
+                  Team: <strong className="text-stone-900">{teamState.name}</strong> • Session: <strong className="text-stone-800">{room.name} ({room.code})</strong>
+                </p>
                 <p className="text-xs text-stone-500 mt-0.5">
-                  Cohort: <strong className="text-stone-800">{teamState.name}</strong> • Session: <strong className="text-stone-800">{room.name} ({room.code})</strong>
+                  Your simulation has been completed.
                 </p>
               </div>
             </div>
@@ -325,7 +330,7 @@ export default function App() {
                   className="flex-1 inline-flex items-center justify-center gap-2 py-3 px-5 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 active:from-rose-800 active:to-rose-900 text-white rounded-xl font-bold text-xs shadow-lg shadow-rose-200 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download className="w-4 h-4" />
-                  <span>{isGeneratingPdf ? 'Generating PDF Report...' : '📥 Download Report (PDF)'}</span>
+                  <span>{isGeneratingPdf ? 'Generating PDF Report...' : 'DOWNLOAD REPORT'}</span>
                 </button>
 
                 <button
@@ -333,7 +338,7 @@ export default function App() {
                   onClick={() => setHasDismissedCompletionModal(true)}
                   className="px-5 py-3 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-stone-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
                 >
-                  Review Factory Floor
+                  Continue / Close
                 </button>
               </div>
 

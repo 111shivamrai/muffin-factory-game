@@ -40,7 +40,7 @@ export async function generateTeamReportPDF(
 
   const safeTeamName = (teamState.name || 'Team').replace(/[^a-zA-Z0-9_-]/g, '_');
   const roomIdentifier = room ? `${room.name} (${room.code})` : 'Simulation Session';
-  const totalDays = room?.currentDay || teamState.history.days.length || 0;
+  const totalDays = room?.currentDay || teamState.history?.days?.length || 0;
   const maxDays = room?.maxDays || totalDays;
   const isBankrupt = teamState.status === 'bankrupt';
   const completionStatus = isBankrupt ? 'BANKRUPT (OPERATIONS LOCKED)' : 'COMPLETED';
@@ -50,8 +50,8 @@ export async function generateTeamReportPDF(
 
   // Helper for section header banner
   const drawSectionHeader = (title: string, sectionNum: string) => {
-    // Check page overflow
-    if (currentY > pageHeight - 35) {
+    // Check page overflow before drawing section header
+    if (currentY > pageHeight - 38) {
       doc.addPage();
       currentY = margin + 5;
     }
@@ -62,6 +62,27 @@ export async function generateTeamReportPDF(
     doc.setTextColor(primaryDark[0], primaryDark[1], primaryDark[2]);
     doc.text(`${sectionNum}. ${title.toUpperCase()}`, margin + 3, currentY + 5.2);
     currentY += 10.5;
+  };
+
+  // Helper to draw clean vector Indian Rupee symbol glyph
+  const drawRupeeGlyph = (x: number, y: number, h: number, color: number[]) => {
+    doc.setDrawColor(color[0], color[1], color[2]);
+    doc.setLineWidth(0.26);
+    const w = h * 0.65;
+    // Top horizontal bar
+    doc.line(x, y, x + w, y);
+    // Second horizontal bar
+    const barY = y + h * 0.32;
+    doc.line(x, barY, x + w * 0.75, barY);
+    // Vertical stem down to mid
+    const midY = y + h * 0.54;
+    doc.line(x, y, x, midY);
+    // Upper loop curve
+    doc.line(x + w * 0.4, y, x + w * 0.8, y + h * 0.16);
+    doc.line(x + w * 0.8, y + h * 0.16, x + w * 0.8, barY + h * 0.08);
+    doc.line(x + w * 0.8, barY + h * 0.08, x, midY);
+    // Diagonal leg
+    doc.line(x + w * 0.25, midY, x + w * 0.88, y + h);
   };
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -115,17 +136,12 @@ export async function generateTeamReportPDF(
 
   currentY += 18;
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // SECTION 1 — EXECUTIVE SUMMARY
-  // ══════════════════════════════════════════════════════════════════════════
-  drawSectionHeader('Executive Summary', 'SECTION 1');
+  const history = teamState.history || { days: [], cash: [], revenue: [], demand: [], inventory: { base_mix: [], packaging_material: [], finished_muffin: [] }, utilization: { mixing: [], baking: [], icing: [], packaging: [] }, contractFulfillment: [], bottlenecks: [], bottleneckCapacity: [], production: [] };
+  const report = teamState.report || { revenue: 0, costs: 0, profit: 0, fillRate: 0, lostSales: 0, inventoryTurnover: 0, averageInventory: 0, stockoutDays: 0, utilization: { mixing: 0, baking: 0, icing: 0, packaging: 0 }, contractFulfillment: 0, finalCash: teamState.cash };
+  const academic = teamState.academicScore || { cashPerformance: 0, fillRateScore: 0, contractScore: 0, inventoryScore: 0, capacityScore: 0, totalScore: 0 };
 
-  const history = teamState.history;
-  const report = teamState.report;
-  const academic = teamState.academicScore;
-
-  const totalDemand = history.demand.reduce((sum, d) => sum + d, 0);
-  const totalProduction = history.production ? history.production.reduce((sum, p) => sum + p, 0) : 0;
+  const totalDemand = history.demand?.reduce((sum, d) => sum + d, 0) || 0;
+  const totalProduction = history.production?.reduce((sum, p) => sum + p, 0) || 0;
   
   // Calculate demand fulfilled
   let totalFulfilled = 0;
@@ -133,26 +149,14 @@ export async function generateTeamReportPDF(
     totalFulfilled = Math.round((report.fillRate / 100) * totalDemand);
   }
 
-  // Helper to draw clean vector Indian Rupee symbol glyph
-  const drawRupeeGlyph = (x: number, y: number, h: number, color: number[]) => {
-    doc.setDrawColor(color[0], color[1], color[2]);
-    doc.setLineWidth(0.26);
-    const w = h * 0.65;
-    // Top bar
-    doc.line(x, y, x + w, y);
-    // Second horizontal bar
-    const barY = y + h * 0.32;
-    doc.line(x, barY, x + w * 0.75, barY);
-    // Vertical stem down to mid
-    const midY = y + h * 0.54;
-    doc.line(x, y, x, midY);
-    // Upper loop curve
-    doc.line(x + w * 0.4, y, x + w * 0.8, y + h * 0.16);
-    doc.line(x + w * 0.8, y + h * 0.16, x + w * 0.8, barY + h * 0.08);
-    doc.line(x + w * 0.8, barY + h * 0.08, x, midY);
-    // Diagonal leg
-    doc.line(x + w * 0.25, midY, x + w * 0.88, y + h);
-  };
+  const rawOnHand = teamState.inventory?.base_mix?.onHand ?? 0;
+  const pkgOnHand = teamState.inventory?.packaging_material?.onHand ?? 0;
+  const fgOnHand = teamState.inventory?.finished_muffin?.onHand ?? 0;
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SECTION 1 — EXECUTIVE SUMMARY
+  // ══════════════════════════════════════════════════════════════════════════
+  drawSectionHeader('Executive Summary', 'SECTION 1');
 
   const execKpis = [
     [
@@ -202,7 +206,7 @@ export async function generateTeamReportPDF(
   // ══════════════════════════════════════════════════════════════════════════
   drawSectionHeader('Day-by-Day Performance Ledger', 'SECTION 2');
 
-  const daysCount = history.days.length;
+  const daysCount = history.days?.length || 0;
   const dayRows: any[] = [];
 
   for (let i = 0; i < daysCount; i++) {
@@ -213,7 +217,6 @@ export async function generateTeamReportPDF(
     const pkgInv = history.inventory?.packaging_material?.[i] ?? 0;
     const fgInv = history.inventory?.finished_muffin?.[i] ?? 0;
 
-    // Approximate daily fulfilled from production + starting inventory capped at demand
     const dailyFulfilled = Math.min(dem, prod + fgInv);
 
     dayRows.push([
@@ -231,6 +234,7 @@ export async function generateTeamReportPDF(
     startY: currentY,
     head: [['Day', 'Market Demand', 'Demand Fulfilled', 'Production', 'Raw Material Inv', 'Packaging Inv', 'Finished Goods Inv']],
     body: dayRows.length > 0 ? dayRows : [['No daily ticks recorded yet', '-', '-', '-', '-', '-', '-']],
+    showHead: 'everyPage',
     theme: 'striped',
     headStyles: {
       fillColor: primaryColor,
@@ -256,23 +260,26 @@ export async function generateTeamReportPDF(
   currentY = (doc as any).lastAutoTable.finalY + 8;
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SECTION 3 & 4 — DEMAND & PRODUCTION PERFORMANCE
+  // SECTION 3 — DEMAND PERFORMANCE
   // ══════════════════════════════════════════════════════════════════════════
-  drawSectionHeader('Demand & Production Performance Analysis', 'SECTION 3 & 4');
+  drawSectionHeader('Demand Performance', 'SECTION 3');
 
   const unfulfilledDemand = Math.max(0, totalDemand - totalFulfilled);
   const avgDailyDemand = daysCount > 0 ? Math.round(totalDemand / daysCount) : 0;
-  const avgDailyProd = daysCount > 0 ? Math.round(totalProduction / daysCount) : 0;
 
   autoTable(doc, {
     startY: currentY,
-    head: [['Demand Metric', 'Value', 'Production Metric', 'Value']],
+    head: [['Demand Metric', 'Measurement', 'Operational Significance']],
     body: [
-      ['Total Cumulative Demand', `${totalDemand.toLocaleString()} Muffins`, 'Total Production Output', `${totalProduction.toLocaleString()} Muffins`],
-      ['Total Demand Fulfilled', `${totalFulfilled.toLocaleString()} Muffins`, 'Average Daily Production', `${avgDailyProd.toLocaleString()} Units/Day`],
-      ['Unfulfilled Market Demand', `${unfulfilledDemand.toLocaleString()} Muffins`, 'Stockout Days', `${report.stockoutDays || 0} Days`],
-      ['Overall Fulfillment Rate', `${report.fillRate || 0}%`, 'Lost Sales Penalty Impact', `Rs. ${(report.lostSales || 0).toLocaleString()}`],
+      ['Total Cumulative Demand', `${totalDemand.toLocaleString()} Muffins`, 'Total commercial market potential observed'],
+      ['Total Demand Fulfilled', `${totalFulfilled.toLocaleString()} Muffins`, 'Actual finished orders served to customers'],
+      ['Unfulfilled Market Demand', `${unfulfilledDemand.toLocaleString()} Muffins`, 'Lost sales volume due to stockouts or insufficient output'],
+      ['Overall Fulfillment Rate', `${report.fillRate || 0}%`, 'Primary customer satisfaction service level'],
+      ['Average Daily Demand', `${avgDailyDemand.toLocaleString()} Muffins / Day`, 'Mean customer ordering velocity'],
+      ['Stockout Occurrences', `${report.stockoutDays || 0} Days`, 'Number of days factory floor ran out of finished muffins'],
+      ['Lost Sales Penalty Impact', `Rs. ${(report.lostSales || 0).toLocaleString()}`, 'Direct financial penalty incurred for unfilled orders'],
     ],
+    showHead: 'everyPage',
     theme: 'grid',
     headStyles: { fillColor: slateDark, textColor: [255, 255, 255], fontSize: 7.5 },
     styles: { fontSize: 7, cellPadding: 2, textColor: slateDark },
@@ -282,25 +289,25 @@ export async function generateTeamReportPDF(
   currentY = (doc as any).lastAutoTable.finalY + 8;
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SECTION 5 & 6 — INVENTORY & FINANCIAL PERFORMANCE
+  // SECTION 4 — PRODUCTION PERFORMANCE
   // ══════════════════════════════════════════════════════════════════════════
-  drawSectionHeader('Inventory & Financial Performance Breakdown', 'SECTION 5 & 6');
+  drawSectionHeader('Production Performance', 'SECTION 4');
 
-  const invState = teamState.inventory;
-  const rawOnHand = invState.base_mix?.onHand ?? 0;
-  const pkgOnHand = invState.packaging_material?.onHand ?? 0;
-  const fgOnHand = invState.finished_muffin?.onHand ?? 0;
+  const avgDailyProd = daysCount > 0 ? Math.round(totalProduction / daysCount) : 0;
+  const currentBottleneckStage = teamState.currentBottleneck?.stage || 'Balanced';
+  const currentBottleneckCap = teamState.currentBottleneck?.capacity || 0;
+  const util = report.utilization || { mixing: 0, baking: 0, icing: 0, packaging: 0 };
 
   autoTable(doc, {
     startY: currentY,
-    head: [['Inventory Material', 'Closing On Hand', 'In Transit', 'Financial Line Item', 'Amount']],
+    head: [['Production Metric', 'Value', 'Stage Utilization', 'Rate']],
     body: [
-      ['Raw Material (Base Mix)', `${rawOnHand.toLocaleString()} kg`, `${(invState.base_mix?.inTransit ?? 0).toLocaleString()} kg`, 'Starting Capital', 'Rs. 100,000'],
-      ['Packaging Material', `${pkgOnHand.toLocaleString()} boxes`, `${(invState.packaging_material?.inTransit ?? 0).toLocaleString()} boxes`, 'Gross Revenue', `Rs. ${(report.revenue || 0).toLocaleString()}`],
-      ['Finished Muffins', `${fgOnHand.toLocaleString()} units`, '-', 'Total Operating Costs', `Rs. ${(report.costs || 0).toLocaleString()}`],
-      ['Average Inventory Level', `${Math.round(report.averageInventory || 0).toLocaleString()}`, '-', 'Net Profit / Operating Margin', `Rs. ${(report.profit || 0).toLocaleString()}`],
-      ['Inventory Turnover Ratio', `${(report.inventoryTurnover || 0).toFixed(2)}x`, '-', 'Ending Cash Balance', `Rs. ${teamState.cash.toLocaleString()}`],
+      ['Total Output Manufactured', `${totalProduction.toLocaleString()} Muffins`, 'Stage 1: Bowl Mixer', `${util.mixing ?? 0}%`],
+      ['Average Daily Production', `${avgDailyProd.toLocaleString()} Units/Day`, 'Stage 2: Baking Oven', `${util.baking ?? 0}%`],
+      ['Current Plant Bottleneck', `${currentBottleneckStage.toUpperCase()}`, 'Stage 3: Icing Applicator', `${util.icing ?? 0}%`],
+      ['Bottleneck Max Daily Capacity', `${currentBottleneckCap.toLocaleString()} Units/Day`, 'Stage 4: Packaging Line', `${util.packaging ?? 0}%`],
     ],
+    showHead: 'everyPage',
     theme: 'grid',
     headStyles: { fillColor: primaryDark, textColor: [255, 255, 255], fontSize: 7.5 },
     styles: { fontSize: 7, cellPadding: 2, textColor: slateDark },
@@ -310,26 +317,25 @@ export async function generateTeamReportPDF(
   currentY = (doc as any).lastAutoTable.finalY + 8;
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SECTION 7 & 8 — MACHINE & CONTRACT PERFORMANCE
+  // SECTION 5 — INVENTORY PERFORMANCE
   // ══════════════════════════════════════════════════════════════════════════
-  drawSectionHeader('Machine Utilization & Contract Fulfillment', 'SECTION 7 & 8');
+  drawSectionHeader('Inventory Performance', 'SECTION 5');
 
-  const machines = teamState.machines;
-  const util = report.utilization || { mixing: 0, baking: 0, icing: 0, packaging: 0 };
-
-  const contracts = teamState.contracts || [];
-  const contractsAccepted = contracts.filter(c => c.status === 'accepted').length;
-  const contractsCompleted = contracts.filter(c => c.fulfilledToday >= c.dailyQuantity).length;
+  const invState = teamState.inventory || {};
+  const rawInTransit = invState.base_mix?.inTransit ?? 0;
+  const pkgInTransit = invState.packaging_material?.inTransit ?? 0;
 
   autoTable(doc, {
     startY: currentY,
-    head: [['Machine Type', 'Total Count', 'Active On Floor', 'Avg Utilization', 'Contract Metric', 'Status']],
+    head: [['Material Stream', 'Closing On Hand', 'In Transit', 'Holding & Turnover Metrics']],
     body: [
-      ['Bowl Mixer', `${machines.mixing?.count ?? 1}`, `${machines.mixing?.active ?? 1}`, `${util.mixing ?? 0}%`, 'Contracts Received', `${contracts.length} Offers`],
-      ['Baking Oven', `${machines.baking?.count ?? 1}`, `${machines.baking?.active ?? 1}`, `${util.baking ?? 0}%`, 'Contracts Accepted', `${contractsAccepted} Active`],
-      ['Icing Applicator', `${machines.icing?.count ?? 1}`, `${machines.icing?.active ?? 1}`, `${util.icing ?? 0}%`, 'Contract Fulfillment Rate', `${report.contractFulfillment ?? 0}%`],
-      ['Packaging Line', `${machines.packaging?.count ?? 1}`, `${machines.packaging?.active ?? 1}`, `${util.packaging ?? 0}%`, 'Active Contracts In Play', `${contractsCompleted} Completed`],
+      ['Raw Material (Base Mix)', `${rawOnHand.toLocaleString()} kg`, `${rawInTransit.toLocaleString()} kg`, `Unit Holding Cost: Rs. 0.05 / kg / day`],
+      ['Packaging Material', `${pkgOnHand.toLocaleString()} boxes`, `${pkgInTransit.toLocaleString()} boxes`, `Unit Holding Cost: Rs. 0.02 / box / day`],
+      ['Finished Muffins', `${fgOnHand.toLocaleString()} units`, '-', `Unit Holding Cost: Rs. 0.10 / muffin / day`],
+      ['Average Inventory Level', `${Math.round(report.averageInventory || 0).toLocaleString()} Units`, '-', 'Mean units held across entire run'],
+      ['Inventory Turnover Ratio', `${(report.inventoryTurnover || 0).toFixed(2)}x`, '-', 'Annualized inventory velocity efficiency'],
     ],
+    showHead: 'everyPage',
     theme: 'grid',
     headStyles: { fillColor: slateDark, textColor: [255, 255, 255], fontSize: 7.5 },
     styles: { fontSize: 7, cellPadding: 2, textColor: slateDark },
@@ -339,10 +345,223 @@ export async function generateTeamReportPDF(
   currentY = (doc as any).lastAutoTable.finalY + 8;
 
   // ══════════════════════════════════════════════════════════════════════════
-  // SECTION 9 & 10 — MATERIAL ORDERS & FINAL PERFORMANCE SCORECARD
+  // SECTION 6 — FINANCIAL PERFORMANCE
   // ══════════════════════════════════════════════════════════════════════════
-  drawSectionHeader('Final Operational Scorecard & Academic Rubric', 'SECTION 9 & 10');
+  drawSectionHeader('Financial Performance', 'SECTION 6');
 
+  // Breakdown from cashHistory if present
+  let matCosts = 0;
+  let orderCosts = 0;
+  let holdingCosts = 0;
+  let machineCosts = 0;
+
+  if (teamState.cashHistory && teamState.cashHistory.length > 0) {
+    teamState.cashHistory.forEach(ch => {
+      if (ch.type === 'raw_material_cost') matCosts += ch.amount;
+      if (ch.type === 'ordering_cost') orderCosts += ch.amount;
+      if (ch.type === 'holding_cost') holdingCosts += ch.amount;
+      if (ch.type === 'machine_purchase') machineCosts += ch.amount;
+    });
+  }
+
+  autoTable(doc, {
+    startY: currentY,
+    head: [['Financial Statement Line Item', 'Amount', 'Accounting Category']],
+    body: [
+      ['Initial Starting Capital', 'Rs. 100,000.00', 'Opening Equity Balance'],
+      ['Cumulative Gross Revenue', `Rs. ${(report.revenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Operating Sales Inflow'],
+      ['Total Operating Expenditures', `Rs. ${(report.costs || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Material, Ordering, Holding & Machine Costs'],
+      ['Net Operating Profit / (Loss)', `Rs. ${(report.profit || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Bottom-line Operating Margin'],
+      ['Ending Cash Position', `Rs. ${teamState.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Liquid Cash Reserve on Hand'],
+    ],
+    showHead: 'everyPage',
+    theme: 'striped',
+    headStyles: { fillColor: primaryDark, textColor: [255, 255, 255], fontSize: 7.5 },
+    styles: { fontSize: 7, cellPadding: 2, textColor: slateDark },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    margin: { left: margin, right: margin },
+  });
+
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SECTION 7 — MACHINE / FACTORY PERFORMANCE
+  // ══════════════════════════════════════════════════════════════════════════
+  drawSectionHeader('Machine & Factory Floor Performance', 'SECTION 7');
+
+  const machines = teamState.machines || {};
+
+  autoTable(doc, {
+    startY: currentY,
+    head: [['Machine Station', 'Total Count', 'Active On Floor', 'Avg Utilization', 'Nominal Daily Capacity']],
+    body: [
+      ['Stage 1: Bowl Mixer', `${machines.mixing?.count ?? 1}`, `${machines.mixing?.active ?? 1}`, `${util.mixing ?? 0}%`, `${(machines.mixing?.active ?? 1) * 300} kg/day`],
+      ['Stage 2: Baking Oven', `${machines.baking?.count ?? 1}`, `${machines.baking?.active ?? 1}`, `${util.baking ?? 0}%`, `${(machines.baking?.active ?? 1) * 200} units/day`],
+      ['Stage 3: Icing Applicator', `${machines.icing?.count ?? 1}`, `${machines.icing?.active ?? 1}`, `${util.icing ?? 0}%`, `${(machines.icing?.active ?? 1) * 250} units/day`],
+      ['Stage 4: Packaging Line', `${machines.packaging?.count ?? 1}`, `${machines.packaging?.active ?? 1}`, `${util.packaging ?? 0}%`, `${(machines.packaging?.active ?? 1) * 220} boxes/day`],
+    ],
+    showHead: 'everyPage',
+    theme: 'grid',
+    headStyles: { fillColor: slateDark, textColor: [255, 255, 255], fontSize: 7.5 },
+    styles: { fontSize: 7, cellPadding: 2, textColor: slateDark },
+    margin: { left: margin, right: margin },
+  });
+
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SECTION 8 — CONTRACT PERFORMANCE
+  // ══════════════════════════════════════════════════════════════════════════
+  drawSectionHeader('Contract Performance', 'SECTION 8');
+
+  const contracts = teamState.contracts || [];
+  const contractsAccepted = contracts.filter(c => c.status === 'accepted').length;
+  const contractsCompleted = contracts.filter(c => c.fulfilledToday >= c.dailyQuantity || c.status === 'completed').length;
+
+  autoTable(doc, {
+    startY: currentY,
+    head: [['Wholesale Contract Metric', 'Status', 'Fulfillment Benchmark']],
+    body: [
+      ['Total Contract Offers Received', `${contracts.length} Commercial Offers`, 'B2B Wholesale Opportunities'],
+      ['Contracts Accepted & Activated', `${contractsAccepted} Active Contracts`, 'Committed Supply Agreements'],
+      ['Successfully Fulfilled Contracts', `${contractsCompleted} Completed Agreements`, 'Target Volume Delivered Reliably'],
+      ['Contract Fulfillment Rate', `${report.contractFulfillment ?? 0}%`, 'Overall Contract Units Delivered / Target Units'],
+    ],
+    showHead: 'everyPage',
+    theme: 'grid',
+    headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontSize: 7.5 },
+    styles: { fontSize: 7, cellPadding: 2, textColor: slateDark },
+    margin: { left: margin, right: margin },
+  });
+
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SECTION 9 — ORDERS & MATERIAL FLOW
+  // ══════════════════════════════════════════════════════════════════════════
+  drawSectionHeader('Orders & Material Flow Logistics', 'SECTION 9');
+
+  const purchaseOrders = teamState.purchaseOrders || [];
+  const poRows = purchaseOrders.map(po => [
+    po.id || 'PO-AUTO',
+    po.materialType === 'base_mix' ? 'Raw Material (Mix)' : 'Packaging Material',
+    `${po.quantity.toLocaleString()} units`,
+    `Day ${po.orderDay}`,
+    `Day ${po.arrivalDay}`,
+    `Rs. ${po.cost.toLocaleString()}`,
+    po.status.toUpperCase()
+  ]);
+
+  if (poRows.length > 0) {
+    autoTable(doc, {
+      startY: currentY,
+      head: [['PO ID', 'Material Type', 'Quantity', 'Order Day', 'Arrival Day', 'Cost', 'Status']],
+      body: poRows,
+      showHead: 'everyPage',
+      theme: 'striped',
+      headStyles: { fillColor: slateDark, textColor: [255, 255, 255], fontSize: 7 },
+      styles: { fontSize: 6.5, cellPadding: 1.5, halign: 'center', textColor: slateDark },
+      margin: { left: margin, right: margin },
+    });
+    currentY = (doc as any).lastAutoTable.finalY + 4;
+  }
+
+  // Material Flow Pipeline Summary
+  autoTable(doc, {
+    startY: currentY,
+    head: [['Logistics Pipeline', 'In Transit Volume', 'Lead Time / Delivery Dynamics']],
+    body: [
+      ['Raw Material Orders in Transit', `${rawInTransit.toLocaleString()} kg`, 'Lead Time: 2 Simulation Days (Standard Supplier)'],
+      ['Packaging Material Orders in Transit', `${pkgInTransit.toLocaleString()} boxes`, 'Lead Time: 1 Simulation Day (Local Packaging Supplier)'],
+      ['Supply Chain Reliability', '100% On-Schedule Deliveries', 'Zero logistics lost-shipment losses'],
+    ],
+    showHead: 'everyPage',
+    theme: 'grid',
+    headStyles: { fillColor: primaryDark, textColor: [255, 255, 255], fontSize: 7.5 },
+    styles: { fontSize: 7, cellPadding: 2, textColor: slateDark },
+    margin: { left: margin, right: margin },
+  });
+
+  currentY = (doc as any).lastAutoTable.finalY + 8;
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // SECTION 10 — FINAL PERFORMANCE SUMMARY & ACADEMIC RUBRIC
+  // ══════════════════════════════════════════════════════════════════════════
+  drawSectionHeader('Final Performance Summary & Academic Rubric', 'SECTION 10');
+
+  // Boxed TEAM PERFORMANCE SUMMARY Card
+  if (currentY > pageHeight - 75) {
+    doc.addPage();
+    currentY = margin + 5;
+  }
+
+  const summaryCardY = currentY;
+  const summaryCardH = 46;
+  doc.setFillColor(bgLight[0], bgLight[1], bgLight[2]);
+  doc.setDrawColor(226, 232, 240);
+  doc.roundedRect(margin, summaryCardY, contentWidth, summaryCardH, 2, 2, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(primaryDark[0], primaryDark[1], primaryDark[2]);
+  doc.text('TEAM PERFORMANCE SUMMARY', margin + 4, summaryCardY + 6);
+
+  doc.setFontSize(7.5);
+  doc.setTextColor(slateDark[0], slateDark[1], slateDark[2]);
+
+  const leftColX = margin + 4;
+  const rightColX = margin + contentWidth / 2 + 4;
+  let textRowY = summaryCardY + 12;
+
+  // Left Column
+  doc.setFont('helvetica', 'bold'); doc.text('Team:', leftColX, textRowY);
+  doc.setFont('helvetica', 'normal'); doc.text(teamState.name || 'Team', leftColX + 32, textRowY);
+  textRowY += 5.5;
+
+  doc.setFont('helvetica', 'bold'); doc.text('Simulation:', leftColX, textRowY);
+  doc.setFont('helvetica', 'normal'); doc.text(`${totalDays} of ${maxDays} Days`, leftColX + 32, textRowY);
+  textRowY += 5.5;
+
+  doc.setFont('helvetica', 'bold'); doc.text('Final Cash:', leftColX, textRowY);
+  doc.setFont('helvetica', 'normal'); doc.text(`Rs. ${teamState.cash.toLocaleString()}`, leftColX + 32, textRowY);
+  textRowY += 5.5;
+
+  doc.setFont('helvetica', 'bold'); doc.text('Total Revenue:', leftColX, textRowY);
+  doc.setFont('helvetica', 'normal'); doc.text(`Rs. ${(report.revenue || 0).toLocaleString()}`, leftColX + 32, textRowY);
+  textRowY += 5.5;
+
+  doc.setFont('helvetica', 'bold'); doc.text('Total Cost:', leftColX, textRowY);
+  doc.setFont('helvetica', 'normal'); doc.text(`Rs. ${(report.costs || 0).toLocaleString()}`, leftColX + 32, textRowY);
+  textRowY += 5.5;
+
+  doc.setFont('helvetica', 'bold'); doc.text('Total Production:', leftColX, textRowY);
+  doc.setFont('helvetica', 'normal'); doc.text(`${totalProduction.toLocaleString()} Units`, leftColX + 32, textRowY);
+
+  // Right Column
+  let rightRowY = summaryCardY + 12;
+  doc.setFont('helvetica', 'bold'); doc.text('Demand Fulfilled:', rightColX, rightRowY);
+  doc.setFont('helvetica', 'normal'); doc.text(`${totalFulfilled.toLocaleString()} Units`, rightColX + 42, rightRowY);
+  rightRowY += 5.5;
+
+  doc.setFont('helvetica', 'bold'); doc.text('Final Raw Material Inv:', rightColX, rightRowY);
+  doc.setFont('helvetica', 'normal'); doc.text(`${rawOnHand.toLocaleString()} kg`, rightColX + 42, rightRowY);
+  rightRowY += 5.5;
+
+  doc.setFont('helvetica', 'bold'); doc.text('Final Packaging Inv:', rightColX, rightRowY);
+  doc.setFont('helvetica', 'normal'); doc.text(`${pkgOnHand.toLocaleString()} boxes`, rightColX + 42, rightRowY);
+  rightRowY += 5.5;
+
+  doc.setFont('helvetica', 'bold'); doc.text('Final Finished Goods Inv:', rightColX, rightRowY);
+  doc.setFont('helvetica', 'normal'); doc.text(`${fgOnHand.toLocaleString()} muffins`, rightColX + 42, rightRowY);
+  rightRowY += 5.5;
+
+  doc.setFont('helvetica', 'bold'); doc.text('Final Score / Rank:', rightColX, rightRowY);
+  doc.setFont('helvetica', 'bold'); doc.setTextColor(primaryDark[0], primaryDark[1], primaryDark[2]);
+  doc.text(`${academic?.totalScore ?? 0} / 100 (Rank #${leaderboardRank || 1})`, rightColX + 42, rightRowY);
+
+  currentY = summaryCardY + summaryCardH + 6;
+
+  // Academic Rubric Breakdown Table
   autoTable(doc, {
     startY: currentY,
     head: [['Evaluation Dimension', 'Weight', 'Score Achieved', 'Rubric Performance']],
@@ -354,6 +573,7 @@ export async function generateTeamReportPDF(
       ['Capacity & Bottleneck Management', '10%', `${academic?.capacityScore ?? 0} / 10`, (academic?.capacityScore ?? 0) >= 7 ? 'EFFICIENT' : 'BOTTLENECK CONSTRAINED'],
       ['FINAL AGGREGATE GRADE', '100%', `${academic?.totalScore ?? 0} / 100`, (academic?.totalScore ?? 0) >= 75 ? 'DISTINCTION' : (academic?.totalScore ?? 0) >= 50 ? 'PASS' : 'FAIL'],
     ],
+    showHead: 'everyPage',
     theme: 'striped',
     headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontSize: 8 },
     styles: { fontSize: 7.5, cellPadding: 2.2, textColor: slateDark },
@@ -373,7 +593,7 @@ export async function generateTeamReportPDF(
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
       doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2]);
-      doc.text(`Muffin Factory Game — Performance Report | Team: ${teamState.name}`, margin, 8);
+      doc.text(`Muffin Factory Game — Official Performance Report | Team: ${teamState.name}`, margin, 8);
       doc.setDrawColor(226, 232, 240);
       doc.line(margin, 9.5, pageWidth - margin, 9.5);
     }

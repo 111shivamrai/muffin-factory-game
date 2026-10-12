@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import emailjs from '@emailjs/browser';
 import { useGameStore } from '../store/gameStore.js';
 import { UserRole } from '../../../backend/src/types/index.js';
 import { 
@@ -955,31 +954,33 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
               ) : (
                 <>
                   <p className="text-[13px] text-[#78716c] mb-6 leading-relaxed">Fill in your details below and our Operations Strategy team will reach out to schedule your personalized walkthrough.</p>
-                  <form onSubmit={(e) => { 
+                  <form onSubmit={async (e) => { 
                     e.preventDefault(); 
-                    emailjs.send(
-                      'service_5pcx4hw',
-                      'template_r9639yf',
-                      {
-                        to_email: 'muffinmegafactory@gmail.com',
-                        from_name: demoName,
-                        name: demoName,
-                        user_name: demoName,
-                        sender: demoName,
-                        from_email: demoEmail,
-                        email: demoEmail,
-                        reply_to: demoEmail,
-                        user_email: demoEmail,
-                        message: `New Request: Book a Demo\n\nName: ${demoName}\nEmail: ${demoEmail}\nInstitution/Company: ${demoInstitution}`,
-                        type: 'Book a Demo'
-                      },
-                      'TmzldpiycMQDEttvp'
-                    ).then(() => {
+                    try {
+                      const { default: emailjs } = await import('@emailjs/browser');
+                      await emailjs.send(
+                        'service_5pcx4hw',
+                        'template_r9639yf',
+                        {
+                          to_email: 'muffinmegafactory@gmail.com',
+                          from_name: demoName,
+                          name: demoName,
+                          user_name: demoName,
+                          sender: demoName,
+                          from_email: demoEmail,
+                          email: demoEmail,
+                          reply_to: demoEmail,
+                          user_email: demoEmail,
+                          message: `New Request: Book a Demo\n\nName: ${demoName}\nEmail: ${demoEmail}\nInstitution/Company: ${demoInstitution}`,
+                          type: 'Book a Demo'
+                        },
+                        'TmzldpiycMQDEttvp'
+                      );
                       setDemoSubmitted(true);
-                    }).catch((err) => {
+                    } catch (err) {
                       console.error('Failed to send demo request', err);
                       alert('Failed to send request. Please try again.');
-                    });
+                    }
                   }} className="space-y-4">
                     <div>
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-[#44403c] mb-1.5">FULL NAME <span className="text-red-500">*</span></label>
@@ -1059,31 +1060,33 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                   <button onClick={() => { setIsQuoteModalOpen(false); setQuoteSubmitted(false); }} className="mt-6 bg-[#1c1917] text-white font-bold text-xs px-6 py-2.5 rounded-full cursor-pointer border-none transition-all hover:bg-black">Close</button>
                 </div>
               ) : (
-                <form onSubmit={(e) => { 
+                <form onSubmit={async (e) => { 
                   e.preventDefault(); 
-                  emailjs.send(
-                    'service_5pcx4hw',
-                    'template_r9639yf',
-                    {
-                      to_email: 'muffinmegafactory@gmail.com',
-                      from_name: quoteName,
-                      name: quoteName,
-                      user_name: quoteName,
-                      sender: quoteName,
-                      from_email: quoteEmail,
-                      email: quoteEmail,
-                      reply_to: quoteEmail,
-                      user_email: quoteEmail,
-                      message: `New Request: Formal Quote\n\nName: ${quoteName}\nEmail: ${quoteEmail}\nOrganization: ${quoteOrg}\nDepartment/Role: ${quoteDept}`,
-                      type: 'Request Formal Quote'
-                    },
-                    'TmzldpiycMQDEttvp'
-                  ).then(() => {
+                  try {
+                    const { default: emailjs } = await import('@emailjs/browser');
+                    await emailjs.send(
+                      'service_5pcx4hw',
+                      'template_r9639yf',
+                      {
+                        to_email: 'muffinmegafactory@gmail.com',
+                        from_name: quoteName,
+                        name: quoteName,
+                        user_name: quoteName,
+                        sender: quoteName,
+                        from_email: quoteEmail,
+                        email: quoteEmail,
+                        reply_to: quoteEmail,
+                        user_email: quoteEmail,
+                        message: `New Request: Formal Quote\n\nName: ${quoteName}\nEmail: ${quoteEmail}\nOrganization: ${quoteOrg}\nDepartment/Role: ${quoteDept}`,
+                        type: 'Request Formal Quote'
+                      },
+                      'TmzldpiycMQDEttvp'
+                    );
                     setQuoteSubmitted(true);
-                  }).catch((err) => {
+                  } catch (err) {
                     console.error('Failed to send quote request', err);
                     alert('Failed to send request. Please try again.');
-                  });
+                  }
                 }} className="space-y-4">
                   <div>
                     <label className="block text-[10px] font-bold uppercase tracking-widest text-[#44403c] mb-1.5">YOUR FULL NAME <span className="text-red-500">*</span></label>

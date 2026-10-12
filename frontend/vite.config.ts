@@ -15,6 +15,12 @@ export default defineConfig({
     cssMinify: true,
     minify: 'esbuild',
     target: 'es2022',
+    modulePreload: {
+      resolveDependencies(filename, deps) {
+        // Keep heavy PDF generation libraries on-demand so initial page load is fast
+        return deps.filter(dep => !dep.includes('vendor-pdf') && !dep.includes('reportPdfGenerator'));
+      }
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {

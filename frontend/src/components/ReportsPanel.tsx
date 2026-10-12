@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore.js';
 import { useShallow } from 'zustand/react/shallow';
 import { Download, GraduationCap, DollarSign, CheckCircle2, FileText, Boxes, Gauge, Award, TrendingUp, Receipt, CalendarX, BarChart3 } from 'lucide-react';
-import { generateTeamReportPDF } from '../utils/reportPdfGenerator.js';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, 
   Tooltip, ResponsiveContainer, Legend 
@@ -65,6 +64,7 @@ function ReportsPanel() {
         const entry = leaderboard.find(t => t.teamId === teamState.id);
         if (entry) rank = entry.rank;
       }
+      const { generateTeamReportPDF } = await import('../utils/reportPdfGenerator.js');
       await generateTeamReportPDF(room, teamState, rank);
     } catch (err) {
       console.error('Failed to generate report PDF:', err);
