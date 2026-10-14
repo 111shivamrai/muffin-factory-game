@@ -75,14 +75,14 @@ function InventoryPanel() {
     setIsApplying(true);
     try {
       if (activeTab === 'mix') {
-        const resMix = await updateInventorySettings('base_mix', mixQty, mixROP, 0, mixLT);
+        const resMix = await updateInventorySettings('base_mix', mixQty, mixROP, 0);
         if (resMix && resMix.error) {
           alert(`Failed to update raw material: ${resMix.error}`);
           return;
         }
         alert('Muffin mix order changes applied successfully! Material replenishment in transit.');
       } else {
-        const resPack = await updateInventorySettings('packaging_material', packQty, packROP, 0, packLT);
+        const resPack = await updateInventorySettings('packaging_material', packQty, packROP, 0);
         if (resPack && resPack.error) {
           alert(`Failed to update packaging material: ${resPack.error}`);
           return;
@@ -298,15 +298,48 @@ function InventoryPanel() {
               <>
                 <StepperRow label="ORDER QUANTITY" value={mixQty} onChange={setMixQty} step={10} badgeColor="emerald" />
                 <StepperRow label="REORDER POINT" value={mixROP} onChange={setMixROP} step={10} badgeColor="emerald" />
-                <StepperRow label="LEAD TIME (DAYS)" value={mixLT} onChange={setMixLT} step={1} badgeColor="emerald" />
               </>
             ) : (
               <>
                 <StepperRow label="ORDER QUANTITY" value={packQty} onChange={setPackQty} step={10} badgeColor="orange" />
                 <StepperRow label="REORDER POINT" value={packROP} onChange={setPackROP} step={10} badgeColor="orange" />
-                <StepperRow label="LEAD TIME (DAYS)" value={packLT} onChange={setPackLT} step={1} badgeColor="orange" />
               </>
             )}
+
+            {/* Fixed Lead Time Specification Row */}
+            {(() => {
+              const leadTimeModifier = teamState?.activeEvents
+                ?.filter(ev => ev.active && ev.targetVariable === 'lead_time')
+                ?.reduce((sum, ev) => sum + ev.modifier, 0) || 0;
+              const effectiveMixLT = Math.max(1, mixLT + leadTimeModifier);
+              const effectivePackLT = Math.max(1, packLT + leadTimeModifier);
+              const displayLT = activeTab === 'mix' ? effectiveMixLT : effectivePackLT;
+
+              return (
+                <div className="flex items-center justify-between py-2 border-t border-[#f0e6d6]/80 mt-1 pt-2.5">
+                  <div className="flex flex-col select-none">
+                    <span className="text-[12px] font-extrabold text-[#1c1917] tracking-wide font-sans">
+                      LEAD TIME (DAYS)
+                    </span>
+                    <span className="text-[9.5px] font-medium text-stone-400">
+                      Fixed supplier delivery schedule
+                    </span>
+                  </div>
+                  <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden shrink-0 shadow-xs">
+                    <div className={`w-[160px] h-10 flex items-center justify-center font-mono font-black text-sm select-none transition-colors ${
+                      activeTab === 'mix'
+                        ? 'bg-emerald-50 text-emerald-800'
+                        : 'bg-orange-50 text-orange-800'
+                    }`}>
+                      <span>{displayLT}</span>
+                      <span className="text-[10px] font-bold text-stone-500 font-sans ml-1.5 uppercase tracking-wide">
+                        {leadTimeModifier !== 0 ? `Days (${leadTimeModifier > 0 ? `+${leadTimeModifier}` : leadTimeModifier} Event)` : 'Days (Fixed)'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* Footer Apply Changes Button */}
