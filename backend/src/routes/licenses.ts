@@ -10,12 +10,8 @@ const router = Router();
 router.get('/', authenticateJWT, authorizeRoles(['admin']), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const list = await db.getLicenses();
-    // Sanitize response: never leak instructor passwords
-    const sanitized = list.map(lic => {
-      const { instructorPassword, ...safe } = lic;
-      return safe;
-    });
-    res.json(sanitized);
+    // Return full license records to admin for the credentials vault modal
+    res.json(list);
   } catch (err) {
     console.error('Error listing licenses:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -96,7 +92,8 @@ router.post('/', authenticateJWT, authorizeRoles(['admin']), async (req: Authent
       expiresAt: expiresAt.toISOString(),
       startDate: now.toISOString().split('T')[0],
       endDate: expiresAt.toISOString().split('T')[0],
-      instructorEmail: cleanInstEmail
+      instructorEmail: cleanInstEmail,
+      instructorPassword: cleanInstPass
     };
 
     await db.saveLicense(newLicense);

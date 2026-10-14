@@ -21,10 +21,10 @@ function verifySocketToken(token: string): any {
 // Helper to initialize a default team state
 function createInitialTeamState(teamId: string, teamName: string, controllerId: string, scenario: SavedScenario): TeamState {
   const mConfigs = scenario.machineSettings;
-  const initialMixers = 1;
-  const initialBakers = 1;
-  const initialIcers = 1;
-  const initialPackagers = 1;
+  const initialMixers = (scenario as any).startMachines?.mixing ?? 1;
+  const initialBakers = (scenario as any).startMachines?.baking ?? 1;
+  const initialIcers = (scenario as any).startMachines?.icing ?? 1;
+  const initialPackagers = (scenario as any).startMachines?.packaging ?? 1;
 
   const defaultMachines = {
     mixing: { type: 'mixing' as MachineType, count: initialMixers, active: initialMixers, inTransit: 0 },
@@ -33,9 +33,14 @@ function createInitialTeamState(teamId: string, teamName: string, controllerId: 
     packaging: { type: 'packaging' as MachineType, count: initialPackagers, active: initialPackagers, inTransit: 0 }
   };
 
+  const startRaw = (scenario as any).startInventory?.rawMaterial ?? (scenario as any).startMaterials ?? 1000;
+  const startPack = (scenario as any).startInventory?.packagingMaterial ?? (scenario as any).startPackagingMaterials ?? 800;
+  const rawLT = scenario.leadTimes?.rawMaterial ?? 3;
+  const packLT = (scenario.leadTimes as any)?.packagingMaterial ?? 2;
+
   const defaultInventory = {
-    base_mix: { materialType: 'base_mix' as MaterialType, onHand: 1000, inTransit: 0, orderQty: 1000, reorderPoint: 300 },
-    packaging_material: { materialType: 'packaging_material' as MaterialType, onHand: 800, inTransit: 0, orderQty: 1000, reorderPoint: 200 },
+    base_mix: { materialType: 'base_mix' as MaterialType, onHand: startRaw, inTransit: 0, orderQty: 1000, reorderPoint: 300, leadTime: rawLT },
+    packaging_material: { materialType: 'packaging_material' as MaterialType, onHand: startPack, inTransit: 0, orderQty: 1000, reorderPoint: 200, leadTime: packLT },
     finished_muffin: { materialType: 'finished_muffin' as MaterialType, onHand: 100, inTransit: 0, orderQty: 0, reorderPoint: 0 }
   };
 
@@ -286,7 +291,7 @@ export function registerSocketHandler(io: Server) {
 
         switch (payload.actionType) {
           case 'update_inventory_settings': {
-            const { materialType, orderQty, reorderPoint } = payload.details;
+            const { materialType, orderQty, reorderPoint, leadTime: customLeadTime } = payload.details;
             if (!materialType || orderQty === undefined) {
               return callback({ error: 'Missing inventory fields' });
             }
@@ -295,6 +300,9 @@ export function registerSocketHandler(io: Server) {
               inv.orderQty = Math.max(0, parseInt(orderQty) || 0);
               if (reorderPoint !== undefined) {
                 inv.reorderPoint = Math.max(0, parseInt(reorderPoint) || 0);
+              }
+              if (customLeadTime !== undefined && Number.isInteger(Number(customLeadTime)) && Number(customLeadTime) > 0) {
+                inv.leadTime = Number(customLeadTime);
               }
 
               // Place replenishment order if none currently in transit, orderQty > 0,
@@ -313,9 +321,11 @@ export function registerSocketHandler(io: Server) {
                   .filter((ev: any) => ev.active && ev.targetVariable === 'lead_time')
                   .reduce((sum: number, ev: any) => sum + ev.modifier, 0) || 0;
 
-                const baseLT = (materialType === 'packaging_material' && (baseLeadTimes as any).packagingMaterial !== undefined)
-                  ? (baseLeadTimes as any).packagingMaterial
-                  : baseLeadTimes.rawMaterial;
+                const baseLT = inv.leadTime !== undefined
+                  ? inv.leadTime
+                  : ((materialType === 'packaging_material' && (baseLeadTimes as any).packagingMaterial !== undefined)
+                    ? (baseLeadTimes as any).packagingMaterial
+                    : baseLeadTimes.rawMaterial);
                 const leadTime = Math.max(1, baseLT + rawMaterialLeadTimeModifier);
                 const poId = `po_${room.currentDay}_${materialType}_${Math.random().toString(36).substr(2, 5)}`;
 
@@ -357,7 +367,10 @@ export function registerSocketHandler(io: Server) {
 
             // Create Machine Order (In Transit)
             const orderId = `mo_${room.currentDay}_${machineType}_${Math.random().toString(36).substr(2, 5)}`;
-            const leadTime = scenario.leadTimes.machineProcurement || 3;
+            const leadTime = (config as any)?.leadTime
+              || (scenario.leadTimes as any)?.machines?.[machineType]
+              || scenario.leadTimes.machineProcurement
+              || 3;
 
             const newOrder: MachineOrder = {
               id: orderId,

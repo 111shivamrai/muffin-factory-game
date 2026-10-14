@@ -5,9 +5,10 @@ import { Info, Check, Coins } from 'lucide-react';
 import { FinancesModal } from './FinancesModal.js';
 
 function InventoryPanel() {
-  const { teamState, role, updateInventorySettings } = useGameStore(
+  const { teamState, room, role, updateInventorySettings } = useGameStore(
     useShallow((state) => ({
       teamState: state.teamState,
+      room: state.room,
       role: state.role,
       updateInventorySettings: state.updateInventorySettings,
     }))
@@ -16,8 +17,10 @@ function InventoryPanel() {
   const [activeTab,  setActiveTab]  = useState<'mix' | 'pack'>('mix');
   const [mixQty,     setMixQty]     = useState(10);
   const [mixROP,     setMixROP]     = useState(40);
+  const [mixLT,      setMixLT]      = useState(3);
   const [packQty,    setPackQty]    = useState(10);
   const [packROP,    setPackROP]    = useState(40);
+  const [packLT,     setPackLT]     = useState(2);
   const [showFinancesModal, setShowFinancesModal] = useState(false);
   const [isAttentionActive, setIsAttentionActive] = useState(true);
 
@@ -33,8 +36,8 @@ function InventoryPanel() {
 
   // Sync server values into local state (only on real changes)
   const prevRef = React.useRef<{
-    mix:  { q: number; r: number };
-    pack: { q: number; r: number };
+    mix:  { q: number; r: number; lt: number };
+    pack: { q: number; r: number; lt: number };
   } | null>(null);
 
   useEffect(() => {
@@ -43,22 +46,27 @@ function InventoryPanel() {
     const p = teamState.inventory.packaging_material;
     if (!m || !p) return;
 
+    const baseRawLT = m.leadTime ?? room?.scenarioConfig?.leadTimes?.rawMaterial ?? 3;
+    const basePackLT = p.leadTime ?? (room?.scenarioConfig?.leadTimes as any)?.packagingMaterial ?? 2;
+
     const cur = {
-      mix:  { q: m.orderQty, r: m.reorderPoint },
-      pack: { q: p.orderQty, r: p.reorderPoint },
+      mix:  { q: m.orderQty, r: m.reorderPoint, lt: baseRawLT },
+      pack: { q: p.orderQty, r: p.reorderPoint, lt: basePackLT },
     };
     const prev = prevRef.current;
 
-    if (!prev || prev.mix.q !== cur.mix.q || prev.mix.r !== cur.mix.r) {
+    if (!prev || prev.mix.q !== cur.mix.q || prev.mix.r !== cur.mix.r || prev.mix.lt !== cur.mix.lt) {
       setMixQty(m.orderQty);
       setMixROP(m.reorderPoint);
+      setMixLT(baseRawLT);
     }
-    if (!prev || prev.pack.q !== cur.pack.q || prev.pack.r !== cur.pack.r) {
+    if (!prev || prev.pack.q !== cur.pack.q || prev.pack.r !== cur.pack.r || prev.pack.lt !== cur.pack.lt) {
       setPackQty(p.orderQty);
       setPackROP(p.reorderPoint);
+      setPackLT(basePackLT);
     }
     prevRef.current = cur;
-  }, [teamState?.inventory]);
+  }, [teamState?.inventory, room?.scenarioConfig?.leadTimes]);
 
   const [isApplying, setIsApplying] = useState(false);
 
@@ -66,17 +74,21 @@ function InventoryPanel() {
     if (!isController || isApplying) return;
     setIsApplying(true);
     try {
-      const resMix = await updateInventorySettings('base_mix', mixQty, mixROP, 0);
-      if (resMix && resMix.error) {
-        alert(`Failed to update raw material: ${resMix.error}`);
-        return;
+      if (activeTab === 'mix') {
+        const resMix = await updateInventorySettings('base_mix', mixQty, mixROP, 0, mixLT);
+        if (resMix && resMix.error) {
+          alert(`Failed to update raw material: ${resMix.error}`);
+          return;
+        }
+        alert('Muffin mix order changes applied successfully! Material replenishment in transit.');
+      } else {
+        const resPack = await updateInventorySettings('packaging_material', packQty, packROP, 0, packLT);
+        if (resPack && resPack.error) {
+          alert(`Failed to update packaging material: ${resPack.error}`);
+          return;
+        }
+        alert('Packaging material order changes applied successfully! Material replenishment in transit.');
       }
-      const resPack = await updateInventorySettings('packaging_material', packQty, packROP, 0);
-      if (resPack && resPack.error) {
-        alert(`Failed to update packaging material: ${resPack.error}`);
-        return;
-      }
-      alert('Order changes applied successfully! Materials ordered and in transit.');
     } catch (err: any) {
       alert(`Error applying order changes: ${err.message || err}`);
     } finally {
@@ -95,12 +107,44 @@ function InventoryPanel() {
 
   // ─── Sub-components ──────────────────────────────────────────────────────────
 
-  /** Inline label on left, unified pill-stepper on right matching reference exactly */
+  /** Inline label on left, unified reliable pill-stepper on right with smooth editing */
   function StepperRow({
-    label, value, onChange, step = 10,
+    label, value, onChange, step = 10, badgeColor = 'emerald'
   }: {
-    label: string; value: number; onChange: (v: number) => void; step?: number;
+    label: string; value: number; onChange: (v: number) => void; step?: number; badgeColor?: 'emerald' | 'orange';
   }) {
+    const [localStr, setLocalStr] = useState(String(value));
+    const [isFocused, setIsFocused] = useState(false);
+
+    useEffect(() => {
+      if (!isFocused) {
+        setLocalStr(String(value));
+      }
+    }, [value, isFocused]);
+
+    const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const cleaned = e.target.value.replace(/[^0-9]/g, '').slice(0, 5);
+      setLocalStr(cleaned);
+      if (cleaned !== '') {
+        const parsed = parseInt(cleaned, 10);
+        if (!isNaN(parsed)) {
+          onChange(parsed);
+        }
+      }
+    };
+
+    const handleBlur = () => {
+      setIsFocused(false);
+      if (localStr === '' || isNaN(parseInt(localStr, 10))) {
+        setLocalStr('0');
+        onChange(0);
+      } else {
+        const parsed = parseInt(localStr, 10);
+        setLocalStr(String(parsed));
+        onChange(parsed);
+      }
+    };
+
     return (
       <div className="flex items-center justify-between py-2 border-b border-[#f0e6d6]/60 last:border-0">
         <span className="text-[12px] font-extrabold text-[#1c1917] tracking-wide font-sans select-none">
@@ -110,23 +154,35 @@ function InventoryPanel() {
           {isController ? (
             <button
               type="button"
-              onClick={() => onChange(Math.max(0, value - step))}
+              onClick={() => {
+                const next = Math.max(0, value - step);
+                setLocalStr(String(next));
+                onChange(next);
+              }}
               className="w-12 h-10 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
             >
               −
             </button>
           ) : null}
           <input
-            type="number"
-            value={value}
-            onChange={(e) => onChange(Math.max(0, parseInt(e.target.value) || 0))}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={localStr}
+            onFocus={() => setIsFocused(true)}
+            onChange={handleTextChange}
+            onBlur={handleBlur}
             disabled={!isController}
             className="w-20 h-10 bg-white text-[#1c1917] text-sm font-extrabold flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
           />
           {isController ? (
             <button
               type="button"
-              onClick={() => onChange(value + step)}
+              onClick={() => {
+                const next = Math.min(99999, value + step);
+                setLocalStr(String(next));
+                onChange(next);
+              }}
               className="w-12 h-10 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
             >
               +
@@ -198,7 +254,7 @@ function InventoryPanel() {
             </div>
             <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
               <div className="text-[9px] font-bold text-stone-500 tracking-wider">PACKAGING MATERIAL</div>
-              <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{packOnHand}</div>
+              <div className="text-xl font-extrabold text-[#ea580c] leading-tight mt-0.5">{packOnHand}</div>
               <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {packTransit}</div>
             </div>
             <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
@@ -227,7 +283,7 @@ function InventoryPanel() {
             onClick={() => setActiveTab('pack')}
             className={`flex-1 py-3 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl transition-all cursor-pointer border-t border-x ${
               activeTab === 'pack'
-                ? 'bg-[#0e8a43] text-white border-[#0e8a43] shadow-sm font-bold'
+                ? 'bg-[#ea580c] text-white border-[#ea580c] shadow-sm font-bold'
                 : 'bg-white text-[#5d4037] border-transparent hover:bg-stone-50'
             }`}
           >
@@ -236,17 +292,19 @@ function InventoryPanel() {
         </div>
 
         {/* Tab Card Body */}
-        <div className="rounded-b-2xl border border-t-0 bg-white border-rose-100 p-4 py-3.5 flex flex-col">
+        <div className={`rounded-b-2xl border border-t-0 bg-white ${activeTab === 'mix' ? 'border-[#0e8a43]/20' : 'border-[#ea580c]/20'} p-4 py-3.5 flex flex-col`}>
           <div className="space-y-2 py-1">
             {activeTab === 'mix' ? (
               <>
-                <StepperRow label="ORDER QUANTITY" value={mixQty} onChange={setMixQty} />
-                <StepperRow label="REORDER POINT" value={mixROP} onChange={setMixROP} />
+                <StepperRow label="ORDER QUANTITY" value={mixQty} onChange={setMixQty} step={10} badgeColor="emerald" />
+                <StepperRow label="REORDER POINT" value={mixROP} onChange={setMixROP} step={10} badgeColor="emerald" />
+                <StepperRow label="LEAD TIME (DAYS)" value={mixLT} onChange={setMixLT} step={1} badgeColor="emerald" />
               </>
             ) : (
               <>
-                <StepperRow label="ORDER QUANTITY" value={packQty} onChange={setPackQty} />
-                <StepperRow label="REORDER POINT" value={packROP} onChange={setPackROP} />
+                <StepperRow label="ORDER QUANTITY" value={packQty} onChange={setPackQty} step={10} badgeColor="orange" />
+                <StepperRow label="REORDER POINT" value={packROP} onChange={setPackROP} step={10} badgeColor="orange" />
+                <StepperRow label="LEAD TIME (DAYS)" value={packLT} onChange={setPackLT} step={1} badgeColor="orange" />
               </>
             )}
           </div>
@@ -258,7 +316,11 @@ function InventoryPanel() {
                 type="button"
                 disabled={isApplying}
                 onClick={handleApplyChanges}
-                className={`w-full py-3 rounded-xl bg-gradient-to-b from-[#0e8a43] to-[#0b7036] text-white font-extrabold text-xs shadow-[0_3px_0_#09592b] hover:translate-y-[1px] hover:shadow-[0_2px_0_#09592b] active:translate-y-[3px] active:shadow-none transition-all border-none flex items-center justify-center gap-1.5 ${
+                className={`w-full py-3 rounded-xl text-white font-extrabold text-xs transition-all border-none flex items-center justify-center gap-1.5 ${
+                  activeTab === 'mix'
+                    ? 'bg-gradient-to-b from-[#0e8a43] to-[#0b7036] shadow-[0_3px_0_#09592b] hover:translate-y-[1px] hover:shadow-[0_2px_0_#09592b] active:translate-y-[3px] active:shadow-none'
+                    : 'bg-gradient-to-b from-[#ea580c] to-[#c2410c] shadow-[0_3px_0_#9a3412] hover:translate-y-[1px] hover:shadow-[0_2px_0_#9a3412] active:translate-y-[3px] active:shadow-none'
+                } ${
                   isApplying ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                 }`}
               >

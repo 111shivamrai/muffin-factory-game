@@ -46,6 +46,7 @@ export interface Inventory {
   orderQty: number;
   reorderPoint: number;
   safetyStock?: number;
+  leadTime?: number;
 }
 
 export interface PurchaseOrder {

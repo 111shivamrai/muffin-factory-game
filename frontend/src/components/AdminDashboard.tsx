@@ -248,10 +248,15 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
         return;
       }
       if (data.license) {
-        const updated = [data.license, ...licenses.filter(l => l.id !== data.license.id)];
+        const createdLicense = {
+          ...data.license,
+          instructorPassword: data.license.instructorPassword || instPass
+        };
+        const updated = [createdLicense, ...licenses.filter(l => l.id !== createdLicense.id)];
         setLicenses(updated);
         localStorage.setItem('admin_licenses', JSON.stringify(updated));
-        setLicSuccessMsg(`License "${data.license.id}" created! Valid for ${validityDaysNum} day(s) until ${expiry.toLocaleDateString()}. Instructor credentials ready.`);
+        setSelectedLicenseForCreds(createdLicense);
+        setLicSuccessMsg(`License "${createdLicense.id}" created! Valid for ${validityDaysNum} day(s) until ${expiry.toLocaleDateString()}. Instructor credentials ready.`);
         setNewLicCustomer('');
         setNewLicEmail('');
         setNewLicSeats(40);
@@ -277,12 +282,14 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
       expiresAt: expiry.toISOString(),
       startDate: today.toISOString().split('T')[0],
       endDate: expiry.toISOString().split('T')[0],
-      instructorEmail: instEmail
+      instructorEmail: instEmail,
+      instructorPassword: instPass
     };
 
     const updated = [newLic, ...licenses.filter(l => l.id !== code)];
     setLicenses(updated);
     localStorage.setItem('admin_licenses', JSON.stringify(updated));
+    setSelectedLicenseForCreds(newLic);
 
     setLicSuccessMsg(`License "${code}" created! Valid for ${validityDaysNum} day(s) until ${expiry.toLocaleDateString()}.`);
     setNewLicCustomer('');

@@ -85,9 +85,10 @@ function ProgressRing({ value, color }: { value: number; color: string }) {
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
 function MachinePanel() {
-  const { teamState, role, buyMachine, updateAllMachineStatuses, updateAllocationStrategy } = useGameStore(
+  const { teamState, room, role, buyMachine, updateAllMachineStatuses, updateAllocationStrategy } = useGameStore(
     useShallow((state) => ({
       teamState: state.teamState,
+      room: state.room,
       role: state.role,
       buyMachine: state.buyMachine,
       updateAllMachineStatuses: state.updateAllMachineStatuses,
@@ -186,6 +187,26 @@ function MachinePanel() {
     { type: 'packaging', label: 'Packaging Machine', state: packActive, setter: setPackActive, mData: packaging, cost: 1000 },
   ];
 
+  // ── Verified Shared Factory Operating Capacity (MIN of 4 stages) ──────────
+  const runningMixers = Math.max(0, (teamState.machines.mixing?.active || 0) - (teamState.breakdownStates?.find(b => b.machineType === 'mixing')?.brokenCount || 0));
+  const runningBakers = Math.max(0, (teamState.machines.baking?.active || 0) - (teamState.breakdownStates?.find(b => b.machineType === 'baking')?.brokenCount || 0));
+  const runningIcers  = Math.max(0, (teamState.machines.icing?.active || 0) - (teamState.breakdownStates?.find(b => b.machineType === 'icing')?.brokenCount || 0));
+  const runningPackagers = Math.max(0, (teamState.machines.packaging?.active || 0) - (teamState.breakdownStates?.find(b => b.machineType === 'packaging')?.brokenCount || 0));
+
+  const stageOperatingCaps: Record<MachineType, number> = {
+    mixing: runningMixers * CAPACITY_PER_MACHINE.mixing,
+    baking: runningBakers * CAPACITY_PER_MACHINE.baking,
+    icing: runningIcers * CAPACITY_PER_MACHINE.icing,
+    packaging: runningPackagers * CAPACITY_PER_MACHINE.packaging,
+  };
+
+  const factoryOperatingCapacity = Math.min(
+    stageOperatingCaps.mixing,
+    stageOperatingCaps.baking,
+    stageOperatingCaps.icing,
+    stageOperatingCaps.packaging
+  );
+
   return (
     <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0" style={{ height: '37rem' }}>
 
@@ -229,12 +250,16 @@ function MachinePanel() {
             const canAfford    = teamState.cash >= cost;
             const isProcuring  = inTransit > 0;
             const unitCapacity = CAPACITY_PER_MACHINE[type];
+            const leadTime     = (room?.scenarioConfig?.machineSettings?.[type] as any)?.leadTime
+              || (room?.scenarioConfig?.leadTimes as any)?.machines?.[type]
+              || room?.scenarioConfig?.leadTimes?.machineProcurement
+              || 3;
 
             // ── Verified Capacity Formulas ────────────────────────────────
             // 1. Available Capacity = Total Owned Floor Machines × Capacity Per Machine
             const availableCapacity = mData.count * unitCapacity;
 
-            // 2. Operating Capacity = Running (Active - Broken) Machines × Capacity Per Machine
+            // 2. Operating Capacity (Individual stage reference)
             const bState = teamState.breakdownStates?.find(b => b.machineType === type);
             const brokenCount = bState?.brokenCount || 0;
             const repairDays = bState?.daysRemaining?.[0] ?? 1;
@@ -260,6 +285,9 @@ function MachinePanel() {
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5 text-[8.5px] font-bold text-stone-500 font-mono">
                         <span>{mData.count} owned · {mData.active} active</span>
+                        <span className="text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.5 rounded text-[7.5px] font-bold">
+                          Lead Time: {leadTime} {leadTime === 1 ? 'Day' : 'Days'}
+                        </span>
                         {isProcuring && (
                           <span className="text-amber-700 bg-amber-50 border border-amber-300 px-1 py-0.2 rounded text-[7.5px] font-bold flex items-center gap-0.5 animate-pulse">
                             🚚 +{inTransit} in transit
@@ -349,17 +377,17 @@ function MachinePanel() {
                   {/* Operating Capacity Box */}
                   <div
                     className="flex-1 rounded-xl bg-purple-50/80 border border-purple-200/90 px-1.5 py-1 flex flex-col justify-center items-center text-center shadow-xs"
-                    title={`Operating Capacity Formula: ${runningCount} active running machine(s) × ${unitCapacity} units/day = ${operatingCapacity} units/day`}
+                    title={`Shared Factory Operating Capacity = MIN(Mixer, Oven, Icing, Packaging) = ${factoryOperatingCapacity} units/day (Stage capacity: ${operatingCapacity} units/day)`}
                   >
                     <div className="text-[6.5px] font-extrabold text-purple-700 uppercase tracking-tight flex items-center justify-center gap-0.5 leading-none">
                       <Activity className="w-2 h-2 text-purple-600 shrink-0" />
                       <span>OPERATING CAPACITY</span>
                     </div>
                     <div className="text-xs font-black text-purple-800 font-mono mt-0.5 leading-none">
-                      {operatingCapacity}
+                      {factoryOperatingCapacity}
                     </div>
                     <div className="text-[6.5px] font-bold text-purple-600/80 uppercase tracking-tight mt-0.5 leading-none">
-                      {runningCount} × {unitCapacity} un/d
+                      Factory Bottleneck Min
                     </div>
                   </div>
 
@@ -452,7 +480,7 @@ function MachinePanel() {
             <div className="grid grid-cols-3 gap-1.5">
               {[
                 { id: 'contracts_first', label: 'CONTRACT FIRST', icon: FileCheck },
-                { id: 'market_first',   label: 'MARKET FORECAST', icon: TrendingUp },
+                { id: 'market_first',   label: 'MARKET FIRST',    icon: TrendingUp },
                 { id: 'split',          label: 'SPLIT EQUAL',     icon: Scale },
               ].map(strat => {
                 const IconComponent = strat.icon;

@@ -33,7 +33,7 @@ interface GameStore {
   disconnectSocket: () => void;
 
   // Operator Actions
-  updateInventorySettings: (materialType: string, orderQty: number, reorderPoint: number, safetyStock?: number) => Promise<{ success?: boolean; error?: string }>;
+  updateInventorySettings: (materialType: string, orderQty: number, reorderPoint: number, safetyStock?: number, leadTime?: number) => Promise<{ success?: boolean; error?: string }>;
   buyMachine: (machineType: string) => Promise<void>;
   toggleMachineStatus: (machineType: string, activeCount: number) => Promise<void>;
   updateAllMachineStatuses: (statuses: Record<string, number>) => Promise<void>;
@@ -223,13 +223,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   // Operator Actions
-  updateInventorySettings: async (materialType, orderQty, reorderPoint, safetyStock = 0) => {
+  updateInventorySettings: async (materialType, orderQty, reorderPoint, safetyStock = 0, leadTime) => {
     const s = get().socket;
     if (!s) return { error: 'Not connected to server' };
     return new Promise((resolve) => {
       s.emit('operator_action', {
         actionType: 'update_inventory_settings',
-        details: { materialType, orderQty, reorderPoint, safetyStock: safetyStock ?? 0 }
+        details: { materialType, orderQty, reorderPoint, safetyStock: safetyStock ?? 0, leadTime }
       }, (res: any) => {
         if (res && res.error) {
           resolve({ error: res.error });

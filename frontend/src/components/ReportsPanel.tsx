@@ -203,25 +203,17 @@ function ReportsPanel() {
         </header>
         <div className="p-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
           {[
-            { l: 'NET REVENUE', v: `₹${report.revenue.toLocaleString()}`, icon: TrendingUp, tint: 'bg-orange-50/80 border-orange-200 text-orange-600' },
-            { l: 'TOTAL COST', v: `₹${report.costs.toLocaleString()}`, icon: Receipt, tint: 'bg-amber-50/80 border-amber-200 text-amber-600' },
-            { l: 'NET PROFIT', v: `₹${report.profit.toLocaleString()}`, icon: DollarSign, tint: 'bg-emerald-50/80 border-emerald-200 text-emerald-600' },
-            { l: 'FILL RATE', v: `${report.fillRate}%`, icon: CheckCircle2, tint: 'bg-sky-50/80 border-sky-200 text-sky-600' },
-            { l: 'STOCKOUT DAYS', v: `${report.stockoutDays} Days`, icon: CalendarX, tint: 'bg-rose-50/80 border-rose-200 text-rose-600' }
-          ].map(e => {
-            const Icon = e.icon;
-            return (
-              <div key={e.l} className="rounded-xl bg-stone-50/80 border border-stone-200/80 p-2.5 flex items-center gap-2.5 min-w-0 transition-all hover:bg-stone-50">
-                <div className={`p-2 rounded-lg border ${e.tint} shrink-0`}>
-                  <Icon className="w-4 h-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[9px] font-bold text-stone-500 tracking-wider truncate uppercase">{e.l}</div>
-                  <div className="text-sm font-extrabold text-stone-800 truncate font-mono mt-0.5">{e.v}</div>
-                </div>
-              </div>
-            );
-          })}
+            { l: 'NET REVENUE', v: `₹${report.revenue.toLocaleString()}` },
+            { l: 'TOTAL COST', v: `₹${report.costs.toLocaleString()}` },
+            { l: 'NET PROFIT', v: `₹${report.profit.toLocaleString()}` },
+            { l: 'FILL RATE', v: `${report.fillRate}%` },
+            { l: 'STOCKOUT DAYS', v: `${report.stockoutDays} Days` }
+          ].map(e => (
+            <div key={e.l} className="rounded-xl bg-stone-50/80 border border-stone-200/80 p-2.5 flex flex-col justify-center min-w-0 transition-all hover:bg-stone-50 h-[64px]">
+              <div className="text-[9.5px] font-bold text-stone-500 tracking-wider truncate uppercase">{e.l}</div>
+              <div className="text-sm font-extrabold text-stone-800 truncate font-mono mt-0.5">{e.v}</div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -248,42 +240,32 @@ function ReportsPanel() {
             {/* 5 Categories Grid */}
             <div className="md:col-span-8 lg:col-span-9 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
               {[
-                { l: 'Cash', w: '40%', v: `${academicScore.cashPerformance}%`, icon: DollarSign, color: 'text-emerald-600 bg-emerald-50 border-emerald-150' },
-                { l: 'Fill Rate', w: '20%', v: `${academicScore.fillRateScore}%`, icon: CheckCircle2, color: 'text-sky-600 bg-sky-50 border-sky-150' },
-                { l: 'Contract', w: '15%', v: `${academicScore.contractScore}%`, icon: FileText, color: 'text-indigo-600 bg-indigo-50 border-indigo-150' },
-                { l: 'Inventory', w: '15%', v: `${academicScore.inventoryScore}%`, icon: Boxes, color: 'text-amber-600 bg-amber-50 border-amber-150' },
-                { l: 'Capacity', w: '10%', v: `${academicScore.capacityScore}%`, icon: Gauge, color: 'text-purple-600 bg-purple-50 border-purple-150' }
-              ].map(e => {
-                const Icon = e.icon;
-                return (
-                  <div key={e.l} className="rounded-xl bg-stone-50/80 border border-stone-200/80 p-2.5 flex flex-col justify-between text-center transition-all hover:bg-stone-50">
-                    <div className="flex items-center justify-between gap-1 mb-1.5">
-                      <div className={`p-1 rounded-md border ${e.color}`}>
-                        <Icon className="w-3 h-3" />
-                      </div>
-                      <span className="text-[9px] font-mono font-bold text-stone-400">{e.w}</span>
-                    </div>
-                    <div>
-                      <div className="text-[10px] font-extrabold text-stone-600 uppercase tracking-tight">{e.l}</div>
-                      <div className="text-base font-black text-stone-800 font-mono mt-0.5">{e.v}</div>
-                    </div>
+                { l: 'Cash', w: '40%', v: `${academicScore.cashPerformance}%` },
+                { l: 'Fill Rate', w: '20%', v: `${academicScore.fillRateScore}%` },
+                { l: 'Contract', w: '15%', v: `${academicScore.contractScore}%` },
+                { l: 'Inventory', w: '15%', v: `${academicScore.inventoryScore}%` },
+                { l: 'Capacity', w: '10%', v: `${academicScore.capacityScore}%` }
+              ].map(e => (
+                <div key={e.l} className="rounded-xl bg-stone-50/80 border border-stone-200/80 p-2.5 flex flex-col justify-between text-center transition-all hover:bg-stone-50 h-[68px]">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[10px] font-extrabold text-stone-600 uppercase tracking-tight">{e.l}</span>
+                    <span className="text-[9px] font-mono font-bold text-stone-400">{e.w}</span>
                   </div>
-                );
-              })}
+                  <div className="text-base font-black text-stone-800 font-mono">{e.v}</div>
+                </div>
+              ))}
             </div>
 
             {/* Final Weighted Grade Box */}
-            <div className="md:col-span-4 lg:col-span-3 rounded-xl bg-gradient-to-br from-indigo-50 via-white to-stone-50 border border-indigo-150 p-3.5 flex flex-col items-center justify-center text-center shadow-2xs">
-              <div className="flex items-center gap-1.5 text-[9px] font-extrabold text-indigo-700 uppercase tracking-wider mb-1">
-                <Award className="w-3.5 h-3.5" />
-                <span>Weighted Academic Grade</span>
+            <div className="md:col-span-4 lg:col-span-3 rounded-xl bg-gradient-to-br from-indigo-50 via-white to-stone-50 border border-indigo-150 p-3 flex flex-col items-center justify-center text-center shadow-2xs">
+              <div className="text-[9.5px] font-extrabold text-indigo-700 uppercase tracking-wider mb-0.5">
+                Weighted Academic Grade
               </div>
-              <div className="text-[11px] font-bold text-stone-500 uppercase tracking-tight">Composite Score</div>
-              <div className="text-3xl font-black text-indigo-600 font-mono tracking-tight my-0.5">
+              <div className="text-2xl font-black text-indigo-600 font-mono tracking-tight my-0.5">
                 {academicScore.totalScore >= 1 ? academicScore.totalScore : `.${Math.round(academicScore.totalScore * 100)}`}
-                <span className="text-sm font-bold text-stone-400 font-sans ml-1">/ 100</span>
+                <span className="text-xs font-bold text-stone-400 font-sans ml-1">/ 100</span>
               </div>
-              <div className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full mt-1">
+              <div className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full mt-0.5">
                 {academicScore.totalScore >= 80 ? 'Distinction' : academicScore.totalScore >= 60 ? 'Satisfactory' : 'Needs Review'}
               </div>
             </div>

@@ -59,6 +59,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   const [scMaxDays, setScMaxDays] = useState<number | ''>('');
   const [scRealTime, setScRealTime] = useState<number | ''>('');
   const [scBaseMixCost, setScBaseMixCost] = useState<number | ''>('');
+  const [scPackagingMaterialCost, setScPackagingMaterialCost] = useState<number | ''>('');
   const [scSellingPrice, setScSellingPrice] = useState<number | ''>('');
 
   // Wizard Step 2: Wholesale Contracts
@@ -92,13 +93,20 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   const [newBpDay, setNewBpDay] = useState<number | ''>('');
   const [newBpDemand, setNewBpDemand] = useState<number | ''>('');
 
-  // Wizard Step 4: Starting Parameters
+  // Wizard Step 4: Starting Parameters & Lead Times
   const [scStartCash, setScStartCash] = useState<number | ''>('');
   const [scStartMaterials, setScStartMaterials] = useState<number | ''>('');
+  const [scRawMaterialLeadTime, setScRawMaterialLeadTime] = useState<number | ''>(3);
+  const [scStartPackagingMaterials, setScStartPackagingMaterials] = useState<number | ''>('');
+  const [scPackagingLeadTime, setScPackagingLeadTime] = useState<number | ''>(2);
   const [scStartMachinesMixing, setScStartMachinesMixing] = useState<number | ''>('');
   const [scStartMachinesBaking, setScStartMachinesBaking] = useState<number | ''>('');
   const [scStartMachinesIcing, setScStartMachinesIcing] = useState<number | ''>('');
   const [scStartMachinesPackaging, setScStartMachinesPackaging] = useState<number | ''>('');
+  const [scMixingLeadTime, setScMixingLeadTime] = useState<number | ''>(3);
+  const [scBakingLeadTime, setScBakingLeadTime] = useState<number | ''>(3);
+  const [scIcingLeadTime, setScIcingLeadTime] = useState<number | ''>(2);
+  const [scPackagingMachineLeadTime, setScPackagingMachineLeadTime] = useState<number | ''>(2);
 
   // Wizard Step 5: Capacity speeds & Purchase Costs
   const [scMixingCap, setScMixingCap] = useState<number | ''>('');
@@ -399,6 +407,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       setScMaxDays(sc.maxDays);
       setScRealTime(Math.round((sc.maxDays * sc.tickRate) / 60) || 15);
       setScBaseMixCost(sc.rawMaterialCosts.baseMix);
+      setScPackagingMaterialCost(sc.rawMaterialCosts.packaging ?? 1.0);
       setScSellingPrice(20.0);
       setScContracts(sc.contracts.map((c, i) => ({
         id: `contract_${i}_${Date.now()}`,
@@ -415,11 +424,18 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
         { day: sc.maxDays, demand: sc.demand.baseVal }
       ]);
       setScStartCash(sc.startCash);
-      setScStartMaterials(12000);
-      setScStartMachinesMixing(1);
-      setScStartMachinesBaking(1);
-      setScStartMachinesIcing(1);
-      setScStartMachinesPackaging(1);
+      setScStartMaterials((sc as any).startInventory?.rawMaterial ?? (sc as any).startMaterials ?? 12000);
+      setScRawMaterialLeadTime(sc.leadTimes?.rawMaterial ?? 3);
+      setScStartPackagingMaterials((sc as any).startInventory?.packagingMaterial ?? (sc as any).startPackagingMaterials ?? 10000);
+      setScPackagingLeadTime((sc.leadTimes as any)?.packagingMaterial ?? 2);
+      setScStartMachinesMixing((sc as any).startMachines?.mixing ?? 1);
+      setScStartMachinesBaking((sc as any).startMachines?.baking ?? 1);
+      setScStartMachinesIcing((sc as any).startMachines?.icing ?? 1);
+      setScStartMachinesPackaging((sc as any).startMachines?.packaging ?? 1);
+      setScMixingLeadTime((sc.machineSettings.mixing as any)?.leadTime ?? (sc.leadTimes as any)?.machines?.mixing ?? 3);
+      setScBakingLeadTime((sc.machineSettings.baking as any)?.leadTime ?? (sc.leadTimes as any)?.machines?.baking ?? 3);
+      setScIcingLeadTime((sc.machineSettings.icing as any)?.leadTime ?? (sc.leadTimes as any)?.machines?.icing ?? 2);
+      setScPackagingMachineLeadTime((sc.machineSettings.packaging as any)?.leadTime ?? (sc.leadTimes as any)?.machines?.packaging ?? 2);
       setScMixingCap(sc.machineSettings.mixing.capacityPerMachine);
       setScMixingCost(sc.machineSettings.mixing.purchaseCost);
       setScBakingCap(sc.machineSettings.baking.capacityPerMachine);
@@ -438,6 +454,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       setScMaxDays('');
       setScRealTime('');
       setScBaseMixCost('');
+      setScPackagingMaterialCost('');
       setScSellingPrice('');
       setScContracts([]);
       setScPoissonDemand(true);
@@ -447,10 +464,17 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       ]);
       setScStartCash('');
       setScStartMaterials('');
+      setScRawMaterialLeadTime(3);
+      setScStartPackagingMaterials('');
+      setScPackagingLeadTime(2);
       setScStartMachinesMixing('');
       setScStartMachinesBaking('');
       setScStartMachinesIcing('');
       setScStartMachinesPackaging('');
+      setScMixingLeadTime(3);
+      setScBakingLeadTime(3);
+      setScIcingLeadTime(2);
+      setScPackagingMachineLeadTime(2);
       setScMixingCap('');
       setScMixingCost('');
       setScBakingCap('');
@@ -491,12 +515,32 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       maxDays: maxDaysVal,
       tickRate: tickRate || 8,
       startCash: typeof scStartCash === 'number' && scStartCash >= 0 ? scStartCash : 100000,
+      startInventory: {
+        rawMaterial: typeof scStartMaterials === 'number' ? scStartMaterials : 1000,
+        packagingMaterial: typeof scStartPackagingMaterials === 'number' ? scStartPackagingMaterials : 800
+      },
       rawMaterialCosts: {
         baseMix: typeof scBaseMixCost === 'number' && scBaseMixCost >= 0 ? scBaseMixCost : 5.0,
-        packaging: 1.0,
+        packaging: typeof scPackagingMaterialCost === 'number' && scPackagingMaterialCost >= 0 ? scPackagingMaterialCost : 1.0,
         orderCost: 150
       },
-      leadTimes: { rawMaterial: 3, packagingMaterial: 3, machineProcurement: 5 },
+      leadTimes: {
+        rawMaterial: typeof scRawMaterialLeadTime === 'number' && scRawMaterialLeadTime > 0 ? scRawMaterialLeadTime : 3,
+        packagingMaterial: typeof scPackagingLeadTime === 'number' && scPackagingLeadTime > 0 ? scPackagingLeadTime : 2,
+        machineProcurement: 5,
+        machines: {
+          mixing: typeof scMixingLeadTime === 'number' && scMixingLeadTime > 0 ? scMixingLeadTime : 3,
+          baking: typeof scBakingLeadTime === 'number' && scBakingLeadTime > 0 ? scBakingLeadTime : 3,
+          icing: typeof scIcingLeadTime === 'number' && scIcingLeadTime > 0 ? scIcingLeadTime : 2,
+          packaging: typeof scPackagingMachineLeadTime === 'number' && scPackagingMachineLeadTime > 0 ? scPackagingMachineLeadTime : 2
+        }
+      },
+      startMachines: {
+        mixing: typeof scStartMachinesMixing === 'number' ? scStartMachinesMixing : 1,
+        baking: typeof scStartMachinesBaking === 'number' ? scStartMachinesBaking : 1,
+        icing: typeof scStartMachinesIcing === 'number' ? scStartMachinesIcing : 1,
+        packaging: typeof scStartMachinesPackaging === 'number' ? scStartMachinesPackaging : 1
+      },
       breakdownsEnabled: true,
       demand: {
         type: scPoissonDemand ? 'random' as any : 'fixed' as any,
@@ -510,6 +554,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
         mixing: {
           capacityPerMachine: typeof scMixingCap === 'number' && scMixingCap > 0 ? scMixingCap : 100,
           purchaseCost: typeof scMixingCost === 'number' && scMixingCost >= 0 ? scMixingCost : 2000,
+          leadTime: typeof scMixingLeadTime === 'number' && scMixingLeadTime > 0 ? scMixingLeadTime : 3,
           operatingCost: 40,
           breakdownProbability: 0.015,
           breakdownDuration: 2,
@@ -518,6 +563,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
         baking: {
           capacityPerMachine: typeof scBakingCap === 'number' && scBakingCap > 0 ? scBakingCap : 80,
           purchaseCost: typeof scBakingCost === 'number' && scBakingCost >= 0 ? scBakingCost : 3000,
+          leadTime: typeof scBakingLeadTime === 'number' && scBakingLeadTime > 0 ? scBakingLeadTime : 3,
           operatingCost: 60,
           breakdownProbability: 0.015,
           breakdownDuration: 2,
@@ -526,6 +572,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
         icing: {
           capacityPerMachine: typeof scIcingCap === 'number' && scIcingCap > 0 ? scIcingCap : 120,
           purchaseCost: typeof scIcingCost === 'number' && scIcingCost >= 0 ? scIcingCost : 1500,
+          leadTime: typeof scIcingLeadTime === 'number' && scIcingLeadTime > 0 ? scIcingLeadTime : 2,
           operatingCost: 30,
           breakdownProbability: 0.01,
           breakdownDuration: 1,
@@ -534,6 +581,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
         packaging: {
           capacityPerMachine: typeof scPackagingCap === 'number' && scPackagingCap > 0 ? scPackagingCap : 150,
           purchaseCost: typeof scPackagingCost === 'number' && scPackagingCost >= 0 ? scPackagingCost : 1000,
+          leadTime: typeof scPackagingMachineLeadTime === 'number' && scPackagingMachineLeadTime > 0 ? scPackagingMachineLeadTime : 2,
           operatingCost: 20,
           breakdownProbability: 0.01,
           breakdownDuration: 1,
@@ -1131,9 +1179,9 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       <p className="text-[8px] text-gray-400 uppercase font-bold">Alarm if customer satisfaction breaches boundary.</p>
                       <input
                         type="range"
-                        min={50}
+                        min={0}
                         max={100}
-                        step={5}
+                        step={1}
                         disabled={!safeguards.satisfactionEnabled}
                         value={safeguards.satisfactionMin}
                         onChange={e => setSafeguards(prev => ({ ...prev, satisfactionMin: parseInt(e.target.value) }))}
@@ -1871,6 +1919,21 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       />
                     </div>
                     <div className="space-y-1">
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Packaging Material Purchase Cost (₹) <span className="text-red-500">*</span></label>
+                      <input
+                        type="number"
+                        value={scPackagingMaterialCost}
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseFloat(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setScPackagingMaterialCost(val as any);
+                        }}
+                        min={0}
+                        step={0.1}
+                        placeholder="Enter packaging material cost per unit (₹)"
+                        className={`w-full p-2 bg-white border rounded font-mono text-xs text-[#1c1917] ${scPackagingMaterialCost === '' ? 'border-red-300' : 'border-muffin-brown/20'}`}
+                      />
+                    </div>
+                    <div className="space-y-1">
                       <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Retail Sales Value (₹) <span className="text-red-500">*</span></label>
                       <input
                         type="number"
@@ -1887,7 +1950,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     </div>
                   </div>
                   {/* Required fields note */}
-                  {(!scName.trim() || scMaxDays === '' || scRealTime === '' || scBaseMixCost === '' || scSellingPrice === '') && (
+                  {(!scName.trim() || scMaxDays === '' || scRealTime === '' || scBaseMixCost === '' || scPackagingMaterialCost === '' || scSellingPrice === '') && (
                     <p className="text-[9px] text-red-500 font-bold">* Required fields must be filled before proceeding</p>
                   )}
                 </div>
@@ -2168,26 +2231,29 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                   <h4 className="font-sans font-black text-[#2c1a0a] text-xs uppercase tracking-wider border-b border-muffin-brown/5 pb-1">
                     Step 4: Initial team starting parameters <span className="text-red-500">*</span>
                   </h4>
+                  {/* Starting Cash (full width) */}
+                  <div className="space-y-1 font-semibold text-xs text-[#2c1a0a]">
+                    <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
+                      Starting Cash per team (₹) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={scStartCash}
+                      onChange={e => {
+                        const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                        if (val === '' || (typeof val === 'number' && val >= 0)) setScStartCash(val as any);
+                      }}
+                      min={1}
+                      placeholder="Enter starting cash per team (₹)"
+                      className={`w-full bg-white border p-2.5 rounded font-mono text-xs text-[#1c1917] placeholder:text-stone-400 focus:border-purple-500 outline-none ${scStartCash === '' || scStartCash <= 0 ? 'border-red-300' : 'border-muffin-brown/20'}`}
+                    />
+                  </div>
+
+                  {/* Row: Starting Raw Materials (Units) + Raw Material Lead Time (Days) */}
                   <div className="grid grid-cols-2 gap-4 font-semibold text-xs text-[#2c1a0a]">
                     <div className="space-y-1">
                       <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
-                        Starting Cash per team (₹) <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={scStartCash}
-                        onChange={e => {
-                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
-                          if (val === '' || (typeof val === 'number' && val >= 0)) setScStartCash(val as any);
-                        }}
-                        min={1}
-                        placeholder="Enter starting cash per team (₹)"
-                        className={`w-full bg-white border p-2.5 rounded font-mono text-xs text-[#1c1917] placeholder:text-stone-400 focus:border-purple-500 outline-none ${scStartCash === '' || scStartCash <= 0 ? 'border-red-300' : 'border-muffin-brown/20'}`}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
-                        Starting Raw Materials (un) <span className="text-red-500">*</span>
+                        Starting Raw Materials (Units) <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -2201,14 +2267,67 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         className={`w-full bg-white border p-2.5 rounded font-mono text-xs text-[#1c1917] placeholder:text-stone-400 focus:border-purple-500 outline-none ${scStartMaterials === '' ? 'border-red-300' : 'border-muffin-brown/20'}`}
                       />
                     </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
+                        Raw Material Lead Time (Days) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={scRawMaterialLeadTime}
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val > 0)) setScRawMaterialLeadTime(val as any);
+                        }}
+                        min={1}
+                        placeholder="Lead time in days (e.g., 3)"
+                        className={`w-full bg-white border p-2.5 rounded font-mono text-xs text-[#1c1917] placeholder:text-stone-400 focus:border-purple-500 outline-none ${scRawMaterialLeadTime === '' || scRawMaterialLeadTime <= 0 ? 'border-red-300' : 'border-muffin-brown/20'}`}
+                      />
+                    </div>
                   </div>
+
+                  {/* Row: Starting Packaging Materials (Units) + Packaging Material Lead Time (Days) */}
+                  <div className="grid grid-cols-2 gap-4 font-semibold text-xs text-[#2c1a0a]">
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
+                        Starting Packaging Materials (Units) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={scStartPackagingMaterials}
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val >= 0)) setScStartPackagingMaterials(val as any);
+                        }}
+                        min={0}
+                        placeholder="Enter starting packaging materials (units)"
+                        className={`w-full bg-white border p-2.5 rounded font-mono text-xs text-[#1c1917] placeholder:text-stone-400 focus:border-purple-500 outline-none ${scStartPackagingMaterials === '' ? 'border-red-300' : 'border-muffin-brown/20'}`}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
+                        Packaging Material Lead Time (Days) <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        value={scPackagingLeadTime}
+                        onChange={e => {
+                          const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                          if (val === '' || (typeof val === 'number' && val > 0)) setScPackagingLeadTime(val as any);
+                        }}
+                        min={1}
+                        placeholder="Lead time in days (e.g., 2)"
+                        className={`w-full bg-white border p-2.5 rounded font-mono text-xs text-[#1c1917] placeholder:text-stone-400 focus:border-purple-500 outline-none ${scPackagingLeadTime === '' || scPackagingLeadTime <= 0 ? 'border-red-300' : 'border-muffin-brown/20'}`}
+                      />
+                    </div>
+                  </div>
+
                   <div className="pt-3 border-t border-muffin-brown/10 text-left">
                     <span className="text-[10px] uppercase font-extrabold text-[#1c1917] block mb-2">
-                      Initial Starting Machine Assets <span className="text-red-500">*</span>
+                      Initial Starting Machine Assets & Lead Times <span className="text-red-500">*</span>
                     </span>
                     <div className="grid grid-cols-4 gap-2 text-center text-xs font-semibold text-slate-700">
                       {/* Mixer Machine */}
-                      <div className="bg-red-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-1.5">
+                      <div className="bg-red-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-2">
                         <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block truncate">
                           🥣 MIXER MACHINE <span className="text-red-500">*</span>
                         </label>
@@ -2246,10 +2365,21 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                             +
                           </button>
                         </div>
+                        <div className="space-y-0.5 text-left">
+                          <label className="text-[8px] font-extrabold uppercase text-stone-500 block">Lead Time (Days)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={scMixingLeadTime}
+                            onChange={e => setScMixingLeadTime(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))}
+                            className="w-full p-1 bg-white border border-muffin-brown/20 rounded font-mono text-[10px] text-center text-[#1c1917]"
+                            placeholder="3"
+                          />
+                        </div>
                       </div>
 
                       {/* Oven Machine */}
-                      <div className="bg-amber-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-1.5">
+                      <div className="bg-amber-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-2">
                         <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block truncate">
                           🥧 OVEN MACHINE <span className="text-red-500">*</span>
                         </label>
@@ -2287,10 +2417,21 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                             +
                           </button>
                         </div>
+                        <div className="space-y-0.5 text-left">
+                          <label className="text-[8px] font-extrabold uppercase text-stone-500 block">Lead Time (Days)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={scBakingLeadTime}
+                            onChange={e => setScBakingLeadTime(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))}
+                            className="w-full p-1 bg-white border border-muffin-brown/20 rounded font-mono text-[10px] text-center text-[#1c1917]"
+                            placeholder="3"
+                          />
+                        </div>
                       </div>
 
                       {/* Icing Machine */}
-                      <div className="bg-blue-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-1.5">
+                      <div className="bg-blue-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-2">
                         <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block truncate">
                           🍦 ICING MACHINE <span className="text-red-500">*</span>
                         </label>
@@ -2328,10 +2469,21 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                             +
                           </button>
                         </div>
+                        <div className="space-y-0.5 text-left">
+                          <label className="text-[8px] font-extrabold uppercase text-stone-500 block">Lead Time (Days)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={scIcingLeadTime}
+                            onChange={e => setScIcingLeadTime(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))}
+                            className="w-full p-1 bg-white border border-muffin-brown/20 rounded font-mono text-[10px] text-center text-[#1c1917]"
+                            placeholder="2"
+                          />
+                        </div>
                       </div>
 
                       {/* Packaging Machine */}
-                      <div className="bg-emerald-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-1.5">
+                      <div className="bg-emerald-500/5 p-2.5 border border-muffin-brown/15 rounded-xl space-y-2">
                         <label className="text-[9px] uppercase text-[#1c1917] font-extrabold block truncate">
                           🎁 PACKAGING MACHINE <span className="text-red-500">*</span>
                         </label>
@@ -2369,11 +2521,22 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                             +
                           </button>
                         </div>
+                        <div className="space-y-0.5 text-left">
+                          <label className="text-[8px] font-extrabold uppercase text-stone-500 block">Lead Time (Days)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={scPackagingMachineLeadTime}
+                            onChange={e => setScPackagingMachineLeadTime(e.target.value === '' ? '' : Math.max(1, parseInt(e.target.value) || 1))}
+                            className="w-full p-1 bg-white border border-muffin-brown/20 rounded font-mono text-[10px] text-center text-[#1c1917]"
+                            placeholder="2"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
                   {/* Step 4 validation note */}
-                  {(!scStartCash || scStartCash <= 0 || scStartMaterials === '' || scStartMachinesMixing === '' || scStartMachinesBaking === '' || scStartMachinesIcing === '' || scStartMachinesPackaging === '') && (
+                  {(!scStartCash || scStartCash <= 0 || scStartMaterials === '' || scStartPackagingMaterials === '' || scStartMachinesMixing === '' || scStartMachinesBaking === '' || scStartMachinesIcing === '' || scStartMachinesPackaging === '') && (
                     <p className="text-[9px] text-red-500 font-bold mt-2">* All starting parameters and machine assets are required before proceeding</p>
                   )}
                 </div>
@@ -2601,6 +2764,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                   scMaxDays !== '' && typeof scMaxDays === 'number' && scMaxDays > 0 &&
                   scRealTime !== '' && typeof scRealTime === 'number' && scRealTime > 0 &&
                   scBaseMixCost !== '' && typeof scBaseMixCost === 'number' && scBaseMixCost >= 0 &&
+                  scPackagingMaterialCost !== '' && typeof scPackagingMaterialCost === 'number' && scPackagingMaterialCost >= 0 &&
                   scSellingPrice !== '' && typeof scSellingPrice === 'number' && scSellingPrice >= 0
                 );
 
@@ -2609,6 +2773,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                 const step4Valid = wizardStep !== 4 || (
                   scStartCash !== '' && typeof scStartCash === 'number' && scStartCash > 0 &&
                   scStartMaterials !== '' && typeof scStartMaterials === 'number' && scStartMaterials >= 0 &&
+                  scStartPackagingMaterials !== '' && typeof scStartPackagingMaterials === 'number' && scStartPackagingMaterials >= 0 &&
                   scStartMachinesMixing !== '' && typeof scStartMachinesMixing === 'number' && scStartMachinesMixing >= 0 &&
                   scStartMachinesBaking !== '' && typeof scStartMachinesBaking === 'number' && scStartMachinesBaking >= 0 &&
                   scStartMachinesIcing !== '' && typeof scStartMachinesIcing === 'number' && scStartMachinesIcing >= 0 &&
