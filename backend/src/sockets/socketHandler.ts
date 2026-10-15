@@ -432,7 +432,8 @@ export function registerSocketHandler(io: Server) {
             for (const [machineType, activeCount] of Object.entries(statuses)) {
               const m = team.machines[machineType as MachineType];
               if (m) {
-                m.active = Math.max(0, Math.min(m.count, parseInt(activeCount as string)));
+                // Minimum 1 active machine required for existing machine types
+                m.active = Math.max(1, Math.min(m.count, parseInt(activeCount as string)));
               }
             }
             break;

@@ -60,8 +60,8 @@ const MACHINE_META: Record<MachineType, {
 
 // ─── SVG Circular Progress Ring ────────────────────────────────────────────────
 function ProgressRing({ value, color }: { value: number; color: string }) {
-  const radius = 26;
-  const stroke = 4.5;
+  const radius = 23;
+  const stroke = 4;
   const normalizedRadius = radius - stroke * 1.5;
   const circumference = normalizedRadius * 2 * Math.PI;
   const strokeDashoffset = circumference - (value / 100) * circumference;
@@ -165,17 +165,22 @@ function MachinePanel() {
   // ─── Handlers ─────────────────────────────────────────────────────────────────
   const handleApplyOperations = () => {
     if (!isController) return;
-    updateAllMachineStatuses({ mixing: mixActive, baking: bakeActive, icing: iceActive, packaging: packActive });
+    const safeMix = Math.max(1, mixActive);
+    const safeBake = Math.max(1, bakeActive);
+    const safeIce = Math.max(1, iceActive);
+    const safePack = Math.max(1, packActive);
+    updateAllMachineStatuses({ mixing: safeMix, baking: safeBake, icing: safeIce, packaging: safePack });
     alert('Workfloor machine operation parameters updated!');
   };
 
   const updateSingle = (type: string, newValue: number) => {
     if (!isController) return;
+    const safeValue = Math.max(1, newValue);
     updateAllMachineStatuses({
-      mixing: type === 'mixing' ? newValue : mixActive,
-      baking: type === 'baking' ? newValue : bakeActive,
-      icing: type === 'icing' ? newValue : iceActive,
-      packaging: type === 'packaging' ? newValue : packActive,
+      mixing: type === 'mixing' ? safeValue : Math.max(1, mixActive),
+      baking: type === 'baking' ? safeValue : Math.max(1, bakeActive),
+      icing: type === 'icing' ? safeValue : Math.max(1, iceActive),
+      packaging: type === 'packaging' ? safeValue : Math.max(1, packActive),
     });
   };
 
@@ -270,12 +275,12 @@ function MachinePanel() {
           onClick={() => setIsDrawerOpen(false)}
           className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-5 animate-in fade-in duration-150"
         >
-          <div 
+            <div 
             onClick={(e) => e.stopPropagation()}
-            className="max-w-4xl w-full max-h-[92vh] bg-[#fffdfb] rounded-3xl shadow-2xl border border-purple-200 flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+            className="max-w-4xl w-full max-h-[96vh] bg-[#fffdfb] rounded-3xl shadow-2xl border border-purple-200 flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
           >
             {/* Modal Header */}
-            <header className="px-5 sm:px-6 py-3.5 bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white font-extrabold tracking-wide text-sm flex items-center justify-between shrink-0 shadow-sm">
+            <header className="px-5 sm:px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white font-extrabold tracking-wide text-sm flex items-center justify-between shrink-0 shadow-sm">
               <div className="flex items-center gap-3 min-w-0">
                 <span className="size-8 rounded-xl bg-white/20 border border-white/40 flex items-center justify-center text-sm shadow-xs shrink-0">⚙️</span>
                 <div className="min-w-0">
@@ -299,29 +304,10 @@ function MachinePanel() {
             </header>
 
             {/* Modal Scrollable Content */}
-            <div className="overflow-y-auto flex-1 flex flex-col min-h-0 p-3 sm:p-4 gap-2.5 sm:gap-3">
-
-              {/* Operations Navigation Header Strip */}
-              <div className="grid grid-cols-[1.25fr_1.05fr_1.05fr_0.8fr] gap-1 px-3 py-1.5 bg-rose-50/50 border border-rose-100 rounded-xl text-[8px] font-extrabold text-stone-500 uppercase tracking-wider text-center shrink-0">
-                <div className="text-left flex items-center gap-1">
-                  <Cog className="w-3 h-3 text-stone-400" />
-                  <span>MACHINE</span>
-                </div>
-                <div className="flex items-center justify-center gap-0.5 text-emerald-700">
-                  <Zap className="w-3 h-3" />
-                  <span>AVAILABLE CAPACITY</span>
-                </div>
-                <div className="flex items-center justify-center gap-0.5 text-purple-700">
-                  <Activity className="w-3 h-3" />
-                  <span>OPERATING CAPACITY</span>
-                </div>
-                <div className="text-right pr-2">
-                  <span>BUY</span>
-                </div>
-              </div>
+            <div className="overflow-y-auto flex-1 flex flex-col min-h-0 p-3 sm:p-3.5 gap-2 sm:gap-2.5">
 
               {/* ══════════════ 4 MACHINE CARDS (MIXER, OVEN, ICING, PACKAGING) ══════════════ */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 shrink-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 shrink-0">
                 {machines.map(({ type, label, state, setter, mData, cost }) => {
                   const meta         = MACHINE_META[type];
                   const inTransit    = mData.inTransit || 0;
@@ -385,15 +371,15 @@ function MachinePanel() {
                           {isController ? (
                             <button
                               type="button"
-                              disabled={state <= 0}
+                              disabled={state <= 1}
                               onClick={() => {
-                                const newVal = Math.max(0, state - 1);
+                                const newVal = Math.max(1, state - 1);
                                 setter(newVal);
                                 updateSingle(type, newVal);
                               }}
-                              title={state <= 0 ? `No active ${label} machines` : `Deactivate one ${label}`}
+                              title={state <= 1 ? `Minimum 1 ${label} must remain active` : `Deactivate one ${label}`}
                               className={`w-7 h-7 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-sm flex items-center justify-center transition-all border-none select-none leading-none ${
-                                state <= 0 ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                                state <= 1 ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
                               }`}
                             >
                               −
@@ -501,13 +487,13 @@ function MachinePanel() {
               </div>
 
               {/* ══════════════ 5. UTILIZATION SECTION ══════════════ */}
-              <div className="shrink-0 bg-white border border-purple-100 rounded-2xl p-3.5 shadow-2xs">
-                <div className="flex items-center gap-2 mb-2">
+              <div className="shrink-0 bg-white border border-purple-100 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
+                <div className="flex items-center gap-2 mb-1.5">
                   <div className="h-px bg-stone-200 flex-1" />
                   <span className="text-[9px] font-extrabold text-[#7b1fa2] tracking-widest uppercase">Machine Utilization</span>
                   <div className="h-px bg-stone-200 flex-1" />
                 </div>
-                <div className="rounded-xl border border-rose-100/50 bg-[#fffdfa] px-3 py-2 grid grid-cols-4 gap-2 text-center">
+                <div className="rounded-xl border border-rose-100/50 bg-[#fffdfa] px-3 py-1.5 grid grid-cols-4 gap-2 text-center">
                   {([ 'mixing', 'baking', 'icing', 'packaging' ] as MachineType[]).map((type) => {
                     const meta = MACHINE_META[type];
                     const labels: Record<MachineType, string> = { mixing: 'Mixer', baking: 'Oven', icing: 'Icing', packaging: 'Packer' };
@@ -533,7 +519,7 @@ function MachinePanel() {
                     return (
                       <div key={type} className="flex flex-col items-center justify-between min-w-0">
                         <span className="text-[8.5px] font-bold text-stone-600 truncate">{labels[type]}</span>
-                        <div className="my-1 shrink-0">
+                        <div className="my-0.5 shrink-0">
                           <ProgressRing value={currentUtil} color={meta.utilColor} />
                         </div>
                         <div className={`size-1.5 rounded-full ${meta.dotClass}`} />
@@ -544,8 +530,8 @@ function MachinePanel() {
               </div>
 
               {/* ══════════════ 6. OUTPUT ALLOCATION STRATEGY SECTION ══════════════ */}
-              <div className="shrink-0 bg-white border border-purple-100 rounded-2xl p-3.5 shadow-2xs">
-                <div className="flex items-center gap-2 mb-2">
+              <div className="shrink-0 bg-white border border-purple-100 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
+                <div className="flex items-center gap-2 mb-1.5">
                   <div className="h-px bg-stone-200 flex-1" />
                   <span className="text-[9px] font-extrabold text-[#7b1fa2] tracking-widest uppercase">Production Output Allocation</span>
                   <div className="h-px bg-stone-200 flex-1" />
@@ -563,14 +549,14 @@ function MachinePanel() {
                         <button
                           type="button"
                           onClick={() => isController && updateAllocationStrategy(strat.id as any)}
-                          className={`w-full py-2.5 px-1 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          className={`w-full py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
                             isSelected
                               ? 'bg-[#f3e5f5] border-[#9c27b0] text-[#7b1fa2] shadow-sm font-extrabold'
                               : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
                           }`}
                           disabled={!isController}
                         >
-                          <IconComponent className={`w-5 h-5 ${isSelected ? 'text-[#7b1fa2]' : 'text-stone-400'}`} />
+                          <IconComponent className={`w-4.5 h-4.5 ${isSelected ? 'text-[#7b1fa2]' : 'text-stone-400'}`} />
                           <span className="text-[8.5px] font-bold text-center tracking-wide leading-tight">{strat.label}</span>
                         </button>
                         {isSelected && (
@@ -585,11 +571,11 @@ function MachinePanel() {
               </div>
 
               {/* ══════════════ 7. EXISTING APPLY OPERATIONS CONTROLS ══════════════ */}
-              <div className="shrink-0 pt-1">
+              <div className="shrink-0 pt-0.5">
                 {isController ? (
                   <button
                     onClick={handleApplyOperations}
-                    className="w-full py-3 rounded-xl bg-gradient-to-b from-fuchsia-600 to-purple-700 text-white font-extrabold text-xs shadow-[0_3px_0_#7b1fa2] hover:translate-y-[1px] hover:shadow-[0_2px_0_#7b1fa2] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-b from-fuchsia-600 to-purple-700 text-white font-extrabold text-xs shadow-[0_3px_0_#7b1fa2] hover:translate-y-[1px] hover:shadow-[0_2px_0_#7b1fa2] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <span>🧁</span>
                     <span>APPLY OPERATIONS</span>
@@ -605,7 +591,7 @@ function MachinePanel() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-5 py-2.5 bg-[#faf5f0] border-t border-[#e8dfd3] flex items-center justify-between text-xs text-stone-500 shrink-0">
+            <div className="px-5 py-2 bg-[#faf5f0] border-t border-[#e8dfd3] flex items-center justify-between text-xs text-stone-500 shrink-0">
               <span className="font-mono text-[10px]">
                 {room?.name} ({room?.code}) • Press ESC to close
               </span>

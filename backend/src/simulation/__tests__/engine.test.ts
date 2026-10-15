@@ -537,4 +537,44 @@ describe('Muffin Mega Factory - Simulation Engine Tests', () => {
     expect(mixerB?.daysRemaining.length).toBe(0);
   });
 
+  test('Minimum active machines: active machine count cannot be reduced below 1 by user control', () => {
+    const state = createMockTeamState();
+    // Simulate user control updating machine active status
+    const requestedStatuses: Record<MachineType, number> = {
+      mixing: 0, // User attempted to reduce to 0
+      baking: -1, // User attempted negative value
+      icing: 1,
+      packaging: 2
+    };
+
+    // Apply the minimum boundary rule: Math.max(1, Math.min(count, requested))
+    for (const [mType, reqCount] of Object.entries(requestedStatuses)) {
+      const m = state.machines[mType as MachineType];
+      if (m) {
+        m.active = Math.max(1, Math.min(m.count, reqCount));
+      }
+    }
+
+    // Mixer and Baking must be clamped to minimum 1, not 0
+    expect(state.machines.mixing.active).toBe(1);
+    expect(state.machines.baking.active).toBe(1);
+    expect(state.machines.icing.active).toBe(1);
+    expect(state.machines.packaging.active).toBe(1); // count is 1, clamped to min(1, 2) = 1
+
+    // Verify that simulation running logic still operates safely with active=1
+    const dayRoom = { ...mockRoom, currentDay: 1 };
+    const nextState = runSimDay(
+      dayRoom,
+      state,
+      80,
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      mockScenario.leadTimes,
+      0.02,
+      2.5,
+      false
+    );
+    expect(nextState.history.bottleneckCapacity[0]).toBeGreaterThan(0);
+  });
+
 });

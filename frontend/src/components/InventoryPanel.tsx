@@ -152,11 +152,11 @@ function InventoryPanel() {
     };
 
     return (
-      <div className="flex items-center justify-between py-2 border-b border-[#f0e6d6]/60 last:border-0">
-        <span className="text-xs font-extrabold text-[#1c1917] tracking-wide font-sans select-none">
+      <div className="flex items-center justify-between py-2.5 border-b border-[#f0e6d6]/70 last:border-0">
+        <span className="text-xs font-black text-[#1c1917] tracking-wide font-sans select-none">
           {label}
         </span>
-        <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-2xs">
+        <div className="w-[176px] h-10.5 flex items-center rounded-2xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-2xs">
           {isController ? (
             <button
               type="button"
@@ -165,7 +165,7 @@ function InventoryPanel() {
                 setLocalStr(String(next));
                 onChange(next);
               }}
-              className="w-9 h-8.5 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-lg flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
+              className="w-12 h-full bg-gradient-to-b from-[#faf5eb] to-[#f4e8d4] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f0e0ca] active:opacity-85 transition-all border-none select-none leading-none"
             >
               −
             </button>
@@ -179,7 +179,7 @@ function InventoryPanel() {
             onChange={handleTextChange}
             onBlur={handleBlur}
             disabled={!isController}
-            className="w-18 h-8.5 bg-white text-[#1c1917] text-xs font-extrabold flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
+            className="w-[80px] h-full bg-white text-[#1c1917] text-sm font-black font-mono flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
           />
           {isController ? (
             <button
@@ -189,7 +189,7 @@ function InventoryPanel() {
                 setLocalStr(String(next));
                 onChange(next);
               }}
-              className="w-9 h-8.5 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-lg flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
+              className="w-12 h-full bg-gradient-to-b from-[#faf5eb] to-[#f4e8d4] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f0e0ca] active:opacity-85 transition-all border-none select-none leading-none"
             >
               +
             </button>
@@ -324,18 +324,18 @@ function InventoryPanel() {
               const displayLT = activeTab === 'mix' ? effectiveMixLT : effectivePackLT;
 
               return (
-                <div className="flex items-center justify-between py-1.5 border-t border-[#f0e6d6]/80 mt-0.5 pt-2">
+                <div className="flex items-center justify-between py-2.5 border-t border-[#f0e6d6]/80 mt-1 pt-2.5">
                   <div className="flex flex-col select-none">
-                    <span className="text-[11.5px] font-extrabold text-[#1c1917] tracking-wide font-sans">
+                    <span className="text-[11.5px] font-black text-[#1c1917] tracking-wide font-sans">
                       LEAD TIME (DAYS)
                     </span>
                     <span className="text-[9px] font-medium text-stone-400">
                       Fixed supplier delivery schedule
                     </span>
                   </div>
-                  <div className="w-[160px] h-9.5 flex items-center justify-center rounded-xl border border-[#d8ccbb] bg-[#fffbf5] shadow-2xs select-none">
+                  <div className="w-[176px] h-10.5 flex items-center justify-center rounded-2xl border border-[#d8ccbb] bg-[#fffbf5] shadow-2xs select-none">
                     <span className={`text-sm font-black mr-1.5 ${
-                      activeTab === 'mix' ? 'text-[#0e8a43]' : 'text-[#a83b0b]'
+                      activeTab === 'mix' ? 'text-[#0e8a43]' : 'text-[#ea580c]'
                     }`}>
                       {displayLT}
                     </span>
