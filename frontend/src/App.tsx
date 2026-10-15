@@ -173,7 +173,7 @@ export default function App() {
       <DashboardTopBar />
 
       {/* Main Dashboard Workspace Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[390px_1fr] xl:grid-cols-[400px_1fr] gap-2.5 min-h-0 lg:overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[400px_1fr] xl:grid-cols-[420px_1fr] gap-2.5 min-h-0 lg:overflow-hidden">
       
         {/* LEFT SIDEBAR: Inventory & Machine Operations Controls */}
         <div className="flex flex-col gap-2.5 overflow-y-auto max-h-full pr-0.5 min-h-0">

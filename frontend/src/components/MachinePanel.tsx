@@ -233,7 +233,7 @@ function MachinePanel() {
 
   return (
     <>
-      {/* ── Compact Collapsible Trigger Card below Operations Advisor ── */}
+      {/* ── Collapsible Trigger Card below Operations Advisor ── */}
       <div 
         onClick={() => setIsDrawerOpen(true)}
         role="button"
@@ -244,44 +244,48 @@ function MachinePanel() {
             setIsDrawerOpen(true);
           }
         }}
-        className="bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white p-3 flex items-center justify-between shadow-[0_2px_0_#7b1fa2] rounded-2xl cursor-pointer hover:from-fuchsia-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 transition-all select-none shrink-0"
-        title="Click to open Factory Floor machinery, capacity, and operations drawer"
+        className="bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white p-3.5 sm:p-4 flex items-center justify-between shadow-[0_2px_0_#7b1fa2] rounded-2xl cursor-pointer hover:from-fuchsia-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 transition-all select-none shrink-0"
+        title="Click to open Factory Floor machinery, capacity, and operations modal"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className="size-9 rounded-lg bg-white/20 grid place-items-center shrink-0">
-            <Cog className="w-5 h-5 text-white" />
+          <span className="size-10 rounded-xl bg-white/20 grid place-items-center shrink-0">
+            <Cog className="w-5.5 h-5.5 text-white" />
           </span>
           <div className="min-w-0">
-            <div className="font-extrabold text-sm tracking-wide">FACTORY FLOOR</div>
-            <div className="text-[11px] text-white/85 truncate">Machinery & production lines</div>
+            <div className="font-extrabold text-sm tracking-wide font-sans">FACTORY FLOOR</div>
+            <div className="text-xs text-white/90 whitespace-nowrap">Machinery & production lines</div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[10px] font-extrabold bg-white/20 border border-white/30 rounded-full px-2.5 py-1 tracking-wider uppercase">
+          <span className="text-[10px] font-extrabold bg-white/20 border border-white/30 rounded-full px-3 py-1 tracking-wider uppercase">
             {machines.filter(m => m.mData.active > 0).length} / {machines.length} ACTIVE
           </span>
         </div>
       </div>
 
-      {/* ── Polished Left-Side Drawer Overlay ── */}
+      {/* ── Polished Centered Factory Floor Operations Modal ── */}
       {isDrawerOpen && (
         <div 
           onClick={() => setIsDrawerOpen(false)}
-          className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs flex justify-start z-50 animate-in fade-in duration-150"
+          className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-5 animate-in fade-in duration-150"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-xl md:max-w-2xl lg:max-w-3xl bg-[#fffdfb] h-full max-h-screen shadow-2xl flex flex-col z-50 border-r border-purple-200 animate-in slide-in-from-left duration-200"
+            className="max-w-4xl w-full max-h-[92vh] bg-[#fffdfb] rounded-3xl shadow-2xl border border-purple-200 flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
           >
-            {/* Drawer Header */}
-            <header className="px-5 py-3.5 bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white font-extrabold tracking-wide text-sm flex items-center justify-between shrink-0 shadow-sm">
-              <div className="flex items-center gap-2.5">
-                <span className="size-7 rounded-lg bg-white/20 border border-white/40 flex items-center justify-center text-sm">⚙️</span>
-                <span className="text-base font-black tracking-tight">FACTORY FLOOR OPERATIONS</span>
-                <span className="text-[9.5px] font-bold bg-white/20 border border-white/30 rounded-full px-2.5 py-0.5 tracking-widest uppercase">
-                  {machines.filter(m => m.mData.active > 0).length} / {machines.length} Active
-                </span>
+            {/* Modal Header */}
+            <header className="px-5 sm:px-6 py-3.5 bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white font-extrabold tracking-wide text-sm flex items-center justify-between shrink-0 shadow-sm">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="size-8 rounded-xl bg-white/20 border border-white/40 flex items-center justify-center text-sm shadow-xs shrink-0">⚙️</span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base font-black tracking-tight font-sans">FACTORY FLOOR OPERATIONS</span>
+                    <span className="text-[9.5px] font-bold bg-white/20 border border-white/30 rounded-full px-2.5 py-0.5 tracking-widest uppercase">
+                      {machines.filter(m => m.mData.active > 0).length} / {machines.length} Active
+                    </span>
+                  </div>
+                </div>
               </div>
               <button
                 type="button"
@@ -294,8 +298,8 @@ function MachinePanel() {
               </button>
             </header>
 
-            {/* Drawer Scrollable Content */}
-            <div className="overflow-y-auto flex-1 flex flex-col min-h-0 p-4 sm:p-5 gap-4">
+            {/* Modal Scrollable Content */}
+            <div className="overflow-y-auto flex-1 flex flex-col min-h-0 p-3 sm:p-4 gap-2.5 sm:gap-3">
 
               {/* Operations Navigation Header Strip */}
               <div className="grid grid-cols-[1.25fr_1.05fr_1.05fr_0.8fr] gap-1 px-3 py-1.5 bg-rose-50/50 border border-rose-100 rounded-xl text-[8px] font-extrabold text-stone-500 uppercase tracking-wider text-center shrink-0">
@@ -600,17 +604,17 @@ function MachinePanel() {
 
             </div>
 
-            {/* Drawer Footer */}
-            <div className="px-5 py-3 bg-[#faf5f0] border-t border-[#e8dfd3] flex items-center justify-between text-xs text-stone-500 shrink-0">
+            {/* Modal Footer */}
+            <div className="px-5 py-2.5 bg-[#faf5f0] border-t border-[#e8dfd3] flex items-center justify-between text-xs text-stone-500 shrink-0">
               <span className="font-mono text-[10px]">
                 {room?.name} ({room?.code}) • Press ESC to close
               </span>
               <button
                 type="button"
                 onClick={() => setIsDrawerOpen(false)}
-                className="px-4 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs cursor-pointer shadow-xs active:scale-95 transition-all border-none"
+                className="px-5 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs cursor-pointer shadow-xs active:scale-95 transition-all border-none"
               >
-                Close Drawer
+                Close
               </button>
             </div>
           </div>

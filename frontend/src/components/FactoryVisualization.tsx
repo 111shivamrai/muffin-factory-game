@@ -59,20 +59,63 @@ export default function FactoryVisualization() {
   );
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(640);
+  const [sceneDimensions, setSceneDimensions] = useState({ width: 640, height: 267 });
 
-  // ResizeObserver to track container width for scale adjustments
+  // ResizeObserver to track container width and height for responsive geometry alignment
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    const updateSize = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setSceneDimensions({ width: rect.width, height: rect.height });
+      }
+    };
+    updateSize();
     const ro = new ResizeObserver((entries) => {
       if (entries[0]) {
-        setContainerWidth(entries[0].contentRect.width || 640);
+        const { width, height } = entries[0].contentRect;
+        setSceneDimensions({
+          width: width || 640,
+          height: height || (width ? width / 2.4 : 267),
+        });
       }
     });
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  // Helper to accurately map original 2.4 background artwork coordinates to container coordinates
+  // accounting for object-fit: cover cropping at any container aspect ratio or size
+  const toContainer = (xImgPct: number, yImgBottomPct: number) => {
+    const w = sceneDimensions.width;
+    const h = sceneDimensions.height;
+    if (!w || !h) return { x: xImgPct, bottom: yImgBottomPct };
+
+    const imgAR = 2.4;
+    const containerAR = w / h;
+
+    let x = xImgPct;
+    let bottom = yImgBottomPct;
+
+    if (containerAR >= imgAR) {
+      // Container is wider than 2.4: vertical overflow cropped equally top & bottom
+      const renderedH = w / imgAR;
+      const cropBottom = (renderedH - h) / 2;
+      const yPx = (yImgBottomPct / 100) * renderedH - cropBottom;
+      bottom = (yPx / h) * 100;
+      x = xImgPct;
+    } else {
+      // Container is narrower than 2.4: horizontal overflow cropped equally left & right
+      const renderedW = h * imgAR;
+      const cropLeft = (renderedW - w) / 2;
+      const xPx = (xImgPct / 100) * renderedW - cropLeft;
+      x = (xPx / w) * 100;
+      bottom = yImgBottomPct;
+    }
+
+    return { x, bottom };
+  };
 
   // Compute live machine states and capacities
   const currentDay = room?.currentDay ?? 1;
@@ -264,16 +307,18 @@ export default function FactoryVisualization() {
 
       // Vertical lift while processing in machine chambers
       const lift = stage ? Math.sin(processing * Math.PI) : 0;
-      const targetChamberY = stage === 'mixing' ? 38 : stage === 'baking' ? 42 : stage === 'icing' ? 30 : 36;
-      const bottom = BELT_CONFIG.beltY + lift * Math.max(0, targetChamberY - BELT_CONFIG.beltY);
+      // In the original 2.4 reference artwork: mixer chamber is 38%, oven is 42%, icing is 31%, packaging is 39%
+      const targetChamberY = stage === 'mixing' ? 38 : stage === 'baking' ? 42 : stage === 'icing' ? 31 : 39;
+      const rawBottom = BELT_CONFIG.beltY + lift * Math.max(0, targetChamberY - BELT_CONFIG.beltY);
+      const mapped = toContainer(x, rawBottom);
 
       // Fade in near intake and fade out near dispatch
       const fade = Math.max(0, Math.min(1, (x - intake) / 3, (dispatch - x) / 3));
 
       products.push({
         key: i,
-        x,
-        bottom,
+        x: mapped.x,
+        bottom: mapped.bottom,
         stage,
         completed,
         processing,
@@ -286,7 +331,7 @@ export default function FactoryVisualization() {
     }
 
     return products;
-  }, [conveyorPhase, isLineRunning]);
+  }, [conveyorPhase, isLineRunning, sceneDimensions]);
 
   return (
     <section className="factory-visual" aria-label="Interactive live factory floor simulation">
@@ -309,7 +354,7 @@ export default function FactoryVisualization() {
         ref={containerRef}
         className={`factory-scene lighting-warm visual-style-original ${isLineRunning ? 'is-running' : ''}`}
         style={{
-          '--belt-y': `${BELT_CONFIG.beltY}%`,
+          '--belt-y': `${toContainer(0, BELT_CONFIG.beltY).bottom}%`,
           '--label-y': `${BELT_CONFIG.labelY}%`,
           '--product-scale': BELT_CONFIG.productScale,
           '--scene-brightness': 1.1,
@@ -352,7 +397,7 @@ export default function FactoryVisualization() {
               <div
                 className={`stage-pin ${isTotallyOffline ? 'stage-broken' : isPartiallyOperational ? 'stage-bottleneck' : ''} ${isRepairing ? 'stage-repairing' : ''} ${isStageRunning ? 'stage-running' : ''} ${isConstrained ? 'stage-bottleneck' : ''}`}
                 style={{
-                  left: `${cfg.x}%`,
+                  left: `${toContainer(cfg.x, 0).x}%`,
                   '--pin-width': `${cfg.width}%`,
                   '--health': `${stats.health}%`,
                   '--repair-progress': `${repairProgress}%`,
@@ -410,7 +455,7 @@ export default function FactoryVisualization() {
               {isBroken && (
                 <div
                   className={`machine-condition-effect ${isTotallyOffline ? 'condition-failed' : 'condition-repairing'}`}
-                  style={{ left: `${cfg.x}%` }}
+                  style={{ left: `${toContainer(cfg.x, 0).x}%` }}
                   aria-hidden="true"
                 >
                   {isTotallyOffline && (
@@ -445,14 +490,14 @@ export default function FactoryVisualization() {
                 key={mType}
                 className={`machine-processing processing-${mType}`}
                 style={{
-                  left: `${cfg.x}%`,
+                  left: `${toContainer(cfg.x, 0).x}%`,
                   '--process': progress,
                   '--stroke': stroke,
                   '--turn': `${progress * 2160}deg`,
                 } as React.CSSProperties}
               >
                 {/* Mechanical moving elements */}
-                <i className="machine-lift" style={{ bottom: `${activeProduct?.bottom ?? BELT_CONFIG.beltY}%` }} />
+                <i className="machine-lift" style={{ bottom: `${activeProduct?.bottom ?? toContainer(0, BELT_CONFIG.beltY).bottom}%` }} />
                 
                 {mType === 'mixing' && (
                   <>

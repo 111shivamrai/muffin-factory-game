@@ -227,17 +227,17 @@ function OperationsAdvisor() {
 
   return (
     <>
-      {/* Compact advisor bar button */}
+      {/* Operations advisor bar button */}
       <div 
         onClick={handleOpen}
-        className="bg-gradient-to-r from-sky-500 to-blue-600 text-white p-3 flex items-center gap-3 shadow-[0_2px_0_#1d4ed8] rounded-2xl cursor-pointer hover:from-sky-600 hover:to-blue-700 transition-all select-none shrink-0"
+        className="bg-gradient-to-r from-sky-500 to-blue-600 text-white p-3.5 sm:p-4 flex items-center gap-3 shadow-[0_2px_0_#1d4ed8] rounded-2xl cursor-pointer hover:from-sky-600 hover:to-blue-700 transition-all select-none shrink-0"
       >
-        <span className="size-9 rounded-lg bg-white/20 grid place-items-center shrink-0">
-          <HelpCircle className="w-5 h-5 text-white" />
+        <span className="size-10 rounded-xl bg-white/20 grid place-items-center shrink-0">
+          <HelpCircle className="w-5.5 h-5.5 text-white" />
         </span>
         <div className="flex-1 min-w-0">
-          <div className="font-extrabold text-sm tracking-wide">OPERATIONS ADVISOR</div>
-          <div className="text-[11px] text-white/85 truncate">Live factory hints and analysis</div>
+          <div className="font-extrabold text-sm tracking-wide font-sans">OPERATIONS ADVISOR</div>
+          <div className="text-xs text-white/90 truncate">Live factory hints and analysis</div>
         </div>
 
         {unreadCount > 0 && (
