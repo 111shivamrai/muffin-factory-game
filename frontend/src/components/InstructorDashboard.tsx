@@ -2251,9 +2251,9 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     Step 4: Initial team starting parameters <span className="text-red-500">*</span>
                   </h4>
                   {/* Starting Parameters: Cash, Raw Materials, Packaging Materials */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-semibold text-xs text-[#2c1a0a]">
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-semibold text-xs text-[#2c1a0a] items-end">
+                    <div className="flex flex-col justify-end space-y-1">
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold tracking-tight block whitespace-nowrap">
                         Starting Cash per team (₹) <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -2269,8 +2269,8 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
+                    <div className="flex flex-col justify-end space-y-1">
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold tracking-tight block whitespace-nowrap">
                         Starting Raw Materials (Units) <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -2286,8 +2286,8 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       />
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">
+                    <div className="flex flex-col justify-end space-y-1">
+                      <label className="text-[9px] uppercase text-[#1c1917] font-extrabold tracking-tight block whitespace-nowrap">
                         Starting Packaging Material (Units) <span className="text-red-500">*</span>
                       </label>
                       <input
