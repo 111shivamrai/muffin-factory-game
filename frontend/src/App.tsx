@@ -130,10 +130,11 @@ export default function App() {
   };
 
   // Route 1: Admin Panel Dashboard or Login
-  if (path === '/saas-admin' || path === '/admin') {
+  if (path === '/saas-admin' || path === '/admin' || path === '/admin/login' || path === '/admin-login') {
+    const isExplicitLogin = path === '/admin/login' || path === '/admin-login';
     return (
       <React.Suspense fallback={<RouteLoadingFallback />}>
-        {isAuthenticated && user && user.role === 'admin' ? (
+        {isAuthenticated && user && user.role === 'admin' && !isExplicitLogin ? (
           <AdminDashboard navigate={navigate} />
         ) : (
           <AdminLoginPage navigate={navigate} />
@@ -143,10 +144,11 @@ export default function App() {
   }
 
   // Route 2: Instructor Panel Dashboard or Login
-  if (path === '/instructor') {
+  if (path === '/instructor' || path === '/instructor/login' || path === '/instructor-login') {
+    const isExplicitLogin = path === '/instructor/login' || path === '/instructor-login';
     return (
       <React.Suspense fallback={<RouteLoadingFallback />}>
-        {isAuthenticated && user && (user.role === 'instructor' || user.role === 'admin') ? (
+        {isAuthenticated && user && (user.role === 'instructor' || user.role === 'admin') && !isExplicitLogin ? (
           <InstructorDashboard navigate={navigate} />
         ) : (
           <InstructorLoginPage navigate={navigate} />

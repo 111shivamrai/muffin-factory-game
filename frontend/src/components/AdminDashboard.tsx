@@ -69,7 +69,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
   // Load licenses from backend API or local storage
   const loadLicenses = async () => {
     try {
-      const token = useGameStore.getState().token || localStorage.getItem('muffin_token');
+      const token = useGameStore.getState().token || (typeof window !== 'undefined' ? (sessionStorage.getItem('muffin_token') || localStorage.getItem('muffin_token')) : null);
       const res = await fetch(`${API_URL}/api/licenses`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
@@ -302,7 +302,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
 
   const handleToggleLicenseStatus = async (id: string) => {
     try {
-      const token = useGameStore.getState().token || localStorage.getItem('muffin_token');
+      const token = useGameStore.getState().token || (typeof window !== 'undefined' ? (sessionStorage.getItem('muffin_token') || localStorage.getItem('muffin_token')) : null);
       await fetch(`${API_URL}/api/licenses/${id}/toggle`, {
         method: 'PATCH',
         headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -323,7 +323,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
   const handleDeleteLicense = async (id: string) => {
     if (confirm(`Delete license ${id}? This will lock out all users on this key.`)) {
       try {
-        const token = useGameStore.getState().token || localStorage.getItem('muffin_token');
+        const token = useGameStore.getState().token || (typeof window !== 'undefined' ? (sessionStorage.getItem('muffin_token') || localStorage.getItem('muffin_token')) : null);
         await fetch(`${API_URL}/api/licenses/${id}`, {
           method: 'DELETE',
           headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -565,7 +565,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
               onClick={async () => {
                 if (confirm("EMERGENCY GLOBAL STOP: This will forcefully stop all machines in ALL active lobbies across the entire platform. Are you absolutely sure?")) {
                   try {
-                    const tkn = localStorage.getItem('muffin_token');
+                    const tkn = useGameStore.getState().token || (typeof window !== 'undefined' ? (sessionStorage.getItem('muffin_token') || localStorage.getItem('muffin_token')) : null);
                     const res = await fetch(`${API_URL}/api/rooms/stop-all`, {
                       method: 'POST',
                       headers: { 'Authorization': `Bearer ${tkn}` }
@@ -731,7 +731,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                   onClick={async () => {
                     if (confirm("EMERGENCY GLOBAL STOP: This will forcefully stop all machines in ALL active lobbies across the entire platform. Are you absolutely sure?")) {
                       try {
-                        const tkn = localStorage.getItem('muffin_token');
+                        const tkn = useGameStore.getState().token || (typeof window !== 'undefined' ? (sessionStorage.getItem('muffin_token') || localStorage.getItem('muffin_token')) : null);
                         const res = await fetch(`${API_URL}/api/rooms/stop-all`, {
                           method: 'POST',
                           headers: { 'Authorization': `Bearer ${tkn}` }

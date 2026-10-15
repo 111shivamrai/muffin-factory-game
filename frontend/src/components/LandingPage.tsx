@@ -26,7 +26,13 @@ interface FeatureItem {
 
 export default function LandingPage({ navigate }: { navigate: (to: string) => void }) {
   const { login, joinRoom, isAuthenticated, user, logout, room, teamState } = useGameStore();
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const p = window.location.pathname;
+      return p === '/login' || p === '/signin';
+    }
+    return false;
+  });
   const [authError, setAuthError] = useState('');
   const [joinError, setJoinError] = useState('');
   
@@ -1328,7 +1334,12 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
       {/* Modern Vercel-like Authentication Modal Overlay */}
       {isLoginModalOpen && (
         <div 
-          onClick={() => setIsLoginModalOpen(false)}
+          onClick={() => {
+            setIsLoginModalOpen(false);
+            if (typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname === '/signin')) {
+              navigate('/');
+            }
+          }}
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         >
           <div 
@@ -1344,7 +1355,12 @@ export default function LandingPage({ navigate }: { navigate: (to: string) => vo
                 <span className="font-serif font-bold text-base text-[#1c1917]">Muffin Factory Lab Portal</span>
               </div>
               <button 
-                onClick={() => setIsLoginModalOpen(false)}
+                onClick={() => {
+                  setIsLoginModalOpen(false);
+                  if (typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname === '/signin')) {
+                    navigate('/');
+                  }
+                }}
                 className="text-[#78716c] hover:text-[#1c1917] bg-transparent border-none cursor-pointer p-1"
               >
                 <X className="w-4.5 h-4.5" />

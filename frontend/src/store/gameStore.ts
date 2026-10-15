@@ -56,34 +56,66 @@ interface GameStore {
   deleteRoom: (id: string) => Promise<void>;
 }
 
-// Read initial auth state from localStorage
-const storedToken = localStorage.getItem('muffin_token');
-const storedUser = localStorage.getItem('muffin_user');
-let parsedUser: User | null = null;
-if (storedUser) {
+// Clear legacy shared localStorage tokens so they do not leak sessions across browser tabs
+if (typeof window !== 'undefined') {
   try {
-    parsedUser = JSON.parse(storedUser);
-  } catch (e) {
+    localStorage.removeItem('muffin_token');
     localStorage.removeItem('muffin_user');
+  } catch (e) {
+    // ignore
   }
 }
 
+// Read initial auth state from tab-scoped sessionStorage.
+// This ensures each browser tab has its own isolated session (e.g., Admin console in Tab 1,
+// Instructor or Student in Tab 2) without leaking or conflicting across tabs.
+const getInitialAuth = () => {
+  if (typeof window === 'undefined') {
+    return { token: null, user: null };
+  }
+  const storedToken = sessionStorage.getItem('muffin_token');
+  const storedUser = sessionStorage.getItem('muffin_user');
+  let parsedUser: User | null = null;
+  if (storedUser) {
+    try {
+      parsedUser = JSON.parse(storedUser);
+    } catch (e) {
+      sessionStorage.removeItem('muffin_user');
+    }
+  }
+  return { token: storedToken, user: parsedUser };
+};
+
+const initialAuth = getInitialAuth();
+
 export const useGameStore = create<GameStore>((set, get) => ({
   // Auth Initialization
-  user: parsedUser,
-  token: storedToken,
-  isAuthenticated: !!storedToken && !!parsedUser,
+  user: initialAuth.user,
+  token: initialAuth.token,
+  isAuthenticated: !!initialAuth.token && !!initialAuth.user,
 
   login: (token, user) => {
-    localStorage.setItem('muffin_token', token);
-    localStorage.setItem('muffin_user', JSON.stringify(user));
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('muffin_token', token);
+      sessionStorage.setItem('muffin_user', JSON.stringify(user));
+      try {
+        localStorage.removeItem('muffin_token');
+        localStorage.removeItem('muffin_user');
+      } catch (e) {}
+    }
     set({ token, user, isAuthenticated: true });
     get().initSocket(token);
   },
 
   logout: () => {
-    localStorage.removeItem('muffin_token');
-    localStorage.removeItem('muffin_user');
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('muffin_token');
+      sessionStorage.removeItem('muffin_user');
+      try {
+        localStorage.removeItem('muffin_token');
+        localStorage.removeItem('muffin_user');
+      } catch (e) {}
+    }
     get().disconnectSocket();
     set({ token: null, user: null, isAuthenticated: false, room: null, teamState: null, role: null });
   },
@@ -432,7 +464,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   }
 }));
 
-// Automatically trigger socket sync if token is stored on load
-if (storedToken) {
-  useGameStore.getState().initSocket(storedToken);
+// Automatically trigger socket sync if token is stored on load in sessionStorage
+if (initialAuth.token) {
+  useGameStore.getState().initSocket(initialAuth.token);
 }
