@@ -329,17 +329,15 @@ function InventoryPanel() {
                       Fixed supplier delivery schedule
                     </span>
                   </div>
-                  <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden shrink-0 shadow-xs">
-                    <div className={`w-[160px] h-10 flex items-center justify-center font-mono font-black text-sm select-none transition-colors ${
-                      activeTab === 'mix'
-                        ? 'bg-emerald-50 text-emerald-800'
-                        : 'bg-orange-50 text-orange-800'
+                  <div className="w-[180px] h-11 flex items-center justify-center rounded-2xl border border-[#d8ccbb] bg-[#fffbf5] shadow-xs select-none">
+                    <span className={`text-base font-black mr-1.5 ${
+                      activeTab === 'mix' ? 'text-[#0e8a43]' : 'text-[#a83b0b]'
                     }`}>
-                      <span>{displayLT}</span>
-                      <span className="text-[10px] font-bold text-stone-500 font-sans ml-1.5 uppercase tracking-wide">
-                        {leadTimeModifier !== 0 ? `Days (${leadTimeModifier > 0 ? `+${leadTimeModifier}` : leadTimeModifier} Event)` : 'Days (Fixed)'}
-                      </span>
-                    </div>
+                      {displayLT}
+                    </span>
+                    <span className="text-[11px] font-bold text-stone-600 font-sans uppercase tracking-wide">
+                      {leadTimeModifier !== 0 ? `DAYS (${leadTimeModifier > 0 ? `+${leadTimeModifier}` : leadTimeModifier} EVENT)` : 'DAYS (FIXED)'}
+                    </span>
                   </div>
                 </div>
               );
