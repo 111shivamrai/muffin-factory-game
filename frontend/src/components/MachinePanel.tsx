@@ -253,7 +253,7 @@ function MachinePanel() {
             const leadTime     = (room?.scenarioConfig?.machineSettings?.[type] as any)?.leadTime
               || (room?.scenarioConfig?.leadTimes as any)?.machines?.[type]
               || room?.scenarioConfig?.leadTimes?.machineProcurement
-              || 3;
+              || (room?.difficulty === 'intermediate' ? 5 : room?.difficulty === 'advanced' ? 6 : 3);
 
             // ── Verified Capacity Formulas ────────────────────────────────
             // 1. Available Capacity = Total Owned Floor Machines × Capacity Per Machine

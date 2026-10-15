@@ -23,6 +23,7 @@ export interface MachineConfig {
   breakdownProbability: number; // 0 to 1
   breakdownDuration: number; // in days
   repairCost: number;
+  leadTime?: number; // delivery lead time in days
 }
 
 export interface Machine {
@@ -222,6 +223,11 @@ export interface SavedScenario {
   holdingCostRate: number;
   lostSalesPenaltyRate: number;
   sellingPrice?: number;
+  startInventory?: {
+    rawMaterial: number;
+    packagingMaterial: number;
+  };
+  startMachines?: Record<MachineType, number>;
   rawMaterialCosts: {
     baseMix: number;
     packaging: number;
@@ -231,6 +237,7 @@ export interface SavedScenario {
     rawMaterial: number;
     packagingMaterial?: number;
     machineProcurement: number;
+    machines?: Record<MachineType, number>;
   };
   breakdownsEnabled: boolean;
   demand: {

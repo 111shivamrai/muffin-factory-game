@@ -46,8 +46,12 @@ function InventoryPanel() {
     const p = teamState.inventory.packaging_material;
     if (!m || !p) return;
 
-    const baseRawLT = m.leadTime ?? room?.scenarioConfig?.leadTimes?.rawMaterial ?? 3;
-    const basePackLT = p.leadTime ?? (room?.scenarioConfig?.leadTimes as any)?.packagingMaterial ?? 2;
+    const baseRawLT = m.leadTime 
+      ?? room?.scenarioConfig?.leadTimes?.rawMaterial 
+      ?? (room?.difficulty === 'beginner' ? 2 : room?.difficulty === 'advanced' ? 4 : 3);
+    const basePackLT = p.leadTime 
+      ?? (room?.scenarioConfig?.leadTimes as any)?.packagingMaterial 
+      ?? (room?.difficulty === 'beginner' ? 1 : room?.difficulty === 'advanced' ? 2 : 2);
 
     const cur = {
       mix:  { q: m.orderQty, r: m.reorderPoint, lt: baseRawLT },
@@ -66,7 +70,7 @@ function InventoryPanel() {
       setPackLT(basePackLT);
     }
     prevRef.current = cur;
-  }, [teamState?.inventory, room?.scenarioConfig?.leadTimes]);
+  }, [teamState?.inventory, room?.scenarioConfig?.leadTimes, room?.difficulty]);
 
   const [isApplying, setIsApplying] = useState(false);
 
@@ -75,14 +79,14 @@ function InventoryPanel() {
     setIsApplying(true);
     try {
       if (activeTab === 'mix') {
-        const resMix = await updateInventorySettings('base_mix', mixQty, mixROP, 0);
+        const resMix = await updateInventorySettings('base_mix', mixQty, mixROP, 0, mixLT);
         if (resMix && resMix.error) {
           alert(`Failed to update raw material: ${resMix.error}`);
           return;
         }
         alert('Muffin mix order changes applied successfully! Material replenishment in transit.');
       } else {
-        const resPack = await updateInventorySettings('packaging_material', packQty, packROP, 0);
+        const resPack = await updateInventorySettings('packaging_material', packQty, packROP, 0, packLT);
         if (resPack && resPack.error) {
           alert(`Failed to update packaging material: ${resPack.error}`);
           return;

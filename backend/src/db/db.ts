@@ -225,8 +225,9 @@ class DatabaseManager {
           startCash: 50000,
           holdingCostRate: 0.02,
           lostSalesPenaltyRate: 2.5,
+          startInventory: { rawMaterial: 1000, packagingMaterial: 800 },
           rawMaterialCosts: { baseMix: 5.0, packaging: 1.0, orderCost: 100.0 },
-          leadTimes: { rawMaterial: 2, machineProcurement: 3 },
+          leadTimes: { rawMaterial: 2, packagingMaterial: 1, machineProcurement: 3 },
           breakdownsEnabled: false,
           demand: {
             type: 'fixed',
@@ -237,10 +238,10 @@ class DatabaseManager {
             customSchedule: []
           },
           machineSettings: {
-            mixing: { capacityPerMachine: 100, purchaseCost: 2000, operatingCost: 40, breakdownProbability: 0, breakdownDuration: 2, repairCost: 300 },
-            baking: { capacityPerMachine: 80, purchaseCost: 3000, operatingCost: 60, breakdownProbability: 0, breakdownDuration: 2, repairCost: 500 },
-            icing: { capacityPerMachine: 120, purchaseCost: 1500, operatingCost: 30, breakdownProbability: 0, breakdownDuration: 1, repairCost: 200 },
-            packaging: { capacityPerMachine: 150, purchaseCost: 1000, operatingCost: 20, breakdownProbability: 0, breakdownDuration: 1, repairCost: 150 }
+            mixing: { capacityPerMachine: 100, purchaseCost: 2000, operatingCost: 40, breakdownProbability: 0, breakdownDuration: 2, repairCost: 300, leadTime: 3 },
+            baking: { capacityPerMachine: 80, purchaseCost: 3000, operatingCost: 60, breakdownProbability: 0, breakdownDuration: 2, repairCost: 500, leadTime: 3 },
+            icing: { capacityPerMachine: 120, purchaseCost: 1500, operatingCost: 30, breakdownProbability: 0, breakdownDuration: 1, repairCost: 200, leadTime: 3 },
+            packaging: { capacityPerMachine: 150, purchaseCost: 1000, operatingCost: 20, breakdownProbability: 0, breakdownDuration: 1, repairCost: 150, leadTime: 3 }
           },
           contracts: [],
           events: [],
@@ -260,8 +261,9 @@ class DatabaseManager {
           startCash: 100000,
           holdingCostRate: 0.02,
           lostSalesPenaltyRate: 2.5,
+          startInventory: { rawMaterial: 12000, packagingMaterial: 10000 },
           rawMaterialCosts: { baseMix: 5.0, packaging: 1.0, orderCost: 150.0 },
-          leadTimes: { rawMaterial: 3, machineProcurement: 5 },
+          leadTimes: { rawMaterial: 3, packagingMaterial: 2, machineProcurement: 5 },
           breakdownsEnabled: true,
           demand: {
             type: 'seasonal',
@@ -272,10 +274,10 @@ class DatabaseManager {
             customSchedule: []
           },
           machineSettings: {
-            mixing: { capacityPerMachine: 100, purchaseCost: 2000, operatingCost: 50, breakdownProbability: 0.015, breakdownDuration: 2, repairCost: 300 },
-            baking: { capacityPerMachine: 80, purchaseCost: 3000, operatingCost: 80, breakdownProbability: 0.015, breakdownDuration: 2, repairCost: 500 },
-            icing: { capacityPerMachine: 120, purchaseCost: 1500, operatingCost: 40, breakdownProbability: 0.01, breakdownDuration: 1, repairCost: 200 },
-            packaging: { capacityPerMachine: 150, purchaseCost: 1000, operatingCost: 30, breakdownProbability: 0.01, breakdownDuration: 1, repairCost: 150 }
+            mixing: { capacityPerMachine: 100, purchaseCost: 2000, operatingCost: 50, breakdownProbability: 0.015, breakdownDuration: 2, repairCost: 300, leadTime: 5 },
+            baking: { capacityPerMachine: 80, purchaseCost: 3000, operatingCost: 80, breakdownProbability: 0.015, breakdownDuration: 2, repairCost: 500, leadTime: 5 },
+            icing: { capacityPerMachine: 120, purchaseCost: 1500, operatingCost: 40, breakdownProbability: 0.01, breakdownDuration: 1, repairCost: 200, leadTime: 5 },
+            packaging: { capacityPerMachine: 150, purchaseCost: 1000, operatingCost: 30, breakdownProbability: 0.01, breakdownDuration: 1, repairCost: 150, leadTime: 5 }
           },
           contracts: [
             { name: 'Festival Bake Sale', startDay: 15, endDay: 25, dailyQuantity: 40, priceMultiplier: 1.8, penalty: 5.0 },
@@ -301,8 +303,9 @@ class DatabaseManager {
           startCash: 150000,
           holdingCostRate: 0.02,
           lostSalesPenaltyRate: 2.5,
+          startInventory: { rawMaterial: 15000, packagingMaterial: 12000 },
           rawMaterialCosts: { baseMix: 6.0, packaging: 1.2, orderCost: 200.0 },
-          leadTimes: { rawMaterial: 4, machineProcurement: 6 },
+          leadTimes: { rawMaterial: 4, packagingMaterial: 2, machineProcurement: 6 },
           breakdownsEnabled: true,
           demand: {
             type: 'hybrid',
@@ -313,10 +316,10 @@ class DatabaseManager {
             customSchedule: []
           },
           machineSettings: {
-            mixing: { capacityPerMachine: 100, purchaseCost: 2500, operatingCost: 60, breakdownProbability: 0.03, breakdownDuration: 3, repairCost: 400 },
-            baking: { capacityPerMachine: 80, purchaseCost: 3500, operatingCost: 90, breakdownProbability: 0.03, breakdownDuration: 3, repairCost: 600 },
-            icing: { capacityPerMachine: 120, purchaseCost: 1800, operatingCost: 50, breakdownProbability: 0.025, breakdownDuration: 2, repairCost: 250 },
-            packaging: { capacityPerMachine: 150, purchaseCost: 1200, operatingCost: 40, breakdownProbability: 0.02, breakdownDuration: 2, repairCost: 200 }
+            mixing: { capacityPerMachine: 100, purchaseCost: 2500, operatingCost: 60, breakdownProbability: 0.03, breakdownDuration: 3, repairCost: 400, leadTime: 6 },
+            baking: { capacityPerMachine: 80, purchaseCost: 3500, operatingCost: 90, breakdownProbability: 0.03, breakdownDuration: 3, repairCost: 600, leadTime: 6 },
+            icing: { capacityPerMachine: 120, purchaseCost: 1800, operatingCost: 50, breakdownProbability: 0.025, breakdownDuration: 2, repairCost: 250, leadTime: 6 },
+            packaging: { capacityPerMachine: 150, purchaseCost: 1200, operatingCost: 40, breakdownProbability: 0.02, breakdownDuration: 2, repairCost: 200, leadTime: 6 }
           },
           contracts: [
             { name: 'Major Supermarket Contract', startDay: 10, endDay: 40, dailyQuantity: 60, priceMultiplier: 1.6, penalty: 8.0 },

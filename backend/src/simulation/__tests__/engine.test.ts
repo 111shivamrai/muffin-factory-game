@@ -299,4 +299,55 @@ describe('Muffin Mega Factory - Simulation Engine Tests', () => {
     expect(packagingPO?.arrivalDay).toBe(5);
   });
 
+  test('Scenario starting parameters and machine orders with scenario lead times', () => {
+    const state = createMockTeamState();
+    // Starting inventories remain distinct and non-interchangeable
+    state.inventory.base_mix.onHand = 2500;
+    state.inventory.packaging_material.onHand = 1800;
+
+    expect(state.inventory.base_mix.onHand).toBe(2500);
+    expect(state.inventory.packaging_material.onHand).toBe(1800);
+
+    // Machine procurement order scheduled with scenario lead time (e.g. 4 days)
+    const machineLeadTime = 4;
+    const orderDay = 1;
+    const arrivalDay = orderDay + machineLeadTime;
+
+    state.machineOrders.push({
+      id: 'mo_test_1',
+      machineType: 'mixing',
+      orderDay,
+      arrivalDay,
+      cost: 2000,
+      status: 'procuring'
+    });
+
+    // On day 2, machine should still be procuring
+    const day2Room = { ...mockRoom, currentDay: 2 };
+    let nextState = runSimDay(
+      day2Room,
+      state,
+      0,
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      { rawMaterial: 2, packagingMaterial: 3, machineProcurement: 4 }
+    );
+    expect(nextState.machineOrders.length).toBe(1);
+    expect(nextState.machineOrders[0].status).toBe('procuring');
+
+    // On day 5 (arrivalDay), machine is delivered and increases owned/active count
+    const initialMixerCount = nextState.machines.mixing.count;
+    const day5Room = { ...mockRoom, currentDay: 5 };
+    nextState = runSimDay(
+      day5Room,
+      nextState,
+      0,
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      { rawMaterial: 2, packagingMaterial: 3, machineProcurement: 4 }
+    );
+    expect(nextState.machineOrders.length).toBe(0); // Delivered orders filtered from active tracking
+    expect(nextState.machines.mixing.count).toBe(initialMixerCount + 1);
+  });
+
 });

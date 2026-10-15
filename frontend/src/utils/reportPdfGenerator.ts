@@ -467,12 +467,15 @@ export async function generateTeamReportPDF(
   }
 
   // Material Flow Pipeline Summary
+  const rawLT = teamState.inventory?.base_mix?.leadTime ?? (room as any)?.scenarioConfig?.leadTimes?.rawMaterial ?? 2;
+  const pkgLT = teamState.inventory?.packaging_material?.leadTime ?? ((room as any)?.scenarioConfig?.leadTimes as any)?.packagingMaterial ?? 1;
+
   autoTable(doc, {
     startY: currentY,
     head: [['Logistics Pipeline', 'In Transit Volume', 'Lead Time / Delivery Dynamics']],
     body: [
-      ['Raw Material Orders in Transit', `${rawInTransit.toLocaleString()} kg`, 'Lead Time: 2 Simulation Days (Standard Supplier)'],
-      ['Packaging Material Orders in Transit', `${pkgInTransit.toLocaleString()} boxes`, 'Lead Time: 1 Simulation Day (Local Packaging Supplier)'],
+      ['Raw Material Orders in Transit', `${rawInTransit.toLocaleString()} kg`, `Lead Time: ${rawLT} Simulation Day${rawLT === 1 ? '' : 's'} (Standard Supplier)`],
+      ['Packaging Material Orders in Transit', `${pkgInTransit.toLocaleString()} boxes`, `Lead Time: ${pkgLT} Simulation Day${pkgLT === 1 ? '' : 's'} (Local Packaging Supplier)`],
       ['Supply Chain Reliability', '100% On-Schedule Deliveries', 'Zero logistics lost-shipment losses'],
     ],
     showHead: 'everyPage',
