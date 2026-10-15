@@ -187,11 +187,23 @@ function MachinePanel() {
     { type: 'packaging', label: 'Packaging Machine', state: packActive, setter: setPackActive, mData: packaging, cost: 1000 },
   ];
 
+  // Helper to reliably derive active breakdown and remaining repair days from authoritative state
+  const getMachineBreakdown = (type: MachineType) => {
+    const b = teamState.breakdownStates?.find(bk => bk.machineType === type);
+    if (!b) return { brokenCount: 0, daysRemaining: 0 };
+    const rem = (b.daysRemaining || []).filter(d => d > 0);
+    const count = rem.length > 0 ? rem.length : (b.daysRemaining && b.daysRemaining.length === 0 ? 0 : (b.brokenCount || 0));
+    return {
+      brokenCount: count,
+      daysRemaining: rem.length > 0 ? rem[0] : 0
+    };
+  };
+
   // ── Verified Shared Factory Operating Capacity (MIN of 4 stages) ──────────
-  const runningMixers = Math.max(0, (teamState.machines.mixing?.active || 0) - (teamState.breakdownStates?.find(b => b.machineType === 'mixing')?.brokenCount || 0));
-  const runningBakers = Math.max(0, (teamState.machines.baking?.active || 0) - (teamState.breakdownStates?.find(b => b.machineType === 'baking')?.brokenCount || 0));
-  const runningIcers  = Math.max(0, (teamState.machines.icing?.active || 0) - (teamState.breakdownStates?.find(b => b.machineType === 'icing')?.brokenCount || 0));
-  const runningPackagers = Math.max(0, (teamState.machines.packaging?.active || 0) - (teamState.breakdownStates?.find(b => b.machineType === 'packaging')?.brokenCount || 0));
+  const runningMixers = Math.max(0, (teamState.machines.mixing?.active || 0) - getMachineBreakdown('mixing').brokenCount);
+  const runningBakers = Math.max(0, (teamState.machines.baking?.active || 0) - getMachineBreakdown('baking').brokenCount);
+  const runningIcers  = Math.max(0, (teamState.machines.icing?.active || 0) - getMachineBreakdown('icing').brokenCount);
+  const runningPackagers = Math.max(0, (teamState.machines.packaging?.active || 0) - getMachineBreakdown('packaging').brokenCount);
 
   const stageOperatingCaps: Record<MachineType, number> = {
     mixing: runningMixers * CAPACITY_PER_MACHINE.mixing,
@@ -260,9 +272,7 @@ function MachinePanel() {
             const availableCapacity = mData.count * unitCapacity;
 
             // 2. Operating Capacity (Individual stage reference)
-            const bState = teamState.breakdownStates?.find(b => b.machineType === type);
-            const brokenCount = bState?.brokenCount || 0;
-            const repairDays = bState?.daysRemaining?.[0] ?? 1;
+            const { brokenCount, daysRemaining: repairDays } = getMachineBreakdown(type);
             const runningCount = Math.max(0, mData.active - brokenCount);
             const operatingCapacity = runningCount * unitCapacity;
 
@@ -293,7 +303,7 @@ function MachinePanel() {
                             🚚 +{inTransit} in transit
                           </span>
                         )}
-                        {brokenCount > 0 && (
+                        {brokenCount > 0 && repairDays > 0 && (
                           <span className="text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded text-[7.5px] font-bold inline-flex items-center gap-1 shadow-2xs">
                             <span>⚠️ {brokenCount} broken</span>
                             <span className="text-stone-300">|</span>
@@ -446,11 +456,11 @@ function MachinePanel() {
                 // Initial baseline utilization calculation based on line bottleneck so it works from Day 1
                 const unitCap = CAPACITY_PER_MACHINE[type];
                 const act = (teamState.machines as any)?.[type]?.active ?? 1;
-                const brk = teamState.breakdownStates?.find(b => b.machineType === type)?.brokenCount || 0;
+                const brk = getMachineBreakdown(type).brokenCount;
                 const operCap = Math.max(0, act - brk) * unitCap;
                 const allRunningCaps = ([ 'mixing', 'baking', 'icing', 'packaging' ] as MachineType[]).map(t => {
                   const a = (teamState.machines as any)?.[t]?.active ?? 1;
-                  const b = teamState.breakdownStates?.find(bk => bk.machineType === t)?.brokenCount || 0;
+                  const b = getMachineBreakdown(t).brokenCount;
                   return Math.max(0, a - b) * CAPACITY_PER_MACHINE[t];
                 });
                 const bottleneckCap = Math.min(...allRunningCaps);

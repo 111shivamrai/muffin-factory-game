@@ -427,4 +427,114 @@ describe('Muffin Mega Factory - Simulation Engine Tests', () => {
     expect(packPO?.arrivalDay).toBe(6); // 2 + 4
   });
 
+  test('Machine repair lifecycle: 1-day repair completes at next day boundary and restores capacity', () => {
+    const state = createMockTeamState();
+    // Simulate 1 broken mixer with 1 day remaining
+    state.machines.mixing.count = 2;
+    state.machines.mixing.active = 2;
+    state.breakdownStates = [
+      { machineType: 'mixing', brokenCount: 1, daysRemaining: [1] }
+    ];
+
+    // Day 10 simulation step with breakdowns disabled so no random new breakdowns roll
+    const day10Room = { ...mockRoom, currentDay: 10 };
+    const nextState = runSimDay(
+      day10Room,
+      state,
+      0, // 0 demand for pure machine state inspection
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      mockScenario.leadTimes,
+      0.02,
+      2.5,
+      false // breakdowns disabled so no new random breakdowns
+    );
+
+    // After 1 day, the 1-day repair must complete!
+    const mixerBreakdown = nextState.breakdownStates.find(b => b.machineType === 'mixing');
+    expect(mixerBreakdown).toBeDefined();
+    expect(mixerBreakdown?.brokenCount).toBe(0);
+    expect(mixerBreakdown?.daysRemaining.length).toBe(0);
+
+    // Mixing capacity should be restored to full 2 machines * 100 = 200
+    // (Baking is still 80, so bottleneck is baking, but mixer available capacity is 200)
+    expect(nextState.machines.mixing.active).toBe(2);
+  });
+
+  test('Machine repair lifecycle: 2-day repair decrements to 1 day on Day 1, and completes on Day 2', () => {
+    const state = createMockTeamState();
+    state.machines.baking.count = 2;
+    state.machines.baking.active = 2;
+    state.breakdownStates = [
+      { machineType: 'baking', brokenCount: 1, daysRemaining: [2] }
+    ];
+
+    // Day 1: Run with 2 days remaining -> should decrement to 1 day remaining and stay broken
+    const day1Room = { ...mockRoom, currentDay: 1 };
+    const stateAfterDay1 = runSimDay(
+      day1Room,
+      state,
+      0,
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      mockScenario.leadTimes,
+      0.02,
+      2.5,
+      false
+    );
+
+    const ovenBreakdownDay1 = stateAfterDay1.breakdownStates.find(b => b.machineType === 'baking');
+    expect(ovenBreakdownDay1?.brokenCount).toBe(1);
+    expect(ovenBreakdownDay1?.daysRemaining).toEqual([1]);
+
+    // Day 2: Run with 1 day remaining -> should complete repair and return to 0 broken
+    const day2Room = { ...mockRoom, currentDay: 2 };
+    const stateAfterDay2 = runSimDay(
+      day2Room,
+      stateAfterDay1,
+      0,
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      mockScenario.leadTimes,
+      0.02,
+      2.5,
+      false
+    );
+
+    const ovenBreakdownDay2 = stateAfterDay2.breakdownStates.find(b => b.machineType === 'baking');
+    expect(ovenBreakdownDay2?.brokenCount).toBe(0);
+    expect(ovenBreakdownDay2?.daysRemaining.length).toBe(0);
+  });
+
+  test('Partial breakdown: 1 of 2 machines broken preserves partial operating capacity', () => {
+    const state = createMockTeamState();
+    state.machines.mixing.count = 2;
+    state.machines.mixing.active = 2; // 2 * 100 = 200 total nominal
+    state.machines.baking.count = 4;
+    state.machines.baking.active = 4; // 4 * 80 = 320 total nominal
+    state.breakdownStates = [
+      { machineType: 'mixing', brokenCount: 1, daysRemaining: [1] }
+    ];
+
+    // On this day, 1 mixer is running (capacity 100), not 0
+    // So bottleneck capacity should be 100, not 0
+    const dayRoom = { ...mockRoom, currentDay: 5 };
+    const nextState = runSimDay(
+      dayRoom,
+      state,
+      100,
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      mockScenario.leadTimes,
+      0.02,
+      2.5,
+      false
+    );
+
+    // Next state: 1-day repair completed on day boundary
+    const mixerB = nextState.breakdownStates.find(b => b.machineType === 'mixing');
+    expect(mixerB?.brokenCount).toBe(0);
+    expect(mixerB?.daysRemaining.length).toBe(0);
+  });
+
 });

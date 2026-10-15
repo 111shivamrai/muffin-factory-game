@@ -132,12 +132,18 @@ function OperationsAdvisor() {
   const bottleneckMsg = `The limiting bottleneck stage is ${stageName} (operating capacity: ${bottleneckCap} units/day). Expanding this stage will unlock higher factory output.`;
 
   // 7. Machine Status
-  const breakdowns = teamState.breakdownStates?.filter(b => b.brokenCount > 0 && b.daysRemaining.length > 0) || [];
+  const breakdowns = teamState.breakdownStates?.filter(b => {
+    const rem = (b.daysRemaining || []).filter(d => d > 0);
+    return rem.length > 0;
+  }) || [];
   let machineSeverity: 'urgent' | 'caution' | 'info' = 'info';
   let machineMsg = '';
   if (breakdowns.length > 0) {
     machineSeverity = 'urgent';
-    const detail = breakdowns.map(b => `${b.brokenCount} ${b.machineType} (${b.daysRemaining[0]} day(s) repair left)`).join(', ');
+    const detail = breakdowns.map(b => {
+      const rem = (b.daysRemaining || []).filter(d => d > 0);
+      return `${rem.length} ${b.machineType} (${rem[0]} day(s) repair left)`;
+    }).join(', ');
     machineMsg = `Active machine breakdown: ${detail}. Operating capacity is temporarily reduced during repairs.`;
   } else {
     machineSeverity = 'info';

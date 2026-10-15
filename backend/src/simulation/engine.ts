@@ -172,10 +172,11 @@ export function runSimDay(
 
   nextState.breakdownStates = breakdownStates.map(state => {
     // Decrement days remaining for existing broken machines
-    state.daysRemaining = state.daysRemaining
+    state.daysRemaining = (state.daysRemaining || [])
       .map(days => days - 1)
       .filter(days => days > 0);
     
+    state.brokenCount = state.daysRemaining.length;
     brokenCounts[state.machineType] = state.daysRemaining.length;
     return state;
   });

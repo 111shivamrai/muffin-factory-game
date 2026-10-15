@@ -94,9 +94,13 @@ export default function FactoryVisualization() {
     if (teamState?.breakdownStates) {
       teamState.breakdownStates.forEach((b) => {
         if (b.machineType in map) {
+          const rem = (b.daysRemaining || []).filter((d) => d > 0);
+          const count = rem.length > 0 
+            ? rem.length 
+            : (b.daysRemaining && b.daysRemaining.length === 0 ? 0 : (b.brokenCount || 0));
           map[b.machineType] = {
-            brokenCount: b.brokenCount || 0,
-            daysRemaining: b.daysRemaining?.[0] ?? (b.brokenCount > 0 ? 1 : 0),
+            brokenCount: count,
+            daysRemaining: rem.length > 0 ? rem[0] : 0,
           };
         }
       });
@@ -327,8 +331,10 @@ export default function FactoryVisualization() {
           const cfg = MACHINE_CONFIG[mType];
           const stats = stageStats[mType];
           const isBottleneck = bottleneckStage.stage === mType && stats.capacity > 0;
-          const isBroken = stats.broken > 0;
-          const isRepairing = isBroken && stats.repairDays > 0;
+          const isBroken = stats.broken > 0 && stats.repairDays > 0;
+          const isRepairing = isBroken;
+          const isTotallyOffline = isBroken && stats.running === 0;
+          const isPartiallyOperational = isBroken && stats.running > 0;
           const isStageRunning = isLineRunning && stats.running > 0;
           const isConstrained = isBottleneck && !lineIssue;
 
@@ -344,14 +350,14 @@ export default function FactoryVisualization() {
             <React.Fragment key={mType}>
               {/* Stage Status Pin Card */}
               <div
-                className={`stage-pin ${isBroken ? 'stage-broken' : ''} ${isRepairing ? 'stage-repairing' : ''} ${isStageRunning ? 'stage-running' : ''} ${isConstrained ? 'stage-bottleneck' : ''}`}
+                className={`stage-pin ${isTotallyOffline ? 'stage-broken' : isPartiallyOperational ? 'stage-bottleneck' : ''} ${isRepairing ? 'stage-repairing' : ''} ${isStageRunning ? 'stage-running' : ''} ${isConstrained ? 'stage-bottleneck' : ''}`}
                 style={{
                   left: `${cfg.x}%`,
                   '--pin-width': `${cfg.width}%`,
                   '--health': `${stats.health}%`,
                   '--repair-progress': `${repairProgress}%`,
                 } as React.CSSProperties}
-                title={`${cfg.label}: ${isRepairing ? `Repairing (${stats.repairDays}d left)` : isBroken ? 'Broken' : isStageRunning ? 'Running' : 'Ready'}, Health: ${stats.health}% (${stats.running}/${stats.active} working)`}
+                title={`${cfg.label}: ${isRepairing ? `Repairing (${stats.repairDays}d left)` : isTotallyOffline ? 'Broken' : isStageRunning ? 'Running' : 'Ready'}, Health: ${stats.health}% (${stats.running}/${stats.active} working)`}
               >
                 <div className="stage-pin-top">
                   <i />
@@ -372,10 +378,12 @@ export default function FactoryVisualization() {
                   {isRepairing ? (
                     <>
                       <Wrench className="w-2.5 h-2.5 text-amber-500 animate-spin" />
-                      <span>{stats.repairDays}d</span>
+                      <span>{isPartiallyOperational ? `${stats.running}/${stats.active} · ${stats.repairDays}d` : `${stats.repairDays}d`}</span>
                     </>
-                  ) : isBroken ? (
+                  ) : isTotallyOffline ? (
                     <span className="text-red-500 font-bold">FAILED</span>
+                  ) : isPartiallyOperational ? (
+                    <span className="text-amber-600 font-bold">{stats.running}/{stats.active} OK</span>
                   ) : stats.active === 0 ? (
                     <span className="text-stone-400">OFF</span>
                   ) : isStageRunning ? (
@@ -398,20 +406,22 @@ export default function FactoryVisualization() {
                 )}
               </div>
 
-              {/* Machine Smoke / Breakdown Alerts */}
+              {/* Machine Smoke / Breakdown Alerts (rendered strictly when active repair is underway) */}
               {isBroken && (
                 <div
-                  className="machine-condition-effect condition-failed"
+                  className={`machine-condition-effect ${isTotallyOffline ? 'condition-failed' : 'condition-repairing'}`}
                   style={{ left: `${cfg.x}%` }}
                   aria-hidden="true"
                 >
-                  <div className="machine-smoke">
-                    <i />
-                    <i />
-                    <i />
-                  </div>
+                  {isTotallyOffline && (
+                    <div className="machine-smoke">
+                      <i />
+                      <i />
+                      <i />
+                    </div>
+                  )}
                   <div className="machine-condition-icon">
-                    {isRepairing ? <Wrench className="w-4 h-4 text-amber-500" /> : <AlertTriangle className="w-4 h-4 text-red-500" />}
+                    <Wrench className="w-4 h-4 text-amber-500" />
                   </div>
                 </div>
               )}

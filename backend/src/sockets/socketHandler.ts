@@ -204,6 +204,15 @@ export function registerSocketHandler(io: Server) {
             teamState.inventory.packaging_material.leadTime = (scenario.leadTimes as any).packagingMaterial;
             updated = true;
           }
+          if (teamState.breakdownStates && Array.isArray(teamState.breakdownStates)) {
+            teamState.breakdownStates.forEach(b => {
+              b.daysRemaining = (b.daysRemaining || []).filter(d => d > 0);
+              if (b.brokenCount !== b.daysRemaining.length) {
+                b.brokenCount = b.daysRemaining.length;
+                updated = true;
+              }
+            });
+          }
           if (room.id === 'room_demo_001') {
             // In demo room, ensure fresh starting machine inTransit state (0 in transit)
             if (teamState.machines) {
