@@ -46,11 +46,11 @@ function InventoryPanel() {
     const p = teamState.inventory.packaging_material;
     if (!m || !p) return;
 
-    const baseRawLT = m.leadTime 
-      ?? room?.scenarioConfig?.leadTimes?.rawMaterial 
+    const baseRawLT = room?.scenarioConfig?.leadTimes?.rawMaterial 
+      ?? m.leadTime 
       ?? (room?.difficulty === 'beginner' ? 2 : room?.difficulty === 'advanced' ? 4 : 3);
-    const basePackLT = p.leadTime 
-      ?? (room?.scenarioConfig?.leadTimes as any)?.packagingMaterial 
+    const basePackLT = (room?.scenarioConfig?.leadTimes as any)?.packagingMaterial 
+      ?? p.leadTime 
       ?? (room?.difficulty === 'beginner' ? 1 : room?.difficulty === 'advanced' ? 2 : 2);
 
     const cur = {
@@ -79,14 +79,16 @@ function InventoryPanel() {
     setIsApplying(true);
     try {
       if (activeTab === 'mix') {
-        const resMix = await updateInventorySettings('base_mix', mixQty, mixROP, 0, mixLT);
+        const currentMixLT = room?.scenarioConfig?.leadTimes?.rawMaterial ?? teamState?.inventory?.base_mix?.leadTime ?? mixLT;
+        const resMix = await updateInventorySettings('base_mix', mixQty, mixROP, 0, currentMixLT);
         if (resMix && resMix.error) {
           alert(`Failed to update raw material: ${resMix.error}`);
           return;
         }
         alert('Muffin mix order changes applied successfully! Material replenishment in transit.');
       } else {
-        const resPack = await updateInventorySettings('packaging_material', packQty, packROP, 0, packLT);
+        const currentPackLT = (room?.scenarioConfig?.leadTimes as any)?.packagingMaterial ?? teamState?.inventory?.packaging_material?.leadTime ?? packLT;
+        const resPack = await updateInventorySettings('packaging_material', packQty, packROP, 0, currentPackLT);
         if (resPack && resPack.error) {
           alert(`Failed to update packaging material: ${resPack.error}`);
           return;
@@ -315,8 +317,10 @@ function InventoryPanel() {
               const leadTimeModifier = teamState?.activeEvents
                 ?.filter(ev => ev.active && ev.targetVariable === 'lead_time')
                 ?.reduce((sum, ev) => sum + ev.modifier, 0) || 0;
-              const effectiveMixLT = Math.max(1, mixLT + leadTimeModifier);
-              const effectivePackLT = Math.max(1, packLT + leadTimeModifier);
+              const configuredMixLT = room?.scenarioConfig?.leadTimes?.rawMaterial ?? teamState?.inventory?.base_mix?.leadTime ?? mixLT;
+              const configuredPackLT = (room?.scenarioConfig?.leadTimes as any)?.packagingMaterial ?? teamState?.inventory?.packaging_material?.leadTime ?? packLT;
+              const effectiveMixLT = Math.max(1, configuredMixLT + leadTimeModifier);
+              const effectivePackLT = Math.max(1, configuredPackLT + leadTimeModifier);
               const displayLT = activeTab === 'mix' ? effectiveMixLT : effectivePackLT;
 
               return (

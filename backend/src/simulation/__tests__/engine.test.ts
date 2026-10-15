@@ -350,4 +350,81 @@ describe('Muffin Mega Factory - Simulation Engine Tests', () => {
     expect(nextState.machines.mixing.count).toBe(initialMixerCount + 1);
   });
 
+  test('Dynamic scenario material lead times: 5 days for raw material and 6 days for packaging', () => {
+    const state = createMockTeamState();
+    // Set inventory to trigger auto-reorders on day 4
+    state.inventory.base_mix.onHand = 100;
+    state.inventory.base_mix.reorderPoint = 300;
+    state.inventory.base_mix.orderQty = 1000;
+    state.inventory.base_mix.inTransit = 0;
+
+    state.inventory.packaging_material.onHand = 50;
+    state.inventory.packaging_material.reorderPoint = 200;
+    state.inventory.packaging_material.orderQty = 800;
+    state.inventory.packaging_material.inTransit = 0;
+
+    const day4Room = { ...mockRoom, currentDay: 4 };
+    const configuredLeadTimes = {
+      rawMaterial: 5,
+      packagingMaterial: 6,
+      machineProcurement: 3
+    };
+
+    const nextState = runSimDay(
+      day4Room,
+      state,
+      0, // 0 demand so consumption doesn't alter math
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      configuredLeadTimes
+    );
+
+    // Verify raw material order placed with arrival on day 4 + 5 = 9
+    const rawPO = nextState.purchaseOrders.find(po => po.materialType === 'base_mix');
+    expect(rawPO).toBeDefined();
+    expect(rawPO?.orderDay).toBe(4);
+    expect(rawPO?.arrivalDay).toBe(9); // 4 + 5
+
+    // Verify packaging material order placed with arrival on day 4 + 6 = 10
+    const packPO = nextState.purchaseOrders.find(po => po.materialType === 'packaging_material');
+    expect(packPO).toBeDefined();
+    expect(packPO?.orderDay).toBe(4);
+    expect(packPO?.arrivalDay).toBe(10); // 4 + 6
+  });
+
+  test('Dynamic scenario material lead times with alternative configuration (1 day raw, 4 days packaging)', () => {
+    const state = createMockTeamState();
+    state.inventory.base_mix.onHand = 100;
+    state.inventory.base_mix.reorderPoint = 300;
+    state.inventory.base_mix.orderQty = 500;
+    state.inventory.base_mix.inTransit = 0;
+
+    state.inventory.packaging_material.onHand = 50;
+    state.inventory.packaging_material.reorderPoint = 200;
+    state.inventory.packaging_material.orderQty = 600;
+    state.inventory.packaging_material.inTransit = 0;
+
+    const day2Room = { ...mockRoom, currentDay: 2 };
+    const altLeadTimes = {
+      rawMaterial: 1,
+      packagingMaterial: 4,
+      machineProcurement: 5
+    };
+
+    const nextState = runSimDay(
+      day2Room,
+      state,
+      0,
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      altLeadTimes
+    );
+
+    const rawPO = nextState.purchaseOrders.find(po => po.materialType === 'base_mix');
+    expect(rawPO?.arrivalDay).toBe(3); // 2 + 1
+
+    const packPO = nextState.purchaseOrders.find(po => po.materialType === 'packaging_material');
+    expect(packPO?.arrivalDay).toBe(6); // 2 + 4
+  });
+
 });

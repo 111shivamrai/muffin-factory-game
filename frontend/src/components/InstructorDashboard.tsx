@@ -1967,11 +1967,6 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         className={`w-full p-2 bg-white border rounded font-mono text-xs text-[#1c1917] ${scPackagingMaterialCost === '' ? 'border-red-300' : 'border-muffin-brown/20'}`}
                       />
                     </div>
-                    <div className="space-y-1 flex flex-col justify-end">
-                      <div className="p-2 bg-stone-50 border border-stone-200/80 rounded text-[10px] text-stone-600 font-mono leading-tight">
-                        Direct material cost: <span className="font-extrabold text-stone-800">₹{((typeof scBaseMixCost === 'number' ? scBaseMixCost : 0) + (typeof scPackagingMaterialCost === 'number' ? scPackagingMaterialCost : 0)).toFixed(2)}</span> / muffin
-                      </div>
-                    </div>
                   </div>
                   {/* Required fields note */}
                   {(!scName.trim() || scMaxDays === '' || scRealTime === '' || scBaseMixCost === '' || scPackagingMaterialCost === '' || scSellingPrice === '') && (

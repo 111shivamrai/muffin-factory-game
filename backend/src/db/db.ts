@@ -478,7 +478,7 @@ class DatabaseManager {
       const res = await this.pool.query('SELECT * FROM rooms WHERE code = $1', [code]);
       if (res.rows.length === 0) return null;
       const row = res.rows[0];
-      return {
+      const room: Room = {
         id: row.id,
         code: row.code,
         name: row.name,
@@ -491,9 +491,24 @@ class DatabaseManager {
         createdAt: new Date(row.created_at),
         createdBy: row.created_by
       };
+      if (room.scenarioId) {
+        room.scenarioConfig = await this.getScenarioById(room.scenarioId) || undefined;
+      }
+      if (!room.scenarioConfig) {
+        room.scenarioConfig = (await this.getScenarios()).find(s => s.difficulty === room.difficulty);
+      }
+      return room;
     } else {
       const db = this.readJsonDb();
       const r = db.rooms.find(room => room.code.toLowerCase() === code.toLowerCase());
+      if (r) {
+        if (r.scenarioId && !r.scenarioConfig) {
+          r.scenarioConfig = db.scenarios.find(s => s.id === r.scenarioId);
+        }
+        if (!r.scenarioConfig) {
+          r.scenarioConfig = db.scenarios.find(s => s.difficulty === r.difficulty);
+        }
+      }
       return r || null;
     }
   }
@@ -503,7 +518,7 @@ class DatabaseManager {
       const res = await this.pool.query('SELECT * FROM rooms WHERE id = $1', [id]);
       if (res.rows.length === 0) return null;
       const row = res.rows[0];
-      return {
+      const room: Room = {
         id: row.id,
         code: row.code,
         name: row.name,
@@ -516,9 +531,24 @@ class DatabaseManager {
         createdAt: new Date(row.created_at),
         createdBy: row.created_by
       };
+      if (room.scenarioId) {
+        room.scenarioConfig = await this.getScenarioById(room.scenarioId) || undefined;
+      }
+      if (!room.scenarioConfig) {
+        room.scenarioConfig = (await this.getScenarios()).find(s => s.difficulty === room.difficulty);
+      }
+      return room;
     } else {
       const db = this.readJsonDb();
       const r = db.rooms.find(room => room.id === id);
+      if (r) {
+        if (r.scenarioId && !r.scenarioConfig) {
+          r.scenarioConfig = db.scenarios.find(s => s.id === r.scenarioId);
+        }
+        if (!r.scenarioConfig) {
+          r.scenarioConfig = db.scenarios.find(s => s.difficulty === r.difficulty);
+        }
+      }
       return r || null;
     }
   }
@@ -751,6 +781,10 @@ class DatabaseManager {
   async saveScenario(scenario: SavedScenario): Promise<SavedScenario> {
     if (this.isPostgres && this.pool) {
       const configJson = JSON.stringify({
+        startInventory: scenario.startInventory,
+        startMachines: scenario.startMachines,
+        sellingPrice: scenario.sellingPrice,
+        starsThresholds: scenario.starsThresholds,
         rawMaterialCosts: scenario.rawMaterialCosts,
         leadTimes: scenario.leadTimes,
         breakdownsEnabled: scenario.breakdownsEnabled,
@@ -797,10 +831,14 @@ class DatabaseManager {
           maxDays: row.max_days,
           tickRate: row.tick_rate,
           startCash: row.start_cash,
+          startInventory: conf.startInventory,
+          startMachines: conf.startMachines,
+          sellingPrice: conf.sellingPrice,
+          starsThresholds: conf.starsThresholds,
           holdingCostRate: conf.holdingCostRate !== undefined ? conf.holdingCostRate : 0.02,
           lostSalesPenaltyRate: conf.lostSalesPenaltyRate !== undefined ? conf.lostSalesPenaltyRate : 2.5,
           rawMaterialCosts: conf.rawMaterialCosts || { baseMix: 5.0, packaging: 1.0, orderCost: 150.0 },
-          leadTimes: conf.leadTimes || { rawMaterial: 3, machineProcurement: 5 },
+          leadTimes: conf.leadTimes || { rawMaterial: 3, packagingMaterial: 2, machineProcurement: 5 },
           breakdownsEnabled: conf.breakdownsEnabled !== false,
           demand: conf.demand,
           machineSettings: conf.machineSettings,
@@ -833,10 +871,14 @@ class DatabaseManager {
         maxDays: row.max_days,
         tickRate: row.tick_rate,
         startCash: row.start_cash,
+        startInventory: conf.startInventory,
+        startMachines: conf.startMachines,
+        sellingPrice: conf.sellingPrice,
+        starsThresholds: conf.starsThresholds,
         holdingCostRate: conf.holdingCostRate !== undefined ? conf.holdingCostRate : 0.02,
         lostSalesPenaltyRate: conf.lostSalesPenaltyRate !== undefined ? conf.lostSalesPenaltyRate : 2.5,
         rawMaterialCosts: conf.rawMaterialCosts || { baseMix: 5.0, packaging: 1.0, orderCost: 150.0 },
-        leadTimes: conf.leadTimes || { rawMaterial: 3, machineProcurement: 5 },
+        leadTimes: conf.leadTimes || { rawMaterial: 3, packagingMaterial: 2, machineProcurement: 5 },
         breakdownsEnabled: conf.breakdownsEnabled !== false,
         demand: conf.demand,
         machineSettings: conf.machineSettings,

@@ -301,11 +301,9 @@ export function runSimDay(
       const orderQty = inv.orderQty;
       if (orderQty > 0) {
         // Place automatic order
-        const baseLT = inv.leadTime !== undefined
-          ? inv.leadTime
-          : ((matType === 'packaging_material' && (baseLeadTimes as any).packagingMaterial !== undefined)
-            ? (baseLeadTimes as any).packagingMaterial
-            : baseLeadTimes.rawMaterial);
+        const baseLT = matType === 'packaging_material'
+          ? ((baseLeadTimes as any)?.packagingMaterial ?? inv.leadTime ?? 2)
+          : (baseLeadTimes?.rawMaterial ?? inv.leadTime ?? 3);
         const leadTime = Math.max(1, baseLT + rawMaterialLeadTimeModifier);
         const poId = `po_${day}_${matType}_${Math.random().toString(36).substr(2, 5)}`;
         

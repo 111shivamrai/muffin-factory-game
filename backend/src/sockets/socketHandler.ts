@@ -194,14 +194,28 @@ export function registerSocketHandler(io: Server) {
         if (!teamState || isNewTeam) {
           teamState = createInitialTeamState(team.id, team.name, team.controllerId, scenario);
           await db.saveTeamState(team.id, teamState.cash, teamState.status, (teamState as any).allocationStrategy ? teamState : { ...teamState, allocationStrategy: 'contracts_first' } as any);
-        } else if (room.id === 'room_demo_001') {
-          // In demo room, ensure fresh starting machine inTransit state (0 in transit)
-          if (teamState.machines) {
-            teamState.machines.mixing.inTransit = 0;
-            teamState.machines.baking.inTransit = 0;
-            teamState.machines.icing.inTransit = 0;
-            teamState.machines.packaging.inTransit = 0;
-            teamState.machineOrders = [];
+        } else {
+          let updated = false;
+          if (teamState.inventory?.base_mix && scenario.leadTimes?.rawMaterial !== undefined && teamState.inventory.base_mix.leadTime !== scenario.leadTimes.rawMaterial) {
+            teamState.inventory.base_mix.leadTime = scenario.leadTimes.rawMaterial;
+            updated = true;
+          }
+          if (teamState.inventory?.packaging_material && (scenario.leadTimes as any)?.packagingMaterial !== undefined && teamState.inventory.packaging_material.leadTime !== (scenario.leadTimes as any).packagingMaterial) {
+            teamState.inventory.packaging_material.leadTime = (scenario.leadTimes as any).packagingMaterial;
+            updated = true;
+          }
+          if (room.id === 'room_demo_001') {
+            // In demo room, ensure fresh starting machine inTransit state (0 in transit)
+            if (teamState.machines) {
+              teamState.machines.mixing.inTransit = 0;
+              teamState.machines.baking.inTransit = 0;
+              teamState.machines.icing.inTransit = 0;
+              teamState.machines.packaging.inTransit = 0;
+              teamState.machineOrders = [];
+              updated = true;
+            }
+          }
+          if (updated) {
             await db.saveTeamState(team.id, teamState.cash, teamState.status, teamState);
           }
         }
@@ -301,9 +315,10 @@ export function registerSocketHandler(io: Server) {
               if (reorderPoint !== undefined) {
                 inv.reorderPoint = Math.max(0, parseInt(reorderPoint) || 0);
               }
-              if (customLeadTime !== undefined && Number.isInteger(Number(customLeadTime)) && Number(customLeadTime) > 0) {
-                inv.leadTime = Number(customLeadTime);
-              }
+              const configuredScenarioLT = materialType === 'packaging_material'
+                ? ((scenario.leadTimes as any)?.packagingMaterial ?? (customLeadTime ? Number(customLeadTime) : inv.leadTime) ?? 2)
+                : (scenario.leadTimes?.rawMaterial ?? (customLeadTime ? Number(customLeadTime) : inv.leadTime) ?? 3);
+              inv.leadTime = configuredScenarioLT;
 
               // Place replenishment order if none currently in transit, orderQty > 0,
               // and current inventory position (onHand + inTransit) is at or below reorder point
@@ -321,11 +336,9 @@ export function registerSocketHandler(io: Server) {
                   .filter((ev: any) => ev.active && ev.targetVariable === 'lead_time')
                   .reduce((sum: number, ev: any) => sum + ev.modifier, 0) || 0;
 
-                const baseLT = inv.leadTime !== undefined
-                  ? inv.leadTime
-                  : ((materialType === 'packaging_material' && (baseLeadTimes as any).packagingMaterial !== undefined)
-                    ? (baseLeadTimes as any).packagingMaterial
-                    : baseLeadTimes.rawMaterial);
+                const baseLT = materialType === 'packaging_material'
+                  ? ((baseLeadTimes as any)?.packagingMaterial ?? inv.leadTime ?? 2)
+                  : (baseLeadTimes?.rawMaterial ?? inv.leadTime ?? 3);
                 const leadTime = Math.max(1, baseLT + rawMaterialLeadTimeModifier);
                 const poId = `po_${room.currentDay}_${materialType}_${Math.random().toString(36).substr(2, 5)}`;
 
