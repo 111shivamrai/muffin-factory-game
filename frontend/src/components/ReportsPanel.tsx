@@ -209,45 +209,58 @@ function ReportsPanel() {
             onClick={(e) => e.stopPropagation()}
             className="max-w-4xl w-full max-h-[90vh] bg-white rounded-3xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
           >
-            {/* Modal Header with Section Switcher & Close */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-stone-200 bg-stone-50/90 shrink-0 gap-3">
-              <div className="flex items-center gap-1.5 overflow-x-auto p-1 bg-stone-200/60 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setActiveModal('performance')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeModal === 'performance' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600 hover:text-stone-900'
-                  }`}
-                >
-                  <TrendingUp className="w-3.5 h-3.5 text-rose-500" />
-                  <span className="whitespace-nowrap">Performance Analytics</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveModal('reports')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeModal === 'reports' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600 hover:text-stone-900'
-                  }`}
-                >
-                  <Receipt className="w-3.5 h-3.5 text-amber-500" />
-                  <span className="whitespace-nowrap">Reports & Analytics</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveModal('academic')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    activeModal === 'academic' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600 hover:text-stone-900'
-                  }`}
-                >
-                  <GraduationCap className="w-3.5 h-3.5 text-indigo-500" />
-                  <span className="whitespace-nowrap">Academic Score</span>
-                </button>
+            {/* Modal Header showing ONLY the selected section's title & icon */}
+            <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-stone-200 bg-stone-50/95 shrink-0 gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                {activeModal === 'performance' ? (
+                  <>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                      <TrendingUp className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-black tracking-tight uppercase text-stone-900 font-sans">
+                        PERFORMANCE ANALYTICS
+                      </h3>
+                      <p className="text-[10px] text-stone-500 font-medium truncate">
+                        Graphs, trends & simulation trajectories
+                      </p>
+                    </div>
+                  </>
+                ) : activeModal === 'reports' ? (
+                  <>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                      <Receipt className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-black tracking-tight uppercase text-stone-900 font-sans">
+                        REPORTS & ANALYTICS
+                      </h3>
+                      <p className="text-[10px] text-stone-500 font-medium truncate">
+                        Financial statements & operational summary
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                      <GraduationCap className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-black tracking-tight uppercase text-stone-900 font-sans">
+                        ACADEMIC PERFORMANCE SCORE
+                      </h3>
+                      <p className="text-[10px] text-stone-500 font-medium truncate">
+                        Weighted evaluation rubric & academic grading
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
 
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-8 h-8 rounded-full bg-stone-200/80 hover:bg-stone-300 text-stone-600 hover:text-stone-900 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                className="w-8 h-8 rounded-full bg-stone-200/80 hover:bg-stone-300 text-stone-600 hover:text-stone-900 flex items-center justify-center transition-colors cursor-pointer shrink-0 border-none"
                 title="Close dialog (Esc)"
               >
                 <X className="w-4 h-4" />
@@ -261,17 +274,11 @@ function ReportsPanel() {
               {activeModal === 'performance' && (
                 <div className="space-y-4 animate-in fade-in duration-150">
                   <div className="rounded-2xl bg-white border border-rose-100 shadow-xs p-4 sm:p-5">
-                    {/* Header with Title, Day badge, and PDF Report button */}
+                    {/* Header with Day badge and PDF Report button */}
                     <div className="flex flex-wrap items-center justify-between pb-3 mb-3 border-b border-rose-100 gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xs font-black text-stone-800 uppercase tracking-wide flex items-center gap-1.5 font-sans">
-                          <TrendingUp className="w-4 h-4 text-rose-500" />
-                          <span>PERFORMANCE ANALYTICS</span>
-                        </span>
-                        <span className="px-2.5 py-0.5 rounded-full bg-rose-100/80 text-rose-700 border border-rose-200 text-[9.5px] font-extrabold tracking-wider font-mono">
-                          SIMULATION DAY {history.days.length} OF {room?.maxDays || 30}
-                        </span>
-                      </div>
+                      <span className="px-3 py-1 rounded-full bg-rose-100/80 text-rose-700 border border-rose-200 text-[10px] font-extrabold tracking-wider font-mono">
+                        SIMULATION DAY {history.days.length} OF {room?.maxDays || 30}
+                      </span>
                       <button
                         type="button"
                         onClick={handleDownloadPdf}
@@ -378,11 +385,11 @@ function ReportsPanel() {
                       <div className="flex items-center gap-2">
                         <Receipt className="w-4 h-4 text-amber-600 shrink-0" />
                         <span className="font-extrabold tracking-wide text-xs uppercase text-stone-800">
-                          Reports & Analytics
+                          Operational Financial Summary
                         </span>
                       </div>
-                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-                        Operational Summary
+                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider font-mono">
+                        Day {history.days.length} Ledger
                       </span>
                     </header>
                     <div className="p-4 sm:p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -428,11 +435,11 @@ function ReportsPanel() {
                       <div className="flex items-center gap-2">
                         <GraduationCap className="w-4 h-4 text-indigo-600 shrink-0" />
                         <span className="font-extrabold tracking-wide text-xs uppercase text-stone-800">
-                          Academic Performance Score
+                          Weighted Grading Rubric
                         </span>
                       </div>
-                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider">
-                        Evaluation Rubric
+                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider font-mono">
+                        Evaluation Weights
                       </span>
                     </header>
 

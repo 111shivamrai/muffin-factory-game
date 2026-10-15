@@ -167,30 +167,30 @@ export default function App() {
 
   // 5. Operator is in a running room -> Render full Operations Dashboard spanning full screen width and height
   return (
-    <div className="h-screen w-screen overflow-hidden p-3 flex flex-col gap-3 font-sans select-none relative" style={{ fontFamily: 'Nunito, system-ui, sans-serif', background: 'linear-gradient(135deg, #fff1f3 0%, #fde7ef 40%, #fce7f3 100%)' }}>
+    <div className="h-screen w-screen overflow-hidden p-2.5 sm:p-3 flex flex-col gap-2.5 font-sans select-none relative" style={{ fontFamily: 'Nunito, system-ui, sans-serif', background: 'linear-gradient(135deg, #fff1f3 0%, #fde7ef 40%, #fce7f3 100%)' }}>
       
       {/* Top Status Bar HUD */}
       <DashboardTopBar />
 
       {/* Main Dashboard Workspace Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-3 min-h-0 lg:overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[390px_1fr] xl:grid-cols-[400px_1fr] gap-2.5 min-h-0 lg:overflow-hidden">
       
         {/* LEFT SIDEBAR: Inventory & Machine Operations Controls */}
-        <div className="flex flex-col gap-3 overflow-y-auto max-h-full pr-1 min-h-0">
+        <div className="flex flex-col gap-2.5 overflow-y-auto max-h-full pr-0.5 min-h-0">
           <InventoryPanel />
           <OperationsAdvisor />
           <MachinePanel />
         </div>
 
         {/* FACTORY AREA: Factory View & Reports */}
-        <div className="flex flex-col gap-3 min-h-0 overflow-hidden">
+        <div className="flex flex-col gap-2.5 min-h-0 overflow-hidden">
           
           {/* Factory Floor Live Feed */}
           <FactoryVisualization />
 
-          {/* Reports, Analytics & Score */}
-          <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3">
-            <React.Suspense fallback={<div className="h-48 flex items-center justify-center text-xs text-stone-400">Loading reports & analytics...</div>}>
+          {/* Reports, Analytics & Score Hub */}
+          <div className="flex-1 min-h-0 overflow-y-auto pr-0.5 space-y-2.5">
+            <React.Suspense fallback={<div className="h-28 flex items-center justify-center text-xs text-stone-400">Loading reports & analytics...</div>}>
               <ReportsPanel />
             </React.Suspense>
           </div>

@@ -152,11 +152,11 @@ function InventoryPanel() {
     };
 
     return (
-      <div className="flex items-center justify-between py-2 border-b border-[#f0e6d6]/60 last:border-0">
-        <span className="text-[12px] font-extrabold text-[#1c1917] tracking-wide font-sans select-none">
+      <div className="flex items-center justify-between py-1.5 border-b border-[#f0e6d6]/60 last:border-0">
+        <span className="text-[11.5px] font-extrabold text-[#1c1917] tracking-wide font-sans select-none">
           {label}
         </span>
-        <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-sm">
+        <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-2xs">
           {isController ? (
             <button
               type="button"
@@ -165,7 +165,7 @@ function InventoryPanel() {
                 setLocalStr(String(next));
                 onChange(next);
               }}
-              className="w-12 h-10 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
+              className="w-9 h-8 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-lg flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
             >
               −
             </button>
@@ -179,7 +179,7 @@ function InventoryPanel() {
             onChange={handleTextChange}
             onBlur={handleBlur}
             disabled={!isController}
-            className="w-20 h-10 bg-white text-[#1c1917] text-sm font-extrabold flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
+            className="w-16 h-8 bg-white text-[#1c1917] text-xs font-extrabold flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
           />
           {isController ? (
             <button
@@ -189,7 +189,7 @@ function InventoryPanel() {
                 setLocalStr(String(next));
                 onChange(next);
               }}
-              className="w-12 h-10 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
+              className="w-9 h-8 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-lg flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85 transition-all border-none select-none leading-none"
             >
               +
             </button>
@@ -204,10 +204,10 @@ function InventoryPanel() {
     <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0">
 
       {/* Header with Clean White Financial Hint Box */}
-      <header className="px-3.5 py-2.5 bg-[#0e8a43] text-white font-extrabold tracking-wide text-xs sm:text-sm flex items-center justify-between gap-2 shrink-0 select-none">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="size-6 rounded-md bg-white/20 grid place-items-center text-xs shrink-0">📦</span>
-          <span className="truncate">RAW MATERIAL MANAGEMENT</span>
+      <header className="px-3 py-2 bg-[#0e8a43] text-white font-extrabold tracking-wide text-xs flex items-center justify-between gap-1.5 shrink-0 select-none">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="size-5 rounded-md bg-white/20 grid place-items-center text-xs shrink-0">📦</span>
+          <span className="text-[11.5px] font-black tracking-tight whitespace-nowrap">RAW MATERIAL MANAGEMENT</span>
         </div>
         
         {/* Eye-Friendly White Financial Hint Box with Dedicated Open Button */}
@@ -216,12 +216,12 @@ function InventoryPanel() {
             setShowFinancesModal(true);
             setIsAttentionActive(false);
           }}
-          className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-white text-stone-800 shadow-xs border border-emerald-100 cursor-pointer select-none transition-all hover:bg-stone-50 hover:shadow-sm active:scale-95 shrink-0 ${
-            isAttentionActive ? 'ring-2 ring-white/90 shadow-md scale-[1.02]' : ''
+          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-white text-stone-800 shadow-xs border border-emerald-100 cursor-pointer select-none transition-all hover:bg-stone-50 hover:shadow-sm active:scale-95 shrink-0 ${
+            isAttentionActive ? 'ring-2 ring-white/90 shadow-md scale-[1.01]' : ''
           }`}
           title="Click to view Financial Hint, unit economics, and cost rules"
         >
-          <div className="flex items-center gap-1.5 font-bold text-[10.5px]">
+          <div className="flex items-center gap-1 font-bold text-[10px]">
             <span className="text-xs">💡</span>
             <span className="font-extrabold text-stone-800 whitespace-nowrap">Financial Hint</span>
           </div>
@@ -233,7 +233,7 @@ function InventoryPanel() {
               setShowFinancesModal(true);
               setIsAttentionActive(false);
             }}
-            className="px-2.5 py-0.5 rounded-lg bg-[#0e8a43] hover:bg-[#0b6e35] text-white font-black text-[9.5px] uppercase tracking-wider shadow-2xs transition-colors cursor-pointer border-none flex items-center"
+            className="px-2 py-0.5 rounded-md bg-[#0e8a43] hover:bg-[#0b6e35] text-white font-black text-[9px] uppercase tracking-wider transition-colors cursor-pointer border-none flex items-center"
           >
             Open
           </button>
@@ -241,32 +241,32 @@ function InventoryPanel() {
       </header>
 
       {/* Content */}
-      <div className="p-3.5 overflow-hidden flex-1 flex flex-col min-h-0">
+      <div className="p-2.5 overflow-hidden flex-1 flex flex-col min-h-0">
         {/* Enclosing Inventory Section Container */}
-        <div className="rounded-2xl bg-[#faf7f2] border border-[#e8dfd3] p-2.5 mb-3.5 shrink-0 shadow-xs">
+        <div className="rounded-2xl bg-[#faf7f2] border border-[#e8dfd3] p-2 mb-2.5 shrink-0 shadow-2xs">
           {/* Centered INVENTORY Header directly above middle card */}
-          <div className="text-center mb-2 select-none">
-            <span className="text-[11px] font-extrabold text-[#1c1917] tracking-widest uppercase bg-white px-3 py-0.5 rounded-full border border-[#e6dcce] shadow-2xs">
+          <div className="text-center mb-1.5 select-none">
+            <span className="text-[10px] font-extrabold text-[#1c1917] tracking-widest uppercase bg-white px-2.5 py-0.5 rounded-full border border-[#e6dcce] shadow-2xs">
               INVENTORY
             </span>
           </div>
 
           {/* Three Inventory Cards Grid */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
-              <div className="text-[9px] font-bold text-stone-500 tracking-wider">RAW MATERIAL</div>
-              <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{mixOnHand}</div>
-              <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {mixTransit}</div>
+          <div className="grid grid-cols-3 gap-1.5">
+            <div className="rounded-xl bg-white border border-[#e6dcce] p-1.5 text-center shadow-2xs">
+              <div className="text-[8.5px] font-bold text-stone-500 tracking-wider">RAW MATERIAL</div>
+              <div className="text-lg font-black text-[#0e8a43] leading-tight mt-0.5">{mixOnHand}</div>
+              <div className="text-[10px] font-extrabold text-stone-600 mt-0.5">Transits: {mixTransit}</div>
             </div>
-            <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
-              <div className="text-[9px] font-bold text-stone-500 tracking-wider">PACKAGING MATERIAL</div>
-              <div className="text-xl font-extrabold text-[#ea580c] leading-tight mt-0.5">{packOnHand}</div>
-              <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Transits: {packTransit}</div>
+            <div className="rounded-xl bg-white border border-[#e6dcce] p-1.5 text-center shadow-2xs">
+              <div className="text-[8.5px] font-bold text-stone-500 tracking-wider">PACKAGING MATERIAL</div>
+              <div className="text-lg font-black text-[#ea580c] leading-tight mt-0.5">{packOnHand}</div>
+              <div className="text-[10px] font-extrabold text-stone-600 mt-0.5">Transits: {packTransit}</div>
             </div>
-            <div className="rounded-xl bg-white border border-[#e6dcce] p-2 text-center shadow-xs">
-              <div className="text-[9px] font-bold text-stone-500 tracking-wider">FINISHED GOODS</div>
-              <div className="text-xl font-extrabold text-[#0e8a43] leading-tight mt-0.5">{finishedOnHand}</div>
-              <div className="text-[11px] font-extrabold text-stone-600 mt-0.5">Muffins</div>
+            <div className="rounded-xl bg-white border border-[#e6dcce] p-1.5 text-center shadow-2xs">
+              <div className="text-[8.5px] font-bold text-stone-500 tracking-wider">FINISHED GOODS</div>
+              <div className="text-lg font-black text-[#0e8a43] leading-tight mt-0.5">{finishedOnHand}</div>
+              <div className="text-[10px] font-extrabold text-stone-600 mt-0.5">Muffins</div>
             </div>
           </div>
         </div>
@@ -276,7 +276,7 @@ function InventoryPanel() {
           <button
             type="button"
             onClick={() => setActiveTab('mix')}
-            className={`flex-1 py-3 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl transition-all cursor-pointer border-t border-x ${
+            className={`flex-1 py-2 text-center text-[9.5px] font-black tracking-wider rounded-t-xl transition-all cursor-pointer border-t border-x ${
               activeTab === 'mix'
                 ? 'bg-[#0e8a43] text-white border-[#0e8a43] shadow-sm font-bold'
                 : 'bg-white text-[#5d4037] border-transparent hover:bg-stone-50'
@@ -287,7 +287,7 @@ function InventoryPanel() {
           <button
             type="button"
             onClick={() => setActiveTab('pack')}
-            className={`flex-1 py-3 text-center text-[10px] font-extrabold tracking-wider rounded-t-xl transition-all cursor-pointer border-t border-x ${
+            className={`flex-1 py-2 text-center text-[9.5px] font-black tracking-wider rounded-t-xl transition-all cursor-pointer border-t border-x ${
               activeTab === 'pack'
                 ? 'bg-[#ea580c] text-white border-[#ea580c] shadow-sm font-bold'
                 : 'bg-white text-[#5d4037] border-transparent hover:bg-stone-50'
@@ -298,8 +298,8 @@ function InventoryPanel() {
         </div>
 
         {/* Tab Card Body */}
-        <div className={`rounded-b-2xl border border-t-0 bg-white ${activeTab === 'mix' ? 'border-[#0e8a43]/20' : 'border-[#ea580c]/20'} p-4 py-3.5 flex flex-col`}>
-          <div className="space-y-2 py-1">
+        <div className={`rounded-b-2xl border border-t-0 bg-white ${activeTab === 'mix' ? 'border-[#0e8a43]/20' : 'border-[#ea580c]/20'} p-3 py-2.5 flex flex-col`}>
+          <div className="space-y-1.5 py-0.5">
             {activeTab === 'mix' ? (
               <>
                 <StepperRow label="ORDER QUANTITY" value={mixQty} onChange={setMixQty} step={10} badgeColor="emerald" />
@@ -324,22 +324,22 @@ function InventoryPanel() {
               const displayLT = activeTab === 'mix' ? effectiveMixLT : effectivePackLT;
 
               return (
-                <div className="flex items-center justify-between py-2 border-t border-[#f0e6d6]/80 mt-1 pt-2.5">
+                <div className="flex items-center justify-between py-1.5 border-t border-[#f0e6d6]/80 mt-0.5 pt-2">
                   <div className="flex flex-col select-none">
-                    <span className="text-[12px] font-extrabold text-[#1c1917] tracking-wide font-sans">
+                    <span className="text-[11.5px] font-extrabold text-[#1c1917] tracking-wide font-sans">
                       LEAD TIME (DAYS)
                     </span>
-                    <span className="text-[9.5px] font-medium text-stone-400">
+                    <span className="text-[9px] font-medium text-stone-400">
                       Fixed supplier delivery schedule
                     </span>
                   </div>
-                  <div className="w-[180px] h-11 flex items-center justify-center rounded-2xl border border-[#d8ccbb] bg-[#fffbf5] shadow-xs select-none">
-                    <span className={`text-base font-black mr-1.5 ${
+                  <div className="w-[155px] h-9 flex items-center justify-center rounded-xl border border-[#d8ccbb] bg-[#fffbf5] shadow-2xs select-none">
+                    <span className={`text-sm font-black mr-1.5 ${
                       activeTab === 'mix' ? 'text-[#0e8a43]' : 'text-[#a83b0b]'
                     }`}>
                       {displayLT}
                     </span>
-                    <span className="text-[11px] font-bold text-stone-600 font-sans uppercase tracking-wide">
+                    <span className="text-[10px] font-bold text-stone-600 font-sans uppercase tracking-wide">
                       {leadTimeModifier !== 0 ? `DAYS (${leadTimeModifier > 0 ? `+${leadTimeModifier}` : leadTimeModifier} EVENT)` : 'DAYS (FIXED)'}
                     </span>
                   </div>
@@ -349,13 +349,13 @@ function InventoryPanel() {
           </div>
 
           {/* Footer Apply Changes Button */}
-          <div className="mt-3">
+          <div className="mt-2.5">
             {isController ? (
               <button
                 type="button"
                 disabled={isApplying}
                 onClick={handleApplyChanges}
-                className={`w-full py-3 rounded-xl text-white font-extrabold text-xs transition-all border-none flex items-center justify-center gap-1.5 ${
+                className={`w-full py-2.5 rounded-xl text-white font-extrabold text-xs transition-all border-none flex items-center justify-center gap-1.5 ${
                   activeTab === 'mix'
                     ? 'bg-gradient-to-b from-[#0e8a43] to-[#0b7036] shadow-[0_3px_0_#09592b] hover:translate-y-[1px] hover:shadow-[0_2px_0_#09592b] active:translate-y-[3px] active:shadow-none'
                     : 'bg-gradient-to-b from-[#ea580c] to-[#c2410c] shadow-[0_3px_0_#9a3412] hover:translate-y-[1px] hover:shadow-[0_2px_0_#9a3412] active:translate-y-[3px] active:shadow-none'
@@ -367,7 +367,7 @@ function InventoryPanel() {
                 <span>{isApplying ? 'APPLYING ORDER...' : 'APPLY ORDER CHANGES'}</span>
               </button>
             ) : (
-              <div className="py-2.5 bg-slate-100 border border-slate-200 text-[10px] rounded-xl text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
+              <div className="py-2 bg-slate-100 border border-slate-200 text-[10px] rounded-xl text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
                 <Info className="w-3.5 h-3.5" />
                 <span>OBSERVER MODE – READ ONLY</span>
               </div>
