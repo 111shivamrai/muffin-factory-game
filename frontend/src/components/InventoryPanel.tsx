@@ -4,6 +4,121 @@ import { useShallow } from 'zustand/react/shallow';
 import { Info, Check, Coins } from 'lucide-react';
 import { FinancesModal } from './FinancesModal.js';
 
+interface StepperRowProps {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  step?: number;
+  isController: boolean;
+}
+
+const StepperRow = React.memo(function StepperRow({
+  label,
+  value,
+  onChange,
+  step = 10,
+  isController,
+}: StepperRowProps) {
+  const [localStr, setLocalStr] = useState(String(value));
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (!isFocused) {
+      setLocalStr(String(value));
+    }
+  }, [value, isFocused]);
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(true);
+    // Select all existing text immediately so user can replace entire number in one operation
+    e.target.select();
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    // Allow empty string during editing so user can clear with backspace or select-all + type
+    if (raw === '') {
+      setLocalStr('');
+      return;
+    }
+    const cleaned = raw.replace(/[^0-9]/g, '').slice(0, 5);
+    setLocalStr(cleaned);
+    if (cleaned !== '') {
+      const parsed = parseInt(cleaned, 10);
+      if (!isNaN(parsed)) {
+        onChange(parsed);
+      }
+    }
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    if (localStr === '' || isNaN(parseInt(localStr, 10))) {
+      setLocalStr(String(value));
+    } else {
+      const parsed = Math.min(99999, Math.max(0, parseInt(localStr, 10)));
+      setLocalStr(String(parsed));
+      onChange(parsed);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between py-2.5 border-b border-[#f0e6d6]/70 last:border-0">
+      <span className="text-xs font-black text-[#1c1917] tracking-wide font-sans select-none">
+        {label}
+      </span>
+      <div className="w-[176px] h-10.5 flex items-center rounded-2xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-2xs">
+        {isController ? (
+          <button
+            type="button"
+            onClick={() => {
+              const currentVal = parseInt(localStr, 10) || value;
+              const next = Math.max(0, currentVal - step);
+              setLocalStr(String(next));
+              onChange(next);
+            }}
+            className="w-12 h-full bg-gradient-to-b from-[#faf5eb] to-[#f4e8d4] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f0e0ca] active:opacity-85 transition-all border-none select-none leading-none"
+          >
+            −
+          </button>
+        ) : null}
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={localStr}
+          onFocus={handleFocus}
+          onChange={handleTextChange}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          disabled={!isController}
+          className="w-[80px] h-full bg-white text-[#1c1917] text-sm font-black font-mono flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0 selection:bg-rose-200"
+        />
+        {isController ? (
+          <button
+            type="button"
+            onClick={() => {
+              const currentVal = parseInt(localStr, 10) || value;
+              const next = Math.min(99999, currentVal + step);
+              setLocalStr(String(next));
+              onChange(next);
+            }}
+            className="w-12 h-full bg-gradient-to-b from-[#faf5eb] to-[#f4e8d4] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f0e0ca] active:opacity-85 transition-all border-none select-none leading-none"
+          >
+            +
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+});
+
 function InventoryPanel() {
   const { teamState, room, role, updateInventorySettings } = useGameStore(
     useShallow((state) => ({
@@ -111,94 +226,6 @@ function InventoryPanel() {
   const mixTransit  = inv.base_mix?.inTransit ?? 0;
   const packTransit = inv.packaging_material?.inTransit ?? 0;
 
-  // ─── Sub-components ──────────────────────────────────────────────────────────
-
-  /** Inline label on left, unified reliable pill-stepper on right with smooth editing */
-  function StepperRow({
-    label, value, onChange, step = 10, badgeColor = 'emerald'
-  }: {
-    label: string; value: number; onChange: (v: number) => void; step?: number; badgeColor?: 'emerald' | 'orange';
-  }) {
-    const [localStr, setLocalStr] = useState(String(value));
-    const [isFocused, setIsFocused] = useState(false);
-
-    useEffect(() => {
-      if (!isFocused) {
-        setLocalStr(String(value));
-      }
-    }, [value, isFocused]);
-
-    const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const cleaned = e.target.value.replace(/[^0-9]/g, '').slice(0, 5);
-      setLocalStr(cleaned);
-      if (cleaned !== '') {
-        const parsed = parseInt(cleaned, 10);
-        if (!isNaN(parsed)) {
-          onChange(parsed);
-        }
-      }
-    };
-
-    const handleBlur = () => {
-      setIsFocused(false);
-      if (localStr === '' || isNaN(parseInt(localStr, 10))) {
-        setLocalStr('0');
-        onChange(0);
-      } else {
-        const parsed = parseInt(localStr, 10);
-        setLocalStr(String(parsed));
-        onChange(parsed);
-      }
-    };
-
-    return (
-      <div className="flex items-center justify-between py-2.5 border-b border-[#f0e6d6]/70 last:border-0">
-        <span className="text-xs font-black text-[#1c1917] tracking-wide font-sans select-none">
-          {label}
-        </span>
-        <div className="w-[176px] h-10.5 flex items-center rounded-2xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-2xs">
-          {isController ? (
-            <button
-              type="button"
-              onClick={() => {
-                const next = Math.max(0, value - step);
-                setLocalStr(String(next));
-                onChange(next);
-              }}
-              className="w-12 h-full bg-gradient-to-b from-[#faf5eb] to-[#f4e8d4] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f0e0ca] active:opacity-85 transition-all border-none select-none leading-none"
-            >
-              −
-            </button>
-          ) : null}
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={localStr}
-            onFocus={() => setIsFocused(true)}
-            onChange={handleTextChange}
-            onBlur={handleBlur}
-            disabled={!isController}
-            className="w-[80px] h-full bg-white text-[#1c1917] text-sm font-black font-mono flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0"
-          />
-          {isController ? (
-            <button
-              type="button"
-              onClick={() => {
-                const next = Math.min(99999, value + step);
-                setLocalStr(String(next));
-                onChange(next);
-              }}
-              className="w-12 h-full bg-gradient-to-b from-[#faf5eb] to-[#f4e8d4] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f0e0ca] active:opacity-85 transition-all border-none select-none leading-none"
-            >
-              +
-            </button>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
-
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] overflow-hidden flex flex-col shrink-0">
@@ -302,13 +329,13 @@ function InventoryPanel() {
           <div className="space-y-1.5 py-0.5">
             {activeTab === 'mix' ? (
               <>
-                <StepperRow label="ORDER QUANTITY" value={mixQty} onChange={setMixQty} step={10} badgeColor="emerald" />
-                <StepperRow label="REORDER POINT" value={mixROP} onChange={setMixROP} step={10} badgeColor="emerald" />
+                <StepperRow label="ORDER QUANTITY" value={mixQty} onChange={setMixQty} step={10} isController={isController} />
+                <StepperRow label="REORDER POINT" value={mixROP} onChange={setMixROP} step={10} isController={isController} />
               </>
             ) : (
               <>
-                <StepperRow label="ORDER QUANTITY" value={packQty} onChange={setPackQty} step={10} badgeColor="orange" />
-                <StepperRow label="REORDER POINT" value={packROP} onChange={setPackROP} step={10} badgeColor="orange" />
+                <StepperRow label="ORDER QUANTITY" value={packQty} onChange={setPackQty} step={10} isController={isController} />
+                <StepperRow label="REORDER POINT" value={packROP} onChange={setPackROP} step={10} isController={isController} />
               </>
             )}
 

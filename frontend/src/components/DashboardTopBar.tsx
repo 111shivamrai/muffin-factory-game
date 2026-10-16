@@ -46,9 +46,40 @@ function DashboardTopBar() {
     return (!c.status || c.status === 'offered') && isOfferOpen;
   });
 
-  const [closedNoticeContractIds, setClosedNoticeContractIds] = useState<string[]>([]);
-  const pendingNotificationContracts = pendingOffers.filter(c => !closedNoticeContractIds.includes(c.id));
-  const contractBadgeCount = pendingNotificationContracts.length;
+  // Track dismissed notifications with localStorage persistence scoped by room and team
+  const notifStorageKey = `muffin_notif_dismissed_${room.id}_${teamState.id}`;
+  const [dismissedNoticeIds, setDismissedNoticeIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`muffin_notif_dismissed_${room.id}_${teamState.id}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleDismissNotification = (contractId: string) => {
+    setDismissedNoticeIds(prev => {
+      if (prev.includes(contractId)) return prev;
+      const next = [...prev, contractId];
+      try {
+        localStorage.setItem(notifStorageKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  // Notification requirements:
+  // 1. Shows exactly 10 days before contract starts (offerStartDay = max(1, startDay - 10))
+  // 2. Visible for exactly TWO simulation days [offerStartDay, offerStartDay + 2)
+  // 3. Automatically dismisses when currentDay >= offerStartDay + 2
+  // 4. Manual dismiss permanently silences that offer toast
+  const pendingNotificationContracts = pendingOffers.filter(c => {
+    const offerStartDay = Math.max(1, c.startDay - 10);
+    const isWithin2DayWindow = currentDay >= offerStartDay && currentDay < (offerStartDay + 2);
+    return isWithin2DayWindow && !dismissedNoticeIds.includes(c.id);
+  });
+  const hasActionableOffers = pendingOffers.length > 0;
+  const contractBadgeCount = pendingOffers.length;
   const upcomingContracts = teamState.contracts.filter(c => currentDay < Math.max(1, c.startDay - 10)).sort((a, b) => a.startDay - b.startDay);
 
   // Active lead time modifier from events
@@ -262,23 +293,32 @@ function DashboardTopBar() {
         {/* 7. CONTRACTS */}
         <div 
           onClick={() => setShowContractsModal(true)}
-          className="rounded-2xl bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] px-2 py-1.5 flex items-center gap-1.5 min-w-0 cursor-pointer hover:bg-rose-50/50 transition-colors relative"
+          className={`rounded-2xl px-2 py-1.5 flex items-center gap-1.5 min-w-0 cursor-pointer transition-all relative ${
+            hasActionableOffers
+              ? 'bg-amber-50/80 border-2 border-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.35),0_2px_0_#fcd34d] hover:bg-amber-100/80'
+              : 'bg-white border border-rose-100 shadow-[0_2px_0_#f5d4dc] hover:bg-rose-50/50'
+          }`}
+          title={hasActionableOffers ? `${pendingOffers.length} actionable wholesale contract offer(s) pending review` : 'View Simulation Contracts'}
         >
           <div className="text-lg xl:text-xl shrink-0">📋</div>
           <div className="min-w-0 flex-1">
             <div className="text-[7px] font-extrabold text-stone-500 tracking-wider uppercase flex items-center gap-1 leading-tight truncate">
               <span>CONTRACTS</span>
-              {pendingOffers.length > 0 && (
-                <span className="px-1 py-0.2 bg-rose-100 text-rose-600 border border-rose-200 text-[6.5px] rounded font-bold">
-                  {pendingOffers.length}
+              {hasActionableOffers && (
+                <span className="px-1.5 py-0.2 bg-amber-500 text-white border border-amber-600 text-[6.5px] rounded-full font-black">
+                  {pendingOffers.length} ACTION
                 </span>
               )}
             </div>
-            <div className="text-[11.5px] xl:text-[13px] font-black truncate text-rose-500 font-mono mt-0.5 leading-tight">
+            <div className={`text-[11.5px] xl:text-[13px] font-black truncate font-mono mt-0.5 leading-tight ${
+              hasActionableOffers ? 'text-amber-700' : 'text-rose-500'
+            }`}>
               {activeContracts.length} Active
             </div>
-            <div className="text-[7px] font-bold truncate text-stone-400 font-mono leading-none">
-              {pendingOffers.length > 0 ? `${pendingOffers.length} Offered` : 'View deals'}
+            <div className={`text-[7px] font-bold truncate font-mono leading-none ${
+              hasActionableOffers ? 'text-amber-600' : 'text-stone-400'
+            }`}>
+              {hasActionableOffers ? `${pendingOffers.length} Review Available` : 'View deals'}
             </div>
           </div>
         </div>
@@ -424,7 +464,11 @@ function DashboardTopBar() {
             {/* Contracts */}
             <div 
               onClick={() => { setShowContractsModal(true); setShowMobileMenu(false); }}
-              className="rounded-xl border border-rose-100 p-2.5 flex items-center gap-2 bg-rose-50/20 cursor-pointer relative"
+              className={`rounded-xl p-2.5 flex items-center gap-2 cursor-pointer relative transition-all ${
+                hasActionableOffers
+                  ? 'bg-amber-50/80 border-2 border-amber-400 shadow-sm'
+                  : 'border border-rose-100 bg-rose-50/20'
+              }`}
             >
               <div className="text-xl">
                 📋
@@ -432,14 +476,16 @@ function DashboardTopBar() {
               <div className="min-w-0">
                 <div className="text-[8px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1">
                   Contracts
-                  {pendingOffers.length > 0 && (
-                    <span className="px-1.5 py-0.2 bg-rose-100 text-rose-600 border border-rose-200 text-[6.5px] rounded-md font-bold">
-                      {pendingOffers.length} NEW
+                  {hasActionableOffers && (
+                    <span className="px-1.5 py-0.2 bg-amber-500 text-white border border-amber-600 text-[6.5px] rounded-md font-bold">
+                      {pendingOffers.length} ACTION
                     </span>
                   )}
                 </div>
-                <div className="text-xs font-extrabold truncate text-rose-500">
-                  {activeContracts.length} Active
+                <div className={`text-xs font-extrabold truncate font-mono ${
+                  hasActionableOffers ? 'text-amber-700' : 'text-rose-500'
+                }`}>
+                  {activeContracts.length} Active {hasActionableOffers ? `(${pendingOffers.length} Review Available)` : ''}
                 </div>
               </div>
             </div>
@@ -478,9 +524,9 @@ function DashboardTopBar() {
         </div>
       )}
 
-      {/* Floating Contract Notification Toast (appears during 10-day advance decision window) */}
+      {/* Floating Contract Notification Toast (appears 10 days before start, visible for 2 simulation days) */}
       {pendingNotificationContracts.length > 0 && !showContractsModal && (
-        <div className="fixed top-16 right-6 z-50 animate-bounce">
+        <div className="fixed top-16 right-6 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-3.5 rounded-2xl shadow-2xl border-2 border-white/50 flex items-center gap-3 max-w-sm">
             <div className="text-2xl bg-white/20 p-2 rounded-xl">📜</div>
             <div className="min-w-0 flex-1">
@@ -502,7 +548,7 @@ function DashboardTopBar() {
                 Review
               </button>
               <button 
-                onClick={() => setClosedNoticeContractIds(prev => [...prev, pendingNotificationContracts[0].id])}
+                onClick={() => handleDismissNotification(pendingNotificationContracts[0].id)}
                 className="px-2.5 py-0.5 bg-white/20 hover:bg-white/30 text-white font-bold rounded-lg text-[8px] cursor-pointer border-none transition-all"
               >
                 Dismiss

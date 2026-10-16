@@ -20,7 +20,8 @@ function ReportsPanel() {
   );
   const [selectedChart, setSelectedChart] = useState<'cash' | 'demand' | 'inventory' | 'utilization'>('cash');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const [activeModal, setActiveModal] = useState<'performance' | 'reports' | 'academic' | null>(null);
+  const [pdfSuccessMessage, setPdfSuccessMessage] = useState<string | null>(null);
+  const [activeModal, setActiveModal] = useState<'performance' | 'reports' | 'academic' | 'pdf_preview' | null>(null);
 
   // Keyboard accessibility: ESC key closes modal
   useEffect(() => {
@@ -42,6 +43,7 @@ function ReportsPanel() {
       cash: history.cash[idx],
       revenue: history.revenue[idx],
       demand: history.demand[idx],
+      sales: (history.sales && history.sales[idx] !== undefined) ? history.sales[idx] : null,
       baseMix: history.inventory.base_mix[idx],
       packaging: history.inventory.packaging_material[idx],
       muffins: history.inventory.finished_muffin[idx],
@@ -57,6 +59,7 @@ function ReportsPanel() {
     history.cash,
     history.revenue,
     history.demand,
+    history.sales,
     history.inventory.base_mix,
     history.inventory.packaging_material,
     history.inventory.finished_muffin,
@@ -71,6 +74,7 @@ function ReportsPanel() {
   const handleDownloadPdf = async () => {
     if (!teamState) return;
     setIsGeneratingPdf(true);
+    setPdfSuccessMessage(null);
     try {
       let rank: number | null = null;
       if (leaderboard && leaderboard.length > 0) {
@@ -79,6 +83,11 @@ function ReportsPanel() {
       }
       const { generateTeamReportPDF } = await import('../utils/reportPdfGenerator.js');
       await generateTeamReportPDF(room, teamState, rank);
+      setPdfSuccessMessage('Report downloaded successfully!');
+      setTimeout(() => {
+        setPdfSuccessMessage(null);
+        setActiveModal(null);
+      }, 1500);
     } catch (err) {
       console.error('Failed to generate report PDF:', err);
     } finally {
@@ -201,15 +210,14 @@ function ReportsPanel() {
         {/* Card 4: Generate PDF Report (Row 2, Col 2) */}
         <button
           type="button"
-          onClick={handleDownloadPdf}
-          disabled={isGeneratingPdf}
-          className="group text-left p-3 rounded-2xl bg-white border border-emerald-200/90 shadow-2xs hover:shadow-md hover:border-emerald-400 active:scale-[0.99] transition-all cursor-pointer flex flex-col justify-between h-[100px] sm:h-[105px] relative overflow-hidden disabled:opacity-75 disabled:cursor-wait"
-          title="Click to generate and download comprehensive PDF simulation report"
+          onClick={() => setActiveModal('pdf_preview')}
+          className="group text-left p-3 rounded-2xl bg-white border border-emerald-200/90 shadow-2xs hover:shadow-md hover:border-emerald-400 active:scale-[0.99] transition-all cursor-pointer flex flex-col justify-between h-[100px] sm:h-[105px] relative overflow-hidden"
+          title="Click to preview and download comprehensive PDF simulation report"
         >
           <div className="flex items-start justify-between gap-2 w-full">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                <Download className={`w-4 h-4 ${isGeneratingPdf ? 'animate-bounce' : ''}`} />
+                <Download className="w-4 h-4" />
               </div>
               <div className="min-w-0">
                 <span className="text-[11px] font-black tracking-wide uppercase text-stone-800 block truncate font-sans">
@@ -227,10 +235,10 @@ function ReportsPanel() {
 
           <div className="flex items-center justify-between text-[11px] font-extrabold text-emerald-700 pt-2 border-t border-emerald-100/60 mt-1 w-full">
             <span className="text-[10px] text-stone-500 font-mono">
-              {isGeneratingPdf ? 'Generating...' : 'Audit Ledger'}
+              Audit Ledger
             </span>
             <span className="inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-              {isGeneratingPdf ? 'Please wait...' : 'Download PDF'} <span>{isGeneratingPdf ? '⏳' : '↓'}</span>
+              Preview & Download <span>→</span>
             </span>
           </div>
         </button>
@@ -278,7 +286,7 @@ function ReportsPanel() {
                       </p>
                     </div>
                   </>
-                ) : (
+                ) : activeModal === 'academic' ? (
                   <>
                     <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-xs shrink-0">
                       <GraduationCap className="w-5 h-5" />
@@ -289,6 +297,20 @@ function ReportsPanel() {
                       </h3>
                       <p className="text-[10px] text-stone-500 font-medium truncate">
                         Weighted evaluation rubric & academic grading
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-xs shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-black tracking-tight uppercase text-stone-900 font-sans">
+                        SIMULATION REPORT
+                      </h3>
+                      <p className="text-[10px] text-stone-500 font-medium truncate">
+                        Review your factory's performance and download a report of your simulation
                       </p>
                     </div>
                   </>
@@ -319,13 +341,12 @@ function ReportsPanel() {
                       </span>
                       <button
                         type="button"
-                        onClick={handleDownloadPdf}
-                        disabled={isGeneratingPdf}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-extrabold text-rose-700 bg-white hover:bg-rose-50 active:bg-rose-100 border border-rose-300 rounded-xl cursor-pointer transition-all shadow-xs hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
-                        title="Download comprehensive PDF report"
+                        onClick={() => setActiveModal('pdf_preview')}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-extrabold text-rose-700 bg-white hover:bg-rose-50 active:bg-rose-100 border border-rose-300 rounded-xl cursor-pointer transition-all shadow-xs hover:shadow-sm active:scale-95"
+                        title="Preview and download comprehensive PDF simulation report"
                       >
                         <Download className="w-3.5 h-3.5 text-rose-500" />
-                        <span>{isGeneratingPdf ? 'Generating PDF...' : 'PDF Report'}</span>
+                        <span>PDF Report</span>
                       </button>
                     </div>
 
@@ -382,7 +403,7 @@ function ReportsPanel() {
                               <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#fcd0c5', color: '#1e293b' }} />
                               <Legend wrapperStyle={{ fontSize: 12 }} iconType="circle" />
                               <Line type="monotone" dataKey="demand" name="Market Demand" stroke="#fb923c" strokeWidth={2} dot={{ r: 2 }} />
-                              <Line type="monotone" dataKey="revenue" name="Sales Proxy" stroke="#60a5fa" strokeWidth={1.5} dot={{ r: 2 }} />
+                              <Line type="monotone" dataKey="sales" name="Actual Daily Sales" stroke="#60a5fa" strokeWidth={1.5} dot={{ r: 2 }} connectNulls={false} />
                             </LineChart>
                           ) : selectedChart === 'inventory' ? (
                             <LineChart data={chartData} margin={{ top: 5, right: 15, left: -10, bottom: 0 }}>
@@ -525,6 +546,104 @@ function ReportsPanel() {
                 </div>
               )}
 
+              {/* ── MODAL VIEW 4: PDF Report Preview ── */}
+              {activeModal === 'pdf_preview' && (
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  {/* Top Intro Card */}
+                  <div className="rounded-2xl bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/40 border border-emerald-200/90 p-4 sm:p-5 shadow-xs">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shrink-0">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-base font-black text-stone-900 tracking-tight font-sans">
+                          Simulation Report
+                        </h4>
+                        <p className="text-xs text-stone-600 leading-relaxed font-sans">
+                          Review your factory's performance and download a report of your simulation.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Metadata strip */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4 pt-3.5 border-t border-emerald-100">
+                      <div className="bg-white/80 rounded-xl p-2.5 border border-emerald-100/80">
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Timeline</span>
+                        <span className="text-xs font-black text-stone-800 font-mono">Day {history.days.length} of {room?.maxDays || 30}</span>
+                      </div>
+                      <div className="bg-white/80 rounded-xl p-2.5 border border-emerald-100/80">
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Liquid Capital</span>
+                        <span className="text-xs font-black text-emerald-700 font-mono">₹{teamState.cash.toLocaleString()}</span>
+                      </div>
+                      <div className="bg-white/80 rounded-xl p-2.5 border border-emerald-100/80">
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Customer Satisfaction</span>
+                        <span className="text-xs font-black text-stone-800 font-mono">{report.fillRate}% CSAT</span>
+                      </div>
+                      <div className="bg-white/80 rounded-xl p-2.5 border border-emerald-100/80">
+                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block">Academic Score</span>
+                        <span className="text-xs font-black text-indigo-700 font-mono">{academicScore.totalScore}/100</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Concise Bullet Points describing report contents */}
+                  <div className="rounded-2xl bg-white border border-stone-200 p-4 sm:p-5 shadow-xs space-y-3">
+                    <div className="text-xs font-black uppercase tracking-wider text-stone-700 font-sans flex items-center gap-1.5 pb-2 border-b border-stone-100">
+                      <span>The PDF includes:</span>
+                    </div>
+
+                    <ul className="space-y-2.5 text-xs text-stone-700">
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                        <div>
+                          <strong className="text-stone-900 font-extrabold">Financial performance, revenue, costs, and profit:</strong>
+                          <span className="text-stone-600 block text-[11px] mt-0.5">Comprehensive audit of liquid cash balance, cumulative revenue, operating expenses, and net profit.</span>
+                        </div>
+                      </li>
+
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                        <div>
+                          <strong className="text-stone-900 font-extrabold">Daily demand, sales, and fulfilment performance:</strong>
+                          <span className="text-stone-600 block text-[11px] mt-0.5">Day-by-day market demand curves, actual units sold, lost sales, and customer satisfaction fill rates.</span>
+                        </div>
+                      </li>
+
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                        <div>
+                          <strong className="text-stone-900 font-extrabold">Raw material, packaging, and inventory information:</strong>
+                          <span className="text-stone-600 block text-[11px] mt-0.5">Inventory ledgers for muffin mix ingredients, packaging boxes, and finished goods stock levels.</span>
+                        </div>
+                      </li>
+
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">4</span>
+                        <div>
+                          <strong className="text-stone-900 font-extrabold">Machine capacity, utilisation, and production performance:</strong>
+                          <span className="text-stone-600 block text-[11px] mt-0.5">Production throughput, active bottleneck analysis across stations (mixing, baking, icing, packaging), and breakdown repairs.</span>
+                        </div>
+                      </li>
+
+                      <li className="flex items-start gap-2.5">
+                        <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">5</span>
+                        <div>
+                          <strong className="text-stone-900 font-extrabold">Contract performance and academic score:</strong>
+                          <span className="text-stone-600 block text-[11px] mt-0.5">Wholesale contract fulfillment rate, missed delivery penalties, rubric grade, and cohort ranking.</span>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {pdfSuccessMessage && (
+                    <div className="flex items-center justify-center gap-2 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-xl p-3 animate-in fade-in">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>{pdfSuccessMessage}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
             </div>
 
             {/* Modal Bottom Status Bar */}
@@ -532,13 +651,34 @@ function ReportsPanel() {
               <span className="font-mono text-[10px]">
                 {room?.name} ({room?.code}) • Press ESC to close
               </span>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-4 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-xs cursor-pointer shadow-xs active:scale-95 transition-all"
-              >
-                Close
-              </button>
+              {activeModal === 'pdf_preview' ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal(null)}
+                    className="px-4 py-1.5 rounded-xl border border-stone-300 hover:bg-stone-200 text-stone-700 font-bold text-xs cursor-pointer transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDownloadPdf}
+                    disabled={isGeneratingPdf}
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs shadow-xs active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Download className={`w-3.5 h-3.5 ${isGeneratingPdf ? 'animate-bounce' : ''}`} />
+                    <span>{isGeneratingPdf ? 'Generating PDF...' : 'Download PDF Report'}</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setActiveModal(null)}
+                  className="px-4 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-900 text-white font-bold text-xs cursor-pointer shadow-xs active:scale-95 transition-all"
+                >
+                  Close
+                </button>
+              )}
             </div>
           </div>
         </div>
