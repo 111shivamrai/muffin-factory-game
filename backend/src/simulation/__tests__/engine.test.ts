@@ -577,4 +577,36 @@ describe('Muffin Mega Factory - Simulation Engine Tests', () => {
     expect(nextState.history.bottleneckCapacity[0]).toBeGreaterThan(0);
   });
 
+  test('Cumulative Customer Satisfaction (fillRate) stays accurate across multiple days', () => {
+    let state = createMockTeamState();
+    // Provide plenty of inventory so demand is fulfilled each day
+    state.inventory.finished_muffin.onHand = 1000;
+    state.inventory.base_mix.onHand = 5000;
+    state.inventory.packaging_material.onHand = 5000;
+
+    // Run for 5 days with 100 demand each day
+    for (let day = 1; day <= 5; day++) {
+      const dayRoom = { ...mockRoom, currentDay: day };
+      state = runSimDay(
+        dayRoom,
+        state,
+        100, // 100 demand each day
+        mockScenario.machineSettings,
+        mockScenario.rawMaterialCosts,
+        mockScenario.leadTimes,
+        0.02,
+        2.5,
+        false
+      );
+    }
+
+    // Cumulative demand over 5 days = 500
+    // Cumulative sales over 5 days = 500
+    // fillRate must be 100%, NOT 20% (which happened when single-day sales was divided by cumulative demand)
+    expect(state.report.fillRate).toBe(100);
+    expect(state.report.lostSales).toBe(0);
+    expect(state.history.sales).toBeDefined();
+    expect(state.history.sales!.length).toBe(5);
+  });
+
 });

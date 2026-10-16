@@ -102,6 +102,8 @@ export function runSimDay(
     nextState.history.contractFulfillment.push(0);
     nextState.history.bottlenecks.push('None');
     nextState.history.bottleneckCapacity.push(0);
+    if (!nextState.history.sales) nextState.history.sales = [];
+    nextState.history.sales.push(0);
     return nextState;
   }
 
@@ -521,7 +523,7 @@ export function runSimDay(
       inventory: { base_mix: [], packaging_material: [], finished_muffin: [] },
       utilization: { mixing: [], baking: [], icing: [], packaging: [] },
       contractFulfillment: [], bottlenecks: [], bottleneckCapacity: [],
-      production: []
+      production: [], sales: []
     };
   }
 
@@ -533,6 +535,10 @@ export function runSimDay(
   nextState.history.inventory.packaging_material.push(nextState.inventory.packaging_material.onHand);
   nextState.history.inventory.finished_muffin.push(nextState.inventory.finished_muffin.onHand);
   nextState.history.production.push(actualProduction);
+  if (!nextState.history.sales) {
+    nextState.history.sales = [];
+  }
+  nextState.history.sales.push(totalSold);
 
   // Machine utilizations: Actual Production / Available Capacity
   const activeMixerCap = runningMixers * mConfigs.mixing.capacityPerMachine;
@@ -570,8 +576,10 @@ export function runSimDay(
   });
 
   const totalDemand = nextState.history.demand.reduce((a, b) => a + b, 0);
-  const totalMarketSales = totalRevenue / MUFFIN_SALE_PRICE; // Approx
-  const fillRate = totalDemand > 0 ? (totalSold / totalDemand) * 100 : 100;
+  const totalUnitsSold = (nextState.history.sales && nextState.history.sales.length > 0)
+    ? nextState.history.sales.reduce((a, b) => a + b, 0)
+    : totalSold;
+  const fillRate = totalDemand > 0 ? (totalUnitsSold / totalDemand) * 100 : 100;
 
   // Average inventory
   const avgBaseMix = nextState.history.inventory.base_mix.reduce((a, b) => a + b, 0) / totalDays;
@@ -617,7 +625,7 @@ export function runSimDay(
     costs: Number(totalCosts.toFixed(2)),
     profit: Number((totalRevenue - totalCosts).toFixed(2)),
     fillRate: Number(fillRate.toFixed(1)),
-    lostSales: totalDemand - totalSold,
+    lostSales: Math.max(0, totalDemand - totalUnitsSold),
     inventoryTurnover: Number(inventoryTurnover.toFixed(2)),
     averageInventory: Number(averageInventory.toFixed(1)),
     stockoutDays,

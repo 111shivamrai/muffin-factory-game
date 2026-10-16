@@ -133,6 +133,7 @@ export interface HistoryData {
   bottlenecks: string[];
   bottleneckCapacity: number[];
   production: number[];
+  sales?: number[];
 }
 
 export interface LeaderboardEntry {
