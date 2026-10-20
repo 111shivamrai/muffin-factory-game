@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore.js';
 import { useShallow } from 'zustand/react/shallow';
 import {
   Info, ShoppingCart, TrendingUp, Scale, FileCheck, Check,
-  Zap, Activity, Cog, X
+  Zap, Activity, Cog, X, AlertTriangle, Wrench
 } from 'lucide-react';
 import { MachineType } from '../../../backend/src/types/index.js';
 
@@ -59,14 +59,14 @@ const MACHINE_META: Record<MachineType, {
 };
 
 // ─── SVG Circular Progress Ring ────────────────────────────────────────────────
-function ProgressRing({ value, color }: { value: number; color: string }) {
-  const radius = 23;
-  const stroke = 4;
+function ProgressRing({ value, color, size = 40 }: { value: number; color: string; size?: number }) {
+  const radius = size / 2;
+  const stroke = 3.5;
   const normalizedRadius = radius - stroke * 1.5;
   const circumference = normalizedRadius * 2 * Math.PI;
   const strokeDashoffset = circumference - (value / 100) * circumference;
   return (
-    <svg height={radius * 2} width={radius * 2} className="mx-auto select-none">
+    <svg height={size} width={size} className="select-none">
       <circle stroke="#f1f5f9" fill="transparent" strokeWidth={stroke}
         r={normalizedRadius} cx={radius} cy={radius} />
       <circle stroke={color} fill="transparent" strokeWidth={stroke}
@@ -75,7 +75,7 @@ function ProgressRing({ value, color }: { value: number; color: string }) {
         r={normalizedRadius} cx={radius} cy={radius}
         className="transition-all duration-300" strokeLinecap="round"
         transform={`rotate(-90 ${radius} ${radius})`} />
-      <text x="50%" y="50%" dy=".3em" textAnchor="middle"
+      <text x="50%" y="50%" dy=".35em" textAnchor="middle"
         className="text-[9px] font-extrabold fill-stone-700">
         {value}%
       </text>
@@ -207,12 +207,12 @@ function MachinePanel() {
   // Helper to reliably derive active breakdown and remaining repair days from authoritative state
   const getMachineBreakdown = (type: MachineType) => {
     const b = teamState.breakdownStates?.find(bk => bk.machineType === type);
-    if (!b) return { brokenCount: 0, daysRemaining: 0 };
+    if (!b) return { brokenCount: 0, daysRemaining: [] as number[] };
     const rem = (b.daysRemaining || []).filter(d => d > 0);
     const count = rem.length > 0 ? rem.length : (b.daysRemaining && b.daysRemaining.length === 0 ? 0 : (b.brokenCount || 0));
     return {
       brokenCount: count,
-      daysRemaining: rem.length > 0 ? rem[0] : 0
+      daysRemaining: rem
     };
   };
 
@@ -236,6 +236,11 @@ function MachinePanel() {
     stageOperatingCaps.packaging
   );
 
+  // ── Breakdown badge count for Factory Floor trigger card ──────────────────
+  const totalBrokenMachines = (['mixing', 'baking', 'icing', 'packaging'] as MachineType[]).reduce((sum, t) => {
+    return sum + getMachineBreakdown(t).brokenCount;
+  }, 0);
+
   return (
     <>
       {/* ── Collapsible Trigger Card below Operations Advisor ── */}
@@ -249,7 +254,7 @@ function MachinePanel() {
             setIsDrawerOpen(true);
           }
         }}
-        className="bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white p-3.5 sm:p-4 flex items-center justify-between shadow-[0_2px_0_#7b1fa2] rounded-2xl cursor-pointer hover:from-fuchsia-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 transition-all select-none shrink-0"
+        className="bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white p-3.5 sm:p-4 flex items-center justify-between shadow-[0_2px_0_#7b1fa2] rounded-2xl cursor-pointer hover:from-fuchsia-700 hover:to-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 transition-all select-none shrink-0 relative"
         title="Click to open Factory Floor machinery, capacity, and operations modal"
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -263,6 +268,13 @@ function MachinePanel() {
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          {/* Breakdown notification badge */}
+          {totalBrokenMachines > 0 && (
+            <span className="flex items-center gap-1 text-[10px] font-extrabold bg-red-500 border border-red-300 rounded-full px-2.5 py-1 tracking-wider uppercase animate-pulse shadow-sm" title={`${totalBrokenMachines} machine(s) currently broken`}>
+              <AlertTriangle className="w-3 h-3" />
+              {totalBrokenMachines}
+            </span>
+          )}
           <span className="text-[10px] font-extrabold bg-white/20 border border-white/30 rounded-full px-3 py-1 tracking-wider uppercase">
             {machines.filter(m => m.mData.active > 0).length} / {machines.length} ACTIVE
           </span>
@@ -273,29 +285,36 @@ function MachinePanel() {
       {isDrawerOpen && (
         <div 
           onClick={() => setIsDrawerOpen(false)}
-          className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-3 sm:p-5 animate-in fade-in duration-150"
+          className="fixed inset-0 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-2 sm:p-4 animate-in fade-in duration-150"
         >
             <div 
             onClick={(e) => e.stopPropagation()}
-            className="max-w-4xl w-full max-h-[96vh] bg-[#fffdfb] rounded-3xl shadow-2xl border border-purple-200 flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+            className="max-w-[880px] w-full bg-[#fffdfb] rounded-2xl shadow-2xl border border-purple-200 flex flex-col overflow-hidden animate-in zoom-in-95 duration-150"
+            style={{ maxHeight: 'calc(100vh - 16px)' }}
           >
             {/* Modal Header */}
-            <header className="px-5 sm:px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white font-extrabold tracking-wide text-sm flex items-center justify-between shrink-0 shadow-sm">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="size-8 rounded-xl bg-white/20 border border-white/40 flex items-center justify-center text-sm shadow-xs shrink-0">⚙️</span>
+            <header className="px-4 sm:px-5 py-2.5 bg-gradient-to-r from-fuchsia-600 to-purple-700 text-white font-extrabold tracking-wide text-sm flex items-center justify-between shrink-0 shadow-sm">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="size-7 rounded-lg bg-white/20 border border-white/40 flex items-center justify-center text-sm shadow-xs shrink-0">⚙️</span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-base font-black tracking-tight font-sans">FACTORY FLOOR OPERATIONS</span>
-                    <span className="text-[9.5px] font-bold bg-white/20 border border-white/30 rounded-full px-2.5 py-0.5 tracking-widest uppercase">
+                    <span className="text-sm font-black tracking-tight font-sans">FACTORY FLOOR OPERATIONS</span>
+                    <span className="text-[9px] font-bold bg-white/20 border border-white/30 rounded-full px-2 py-0.5 tracking-widest uppercase">
                       {machines.filter(m => m.mData.active > 0).length} / {machines.length} Active
                     </span>
+                    {totalBrokenMachines > 0 && (
+                      <span className="text-[9px] font-bold bg-red-500/80 border border-red-300/50 rounded-full px-2 py-0.5 tracking-wider uppercase flex items-center gap-1">
+                        <AlertTriangle className="w-2.5 h-2.5" />
+                        {totalBrokenMachines} Broken
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsDrawerOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer border-none"
+                className="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer border-none"
                 title="Close Factory Floor (Esc)"
                 aria-label="Close"
               >
@@ -303,11 +322,11 @@ function MachinePanel() {
               </button>
             </header>
 
-            {/* Modal Scrollable Content */}
-            <div className="overflow-y-auto flex-1 flex flex-col min-h-0 p-3 sm:p-3.5 gap-2 sm:gap-2.5">
+            {/* Modal Content — no internal scrolling */}
+            <div className="flex flex-col p-3 sm:p-3.5 gap-2 sm:gap-2.5">
 
-              {/* ══════════════ 4 STACKED MACHINE ROWS (MIXER, OVEN, ICING, PACKAGING) ══════════════ */}
-              <div className="flex flex-col gap-2 shrink-0">
+              {/* ══════════════ 4 STACKED MACHINE ROWS ══════════════ */}
+              <div className="flex flex-col gap-1.5">
                 {machines.map(({ type, label, state, setter, mData, cost }) => {
                   const meta         = MACHINE_META[type];
                   const inTransit    = mData.inTransit || 0;
@@ -322,12 +341,11 @@ function MachinePanel() {
                   // Available Capacity = Total Owned Floor Machines × Capacity Per Machine
                   const availableCapacity = mData.count * unitCapacity;
 
-                  // Operating Capacity for this stage
-                  const { brokenCount, daysRemaining: repairDays } = getMachineBreakdown(type);
-                  const runningCount = Math.max(0, state - brokenCount);
-                  const operatingCapacity = runningCount * unitCapacity;
+                  // Breakdown info for this machine
+                  const { brokenCount, daysRemaining: repairDaysArr } = getMachineBreakdown(type);
+                  const maxRepairDays = repairDaysArr.length > 0 ? Math.max(...repairDaysArr) : 0;
 
-                  // Machine Utilization for this stage
+                  // Machine Utilization for this stage (from authoritative history)
                   const histUtil = teamState.history?.utilization?.[type];
                   let currentUtil = 0;
                   if (histUtil && histUtil.length > 0) {
@@ -335,31 +353,29 @@ function MachinePanel() {
                   } else if ((teamState.report as any)?.machineUtilization?.[type] !== undefined) {
                     currentUtil = (teamState.report as any).machineUtilization[type];
                   } else {
-                    const allRunningCaps = ([ 'mixing', 'baking', 'icing', 'packaging' ] as MachineType[]).map(t => {
-                      const a = (teamState.machines as any)?.[t]?.active ?? 0;
-                      const b = getMachineBreakdown(t).brokenCount;
-                      return Math.max(0, a - b) * CAPACITY_PER_MACHINE[t];
-                    });
-                    const bottleneckCap = Math.min(...allRunningCaps);
-                    currentUtil = operatingCapacity > 0 ? Math.min(100, Math.round((bottleneckCap / operatingCapacity) * 100)) : 0;
+                    const runningCount = Math.max(0, state - brokenCount);
+                    const operatingCap = runningCount * unitCapacity;
+                    currentUtil = operatingCap > 0 ? Math.min(100, Math.round((factoryOperatingCapacity / operatingCap) * 100)) : 0;
                   }
 
                   return (
                     <div
                       key={type}
-                      className="rounded-2xl border border-stone-200/90 bg-white px-3 py-2 sm:px-3.5 sm:py-2.5 shadow-2xs hover:border-purple-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-2.5 shrink-0"
+                      className={`rounded-xl border bg-white px-3 py-2 shadow-2xs transition-all flex items-center justify-between gap-2 ${
+                        brokenCount > 0 ? 'border-red-200 bg-red-50/30' : 'border-stone-200/90 hover:border-purple-300'
+                      }`}
                     >
                       {/* LEFT: Machine Icon, Name, Description, Ownership & Lead Time */}
-                      <div className="flex items-center gap-2.5 min-w-0 md:w-[270px] lg:w-[290px] shrink-0">
-                        <span className="text-2xl sm:text-3xl shrink-0 p-1.5 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center">
+                      <div className="flex items-center gap-2 min-w-0 w-[240px] shrink-0">
+                        <span className="text-2xl shrink-0 p-1 rounded-lg bg-stone-50 border border-stone-100 flex items-center justify-center">
                           {meta.icon}
                         </span>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-xs sm:text-sm font-black text-stone-800 font-sans tracking-tight">
+                            <span className="text-[12px] font-black text-stone-800 font-sans tracking-tight leading-tight">
                               {label}
                             </span>
-                            <span className="text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.2 rounded text-[7.5px] font-bold shrink-0">
+                            <span className="text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-px rounded text-[8.5px] font-bold shrink-0">
                               Lead Time: {leadTime}d
                             </span>
                           </div>
@@ -369,23 +385,24 @@ function MachinePanel() {
                           <div className="flex items-center flex-wrap gap-1 mt-0.5 text-[8.5px] font-bold text-stone-500 font-mono">
                             <span>{mData.count} owned · {state} active</span>
                             {isProcuring && (
-                              <span className="text-amber-700 bg-amber-50 border border-amber-300 px-1 py-0.2 rounded text-[7.5px] font-bold flex items-center gap-0.5 animate-pulse">
+                              <span className="text-amber-700 bg-amber-50 border border-amber-300 px-1 py-px rounded text-[7.5px] font-bold flex items-center gap-0.5 animate-pulse">
                                 🚚 +{inTransit} transit
                               </span>
                             )}
-                            {brokenCount > 0 && repairDays > 0 && (
-                              <span className="text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded text-[7.5px] font-bold inline-flex items-center gap-1 shadow-2xs">
-                                ⚠️ {brokenCount} broken · {repairDays}d
+                            {brokenCount > 0 && (
+                              <span className="text-red-700 bg-red-50 border border-red-200 px-1.5 py-px rounded text-[7.5px] font-bold inline-flex items-center gap-1 shadow-2xs">
+                                <Wrench className="w-2.5 h-2.5" />
+                                {brokenCount} broken · Repairing {maxRepairDays}d left
                               </span>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      {/* MIDDLE: Quantity Selector, Available Capacity, Operating Capacity */}
-                      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 justify-between md:justify-center">
+                      {/* MIDDLE: Quantity Selector + Capacity Badges */}
+                      <div className="flex items-center gap-2 shrink-0">
                         {/* Stepper controls (allows 0, never negative) */}
-                        <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-2xs h-8">
+                        <div className="flex items-center rounded-lg border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-2xs h-[30px]">
                           {isController ? (
                             <button
                               type="button"
@@ -404,7 +421,7 @@ function MachinePanel() {
                             </button>
                           ) : null}
                           <div
-                            className="px-2 h-full bg-white text-[#1c1917] text-xs font-black flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none min-w-[52px]"
+                            className="px-2 h-full bg-white text-[#1c1917] text-[11px] font-black flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none min-w-[46px]"
                             title={`${state} active of ${mData.count} owned floor machines`}
                           >
                             {state} / {mData.count}
@@ -436,42 +453,39 @@ function MachinePanel() {
 
                         {/* Available Capacity Box */}
                         <div
-                          className="w-[96px] h-8.5 rounded-xl bg-emerald-50/80 border border-emerald-200/90 px-1 py-0.5 flex flex-col justify-center items-center text-center shadow-2xs"
+                          className="w-[88px] rounded-lg bg-emerald-50/80 border border-emerald-200/90 px-1.5 py-1 flex flex-col justify-center items-center text-center shadow-2xs"
                           title={`Available Capacity: ${mData.count} owned × ${unitCapacity}/day = ${availableCapacity} units/day`}
                         >
                           <div className="text-[7px] font-extrabold text-emerald-700 uppercase tracking-tight flex items-center justify-center gap-0.5 leading-none">
                             <Zap className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
-                            <span>AVAILABLE CAP</span>
+                            <span>AVAIL. CAP</span>
                           </div>
-                          <div className="text-[11px] font-black text-emerald-800 font-mono mt-0.5 leading-none">
-                            {availableCapacity} <span className="text-[7.5px] font-normal text-emerald-600">un/d</span>
+                          <div className="text-[11px] font-black text-emerald-800 font-mono leading-tight">
+                            {availableCapacity} <span className="text-[7px] font-normal text-emerald-600">u/d</span>
                           </div>
                         </div>
 
-                        {/* Operating Capacity Box */}
+                        {/* Operating Capacity Box — shows FACTORY BOTTLENECK (shared across all 4 rows) */}
                         <div
-                          className="w-[96px] h-8.5 rounded-xl bg-purple-50/80 border border-purple-200/90 px-1 py-0.5 flex flex-col justify-center items-center text-center shadow-2xs"
-                          title={`Operating Capacity for ${label}: ${runningCount} active × ${unitCapacity}/day = ${operatingCapacity} units/day`}
+                          className="w-[88px] rounded-lg bg-purple-50/80 border border-purple-200/90 px-1.5 py-1 flex flex-col justify-center items-center text-center shadow-2xs"
+                          title={`Factory Bottleneck Capacity: min(${stageOperatingCaps.mixing}, ${stageOperatingCaps.baking}, ${stageOperatingCaps.icing}, ${stageOperatingCaps.packaging}) = ${factoryOperatingCapacity} units/day`}
                         >
                           <div className="text-[7px] font-extrabold text-purple-700 uppercase tracking-tight flex items-center justify-center gap-0.5 leading-none">
                             <Activity className="w-2.5 h-2.5 text-purple-600 shrink-0" />
-                            <span>OPERATING CAP</span>
+                            <span>OPER. CAP</span>
                           </div>
-                          <div className={`text-[11px] font-black font-mono mt-0.5 leading-none ${operatingCapacity === 0 ? 'text-rose-600' : 'text-purple-800'}`}>
-                            {operatingCapacity} <span className="text-[7.5px] font-normal text-purple-600">un/d</span>
+                          <div className={`text-[11px] font-black font-mono leading-tight ${factoryOperatingCapacity === 0 ? 'text-rose-600' : 'text-purple-800'}`}>
+                            {factoryOperatingCapacity} <span className="text-[7px] font-normal text-purple-600">u/d</span>
                           </div>
                         </div>
                       </div>
 
-                      {/* RIGHT: Buy Button & Machine Utilization */}
-                      <div className="flex items-center justify-end gap-2.5 shrink-0">
-                        {/* Utilization Indicator */}
-                        <div className="flex items-center gap-1.5" title={`${label} Utilization: ${currentUtil}%`}>
-                          <ProgressRing value={currentUtil} color={meta.utilColor} />
-                          <div className="flex flex-col text-left">
-                            <span className="text-[7px] font-extrabold text-stone-400 uppercase tracking-tight leading-none">UTIL</span>
-                            <span className="text-[10px] font-extrabold text-stone-700 font-mono leading-tight">{currentUtil}%</span>
-                          </div>
+                      {/* RIGHT: Utilization (label above ring) + Buy Button */}
+                      <div className="flex items-center gap-2.5 shrink-0">
+                        {/* Utilization Indicator — label ABOVE the circle, percentage INSIDE only */}
+                        <div className="flex flex-col items-center" title={`${label} Utilization: ${currentUtil}%`}>
+                          <span className="text-[7px] font-extrabold text-stone-400 uppercase tracking-tight leading-none mb-0.5">UTILIZATION</span>
+                          <ProgressRing value={currentUtil} color={currentUtil === 0 ? '#d1d5db' : meta.utilColor} size={38} />
                         </div>
 
                         {/* Buy Button */}
@@ -487,7 +501,7 @@ function MachinePanel() {
                                 ? `Buy another ${label} for ₹${cost.toLocaleString()} (+${inTransit} already in transit)`
                                 : `Procure additional ${label} for ₹${cost.toLocaleString()}`
                             }
-                            className={`h-8 px-2.5 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[9.5px] font-extrabold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs border-none shrink-0 select-none ${
+                            className={`h-[30px] px-2.5 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-lg text-[9px] font-extrabold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs border-none shrink-0 select-none ${
                               !canAfford || isBuying === type ? 'opacity-40 cursor-not-allowed' : ''
                             }`}
                           >
@@ -495,7 +509,7 @@ function MachinePanel() {
                             <span>{isBuying === type ? 'BUYING...' : `BUY ₹${cost.toLocaleString()}`}</span>
                           </button>
                         ) : (
-                          <div className="h-8 w-14 bg-stone-100 rounded-xl flex items-center justify-center text-[8px] text-stone-400 font-bold uppercase shrink-0">
+                          <div className="h-[30px] w-14 bg-stone-100 rounded-lg flex items-center justify-center text-[8px] text-stone-400 font-bold uppercase shrink-0">
                             Locked
                           </div>
                         )}
@@ -505,8 +519,8 @@ function MachinePanel() {
                 })}
               </div>
 
-              {/* ══════════════ 6. OUTPUT ALLOCATION STRATEGY SECTION ══════════════ */}
-              <div className="shrink-0 bg-white border border-purple-100 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
+              {/* ══════════════ PRODUCTION OUTPUT ALLOCATION SECTION ══════════════ */}
+              <div className="shrink-0 bg-white border border-purple-100 rounded-xl p-2.5 shadow-2xs">
                 <div className="flex items-center gap-2 mb-1.5">
                   <div className="h-px bg-stone-200 flex-1" />
                   <span className="text-[9px] font-extrabold text-[#7b1fa2] tracking-widest uppercase">Production Output Allocation</span>
@@ -525,19 +539,19 @@ function MachinePanel() {
                         <button
                           type="button"
                           onClick={() => isController && updateAllocationStrategy(strat.id as any)}
-                          className={`w-full py-2 px-1 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                          className={`w-full py-1.5 px-1 rounded-lg border flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
                             isSelected
                               ? 'bg-[#f3e5f5] border-[#9c27b0] text-[#7b1fa2] shadow-sm font-extrabold'
                               : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
                           }`}
                           disabled={!isController}
                         >
-                          <IconComponent className={`w-4.5 h-4.5 ${isSelected ? 'text-[#7b1fa2]' : 'text-stone-400'}`} />
-                          <span className="text-[8.5px] font-bold text-center tracking-wide leading-tight">{strat.label}</span>
+                          <IconComponent className={`w-4 h-4 ${isSelected ? 'text-[#7b1fa2]' : 'text-stone-400'}`} />
+                          <span className="text-[8px] font-bold text-center tracking-wide leading-tight">{strat.label}</span>
                         </button>
                         {isSelected && (
-                          <div className="absolute -bottom-1.5 size-4 rounded-full bg-[#7b1fa2] text-white flex items-center justify-center shadow-sm">
-                            <Check className="w-2.5 h-2.5 font-bold" />
+                          <div className="absolute -bottom-1 size-3.5 rounded-full bg-[#7b1fa2] text-white flex items-center justify-center shadow-sm">
+                            <Check className="w-2 h-2 font-bold" />
                           </div>
                         )}
                       </div>
@@ -546,18 +560,18 @@ function MachinePanel() {
                 </div>
               </div>
 
-              {/* ══════════════ 7. EXISTING APPLY OPERATIONS CONTROLS ══════════════ */}
-              <div className="shrink-0 pt-0.5">
+              {/* ══════════════ APPLY OPERATIONS BUTTON ══════════════ */}
+              <div className="shrink-0">
                 {isController ? (
                   <button
                     onClick={handleApplyOperations}
-                    className="w-full py-2.5 rounded-xl bg-gradient-to-b from-fuchsia-600 to-purple-700 text-white font-extrabold text-xs shadow-[0_3px_0_#7b1fa2] hover:translate-y-[1px] hover:shadow-[0_2px_0_#7b1fa2] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
+                    className="w-full py-2 rounded-xl bg-gradient-to-b from-fuchsia-600 to-purple-700 text-white font-extrabold text-xs shadow-[0_3px_0_#7b1fa2] hover:translate-y-[1px] hover:shadow-[0_2px_0_#7b1fa2] active:translate-y-[3px] active:shadow-none transition-all border-none cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <span>🧁</span>
                     <span>APPLY OPERATIONS</span>
                   </button>
                 ) : (
-                  <div className="py-2.5 bg-slate-100 border border-slate-200 text-[10px] rounded-xl text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
+                  <div className="py-2 bg-slate-100 border border-slate-200 text-[10px] rounded-xl text-slate-400 text-center flex items-center justify-center space-x-1 font-mono">
                     <Info className="w-3.5 h-3.5" />
                     <span>OBSERVER MODE – READ ONLY</span>
                   </div>
@@ -565,20 +579,7 @@ function MachinePanel() {
               </div>
 
             </div>
-
-            {/* Modal Footer */}
-            <div className="px-5 py-2 bg-[#faf5f0] border-t border-[#e8dfd3] flex items-center justify-between text-xs text-stone-500 shrink-0">
-              <span className="font-mono text-[10px]">
-                {room?.name} ({room?.code}) • Press ESC to close
-              </span>
-              <button
-                type="button"
-                onClick={() => setIsDrawerOpen(false)}
-                className="px-5 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs cursor-pointer shadow-xs active:scale-95 transition-all border-none"
-              >
-                Close
-              </button>
-            </div>
+            {/* No footer — removed per requirement. Top-right X is the primary close control. */}
           </div>
         </div>
       )}
