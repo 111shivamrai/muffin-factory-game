@@ -102,6 +102,8 @@ export function runSimDay(
     nextState.history.contractFulfillment.push(0);
     nextState.history.bottlenecks.push('None');
     nextState.history.bottleneckCapacity.push(0);
+    if (!nextState.history.production) nextState.history.production = [];
+    nextState.history.production.push(0);
     if (!nextState.history.sales) nextState.history.sales = [];
     nextState.history.sales.push(0);
     return nextState;

@@ -610,4 +610,66 @@ describe('Muffin Mega Factory - Simulation Engine Tests', () => {
     expect(state.history.sales!.length).toBe(5);
   });
 
+  test('Bankrupt factory stays closed without instructor support', () => {
+    const state = createMockTeamState();
+    state.status = 'bankrupt';
+    state.cash = 0;
+    state.inventory.base_mix.onHand = 500;
+    state.inventory.packaging_material.onHand = 500;
+
+    const nextState = runSimDay(
+      mockRoom,
+      state,
+      100,
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      mockScenario.leadTimes,
+      0.02,
+      2.5,
+      false
+    );
+
+    // Factory operations must remain completely locked
+    expect(nextState.status).toBe('bankrupt');
+    expect(nextState.cash).toBe(0);
+    expect(nextState.history.production[nextState.history.production.length - 1]).toBe(0);
+    expect(nextState.history.revenue[nextState.history.revenue.length - 1]).toBe(0);
+    expect(nextState.history.bottlenecks[nextState.history.bottlenecks.length - 1]).toBe('None');
+  });
+
+  test('Factory resumes production and operations when instructor grants support and restores active status', () => {
+    const state = createMockTeamState();
+    state.status = 'bankrupt';
+    state.cash = 0;
+
+    // Instructor explicitly provides support: grants cash, materials, and restores active status
+    state.cash = 10000;
+    state.inventory.base_mix.onHand = 1000;
+    state.inventory.packaging_material.onHand = 1000;
+    state.status = 'active';
+    // Ensure active machines are ready
+    state.machines.mixing.active = 1;
+    state.machines.baking.active = 1;
+    state.machines.icing.active = 1;
+    state.machines.packaging.active = 1;
+
+    const nextState = runSimDay(
+      mockRoom,
+      state,
+      80,
+      mockScenario.machineSettings,
+      mockScenario.rawMaterialCosts,
+      mockScenario.leadTimes,
+      0.02,
+      2.5,
+      false
+    );
+
+    // Factory has successfully resumed operation
+    expect(nextState.status).toBe('active');
+    expect(nextState.cash).toBeGreaterThan(0);
+    expect(nextState.history.production[nextState.history.production.length - 1]).toBe(80);
+    expect(nextState.history.revenue[nextState.history.revenue.length - 1]).toBeGreaterThan(0);
+  });
+
 });

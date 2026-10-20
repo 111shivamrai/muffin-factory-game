@@ -619,6 +619,7 @@ export function registerSocketHandler(io: Server) {
               const teamState = await db.getTeamState(t.id);
               if (teamState) {
                 teamState.inventory.base_mix.onHand += 2000;
+                teamState.inventory.packaging_material.onHand += 2000;
                 await db.saveTeamState(t.id, teamState.cash, teamState.status, teamState);
                 io.to(`team_${t.id}`).emit('team_state_updated', teamState);
               }
@@ -627,7 +628,7 @@ export function registerSocketHandler(io: Server) {
           }
 
           case 'override_team_state': {
-            const { teamId, balance, rawMaterials, orderQuantity, reorderPoint } = payload.details;
+            const { teamId, balance, rawMaterials, packagingMaterials, orderQuantity, reorderPoint } = payload.details;
             const teamState = await db.getTeamState(teamId);
             if (teamState) {
               if (balance !== undefined && !isNaN(balance)) {
@@ -635,6 +636,11 @@ export function registerSocketHandler(io: Server) {
               }
               if (rawMaterials !== undefined && !isNaN(rawMaterials)) {
                 teamState.inventory.base_mix.onHand = rawMaterials;
+              }
+              if (packagingMaterials !== undefined && !isNaN(packagingMaterials)) {
+                teamState.inventory.packaging_material.onHand = packagingMaterials;
+              } else if (rawMaterials !== undefined && !isNaN(rawMaterials)) {
+                // Backward-compatible fallback if packagingMaterials is omitted
                 teamState.inventory.packaging_material.onHand = Math.round(rawMaterials * 0.8);
               }
               if (orderQuantity !== undefined && !isNaN(orderQuantity)) {
@@ -645,6 +651,20 @@ export function registerSocketHandler(io: Server) {
                 teamState.inventory.base_mix.reorderPoint = reorderPoint;
                 teamState.inventory.packaging_material.reorderPoint = Math.round(reorderPoint * 0.8);
               }
+
+              // Recovery check: If factory was closed/bankrupt and instructor grants positive cash (> 0),
+              // resume operations and restore active machines to at least 1 (or owned count) so production can restart
+              if (teamState.cash > 0 && teamState.status === 'bankrupt') {
+                teamState.status = 'active';
+                if (teamState.machines) {
+                  (['mixing', 'baking', 'icing', 'packaging'] as MachineType[]).forEach(mType => {
+                    if (teamState.machines[mType].active === 0 && teamState.machines[mType].count > 0) {
+                      teamState.machines[mType].active = Math.min(teamState.machines[mType].count, 1);
+                    }
+                  });
+                }
+              }
+
               await db.saveTeamState(teamId, teamState.cash, teamState.status, teamState);
               io.to(`team_${teamId}`).emit('team_state_updated', teamState);
               

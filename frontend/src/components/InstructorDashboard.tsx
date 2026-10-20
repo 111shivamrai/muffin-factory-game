@@ -45,6 +45,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   const [inspectedTeam, setInspectedTeam] = useState<TeamState | null>(null);
   const [overrideCash, setOverrideCash] = useState('');
   const [overrideFlour, setOverrideFlour] = useState('');
+  const [overridePackaging, setOverridePackaging] = useState('');
   const [overrideQ, setOverrideQ] = useState('');
   const [overrideR, setOverrideR] = useState('');
 
@@ -374,6 +375,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
     setInspectedTeam(team);
     setOverrideCash(team.cash.toString());
     setOverrideFlour(team.inventory.base_mix.onHand.toString());
+    setOverridePackaging((team.inventory.packaging_material?.onHand ?? Math.round(team.inventory.base_mix.onHand * 0.8)).toString());
     setOverrideQ(team.inventory.base_mix.orderQty.toString());
     setOverrideR(team.inventory.base_mix.reorderPoint.toString());
   };
@@ -385,6 +387,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       teamId: inspectedTeam.id,
       balance: parseFloat(overrideCash),
       rawMaterials: parseInt(overrideFlour),
+      packagingMaterials: parseInt(overridePackaging),
       orderQuantity: parseInt(overrideQ),
       reorderPoint: parseInt(overrideR)
     }).then(() => {
@@ -1789,6 +1792,15 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     type="number"
                     value={overrideFlour}
                     onChange={e => setOverrideFlour(e.target.value)}
+                    className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono font-bold"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] uppercase font-bold text-gray-500 block">Stock Packaging (un)</label>
+                  <input
+                    type="number"
+                    value={overridePackaging}
+                    onChange={e => setOverridePackaging(e.target.value)}
                     className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono font-bold"
                   />
                 </div>
