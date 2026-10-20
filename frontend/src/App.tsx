@@ -78,8 +78,8 @@ export default function App() {
       // Use the smaller scale to ensure it fits both width and height
       const scale = Math.min(scaleX, scaleY);
       
-      // Cap scale between 0.6 and 1.5
-      const clampedScale = Math.max(0.6, Math.min(scale, 1.5));
+      // Cap scale between 0.9 and 1.1 to preserve crisp standard typography without globally shrinking text
+      const clampedScale = Math.max(0.9, Math.min(scale, 1.1));
       document.documentElement.style.fontSize = `${16 * clampedScale}px`;
     };
 
