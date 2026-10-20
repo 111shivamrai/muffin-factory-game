@@ -213,6 +213,18 @@ export function registerSocketHandler(io: Server) {
               }
             });
           }
+          if (teamState.machines) {
+            const currentTS = teamState;
+            (['mixing', 'baking', 'icing', 'packaging'] as MachineType[]).forEach(mType => {
+              const realOrders = (currentTS.machineOrders || []).filter(
+                mo => mo.machineType === mType && mo.status === 'procuring' && (room.currentDay !== undefined ? mo.arrivalDay > room.currentDay : true)
+              );
+              if ((currentTS.machines[mType].inTransit || 0) !== realOrders.length) {
+                currentTS.machines[mType].inTransit = realOrders.length;
+                updated = true;
+              }
+            });
+          }
           if (room.id === 'room_demo_001') {
             // In demo room, ensure fresh starting machine inTransit state (0 in transit)
             if (teamState.machines) {

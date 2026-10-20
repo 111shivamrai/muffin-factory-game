@@ -331,7 +331,10 @@ function MachinePanel() {
               <div className="flex flex-col gap-2">
                 {machines.map(({ type, label, state, setter, mData, cost }) => {
                   const meta         = MACHINE_META[type];
-                  const inTransit    = mData.inTransit || 0;
+                  const pendingOrders = (teamState.machineOrders || []).filter(
+                    mo => mo.machineType === type && mo.status === 'procuring' && (room?.currentDay !== undefined ? mo.arrivalDay > room.currentDay : true)
+                  );
+                  const inTransit    = pendingOrders.length;
                   const canAfford    = teamState.cash >= cost;
                   const isProcuring  = inTransit > 0;
                   const unitCapacity = (room?.scenarioConfig?.machineSettings?.[type] as any)?.capacityPerMachine
@@ -409,7 +412,7 @@ function MachinePanel() {
 
                         {/* 2. QUANTITY STEPPER (Guaranteed single horizontal line e.g. '1 / 1', '0 / 1') */}
                         <div className="shrink-0">
-                          <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shadow-2xs h-[38px] w-[122px]">
+                          <div className="w-[124px] h-[38px] flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shadow-2xs shrink-0">
                             {isController ? (
                               <button
                                 type="button"
@@ -420,15 +423,15 @@ function MachinePanel() {
                                   updateSingle(type, newVal);
                                 }}
                                 title={state <= 0 ? `${label} active count is already 0` : `Deactivate one ${label}`}
-                                className={`w-8.5 h-full bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center transition-all border-none select-none leading-none shrink-0 ${
-                                  state <= 0 ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                                className={`w-9 h-full bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-black text-lg flex items-center justify-center transition-all border-none select-none leading-none shrink-0 ${
+                                  state <= 0 ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:scale-95 active:bg-[#f0dfc8]'
                                 }`}
                               >
                                 −
                               </button>
                             ) : null}
                             <div
-                              className="flex-1 h-full bg-white text-[#1c1917] text-xs sm:text-[13px] font-black flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none whitespace-nowrap px-1 leading-none"
+                              className="w-[52px] h-full bg-white text-[#1c1917] text-xs sm:text-[13px] font-black flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none whitespace-nowrap leading-none tracking-normal shrink-0"
                               title={`${state} active of ${mData.count} owned floor machines`}
                             >
                               {state} / {mData.count}
@@ -449,8 +452,8 @@ function MachinePanel() {
                                       : `All available ${label} machines are active`
                                     : `Activate one more ${label}`
                                 }
-                                className={`w-8.5 h-full bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center transition-all border-none select-none leading-none shrink-0 ${
-                                  state >= mData.count ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                                className={`w-9 h-full bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-black text-lg flex items-center justify-center transition-all border-none select-none leading-none shrink-0 ${
+                                  state >= mData.count ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:scale-95 active:bg-[#f0dfc8]'
                                 }`}
                               >
                                 +
