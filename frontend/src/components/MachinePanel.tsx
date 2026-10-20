@@ -165,22 +165,22 @@ function MachinePanel() {
   // ─── Handlers ─────────────────────────────────────────────────────────────────
   const handleApplyOperations = () => {
     if (!isController) return;
-    const safeMix = Math.max(1, mixActive);
-    const safeBake = Math.max(1, bakeActive);
-    const safeIce = Math.max(1, iceActive);
-    const safePack = Math.max(1, packActive);
+    const safeMix = Math.max(0, mixActive);
+    const safeBake = Math.max(0, bakeActive);
+    const safeIce = Math.max(0, iceActive);
+    const safePack = Math.max(0, packActive);
     updateAllMachineStatuses({ mixing: safeMix, baking: safeBake, icing: safeIce, packaging: safePack });
     alert('Workfloor machine operation parameters updated!');
   };
 
   const updateSingle = (type: string, newValue: number) => {
     if (!isController) return;
-    const safeValue = Math.max(1, newValue);
+    const safeValue = Math.max(0, newValue);
     updateAllMachineStatuses({
-      mixing: type === 'mixing' ? safeValue : Math.max(1, mixActive),
-      baking: type === 'baking' ? safeValue : Math.max(1, bakeActive),
-      icing: type === 'icing' ? safeValue : Math.max(1, iceActive),
-      packaging: type === 'packaging' ? safeValue : Math.max(1, packActive),
+      mixing: type === 'mixing' ? safeValue : Math.max(0, mixActive),
+      baking: type === 'baking' ? safeValue : Math.max(0, bakeActive),
+      icing: type === 'icing' ? safeValue : Math.max(0, iceActive),
+      packaging: type === 'packaging' ? safeValue : Math.max(0, packActive),
     });
   };
 
@@ -306,12 +306,11 @@ function MachinePanel() {
             {/* Modal Scrollable Content */}
             <div className="overflow-y-auto flex-1 flex flex-col min-h-0 p-3 sm:p-3.5 gap-2 sm:gap-2.5">
 
-              {/* ══════════════ 4 MACHINE CARDS (MIXER, OVEN, ICING, PACKAGING) ══════════════ */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 shrink-0">
+              {/* ══════════════ 4 STACKED MACHINE ROWS (MIXER, OVEN, ICING, PACKAGING) ══════════════ */}
+              <div className="flex flex-col gap-2 shrink-0">
                 {machines.map(({ type, label, state, setter, mData, cost }) => {
                   const meta         = MACHINE_META[type];
                   const inTransit    = mData.inTransit || 0;
-                  const totalCount   = mData.count + inTransit;
                   const canAfford    = teamState.cash >= cost;
                   const isProcuring  = inTransit > 0;
                   const unitCapacity = CAPACITY_PER_MACHINE[type];
@@ -323,73 +322,92 @@ function MachinePanel() {
                   // Available Capacity = Total Owned Floor Machines × Capacity Per Machine
                   const availableCapacity = mData.count * unitCapacity;
 
-                  // Operating Capacity
+                  // Operating Capacity for this stage
                   const { brokenCount, daysRemaining: repairDays } = getMachineBreakdown(type);
-                  const runningCount = Math.max(0, mData.active - brokenCount);
+                  const runningCount = Math.max(0, state - brokenCount);
                   const operatingCapacity = runningCount * unitCapacity;
+
+                  // Machine Utilization for this stage
+                  const histUtil = teamState.history?.utilization?.[type];
+                  let currentUtil = 0;
+                  if (histUtil && histUtil.length > 0) {
+                    currentUtil = histUtil[histUtil.length - 1];
+                  } else if ((teamState.report as any)?.machineUtilization?.[type] !== undefined) {
+                    currentUtil = (teamState.report as any).machineUtilization[type];
+                  } else {
+                    const allRunningCaps = ([ 'mixing', 'baking', 'icing', 'packaging' ] as MachineType[]).map(t => {
+                      const a = (teamState.machines as any)?.[t]?.active ?? 0;
+                      const b = getMachineBreakdown(t).brokenCount;
+                      return Math.max(0, a - b) * CAPACITY_PER_MACHINE[t];
+                    });
+                    const bottleneckCap = Math.min(...allRunningCaps);
+                    currentUtil = operatingCapacity > 0 ? Math.min(100, Math.round((bottleneckCap / operatingCapacity) * 100)) : 0;
+                  }
 
                   return (
                     <div
                       key={type}
-                      className="rounded-2xl border border-stone-200/90 bg-white p-3 shadow-xs space-y-2.5 hover:border-purple-300 transition-all flex flex-col justify-between"
+                      className="rounded-2xl border border-stone-200/90 bg-white px-3 py-2 sm:px-3.5 sm:py-2.5 shadow-2xs hover:border-purple-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-2.5 shrink-0"
                     >
-                      {/* Top Section: Machine Info Box + Stepper */}
-                      <div className="flex items-center justify-between gap-2">
-                        {/* Left: Icon & Machine Name & Details */}
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-2xl shrink-0">{meta.icon}</span>
-                          <div className="min-w-0">
-                            <div className="text-xs font-black text-stone-800 font-sans truncate leading-tight">
+                      {/* LEFT: Machine Icon, Name, Description, Ownership & Lead Time */}
+                      <div className="flex items-center gap-2.5 min-w-0 md:w-[270px] lg:w-[290px] shrink-0">
+                        <span className="text-2xl sm:text-3xl shrink-0 p-1.5 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center">
+                          {meta.icon}
+                        </span>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs sm:text-sm font-black text-stone-800 font-sans tracking-tight">
                               {label}
-                            </div>
-                            <div className="text-[8.5px] font-semibold text-stone-400 font-sans truncate">
-                              {meta.processDesc}
-                            </div>
-                            <div className="flex items-center flex-wrap gap-1 mt-0.5 text-[8.5px] font-bold text-stone-500 font-mono">
-                              <span>{mData.count} owned · {mData.active} active</span>
-                              <span className="text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.2 rounded text-[7.5px] font-bold">
-                                Lead Time: {leadTime} {leadTime === 1 ? 'Day' : 'Days'}
+                            </span>
+                            <span className="text-purple-700 bg-purple-50 border border-purple-200 px-1.5 py-0.2 rounded text-[7.5px] font-bold shrink-0">
+                              Lead Time: {leadTime}d
+                            </span>
+                          </div>
+                          <div className="text-[9px] font-medium text-stone-400 font-sans truncate">
+                            {meta.processDesc}
+                          </div>
+                          <div className="flex items-center flex-wrap gap-1 mt-0.5 text-[8.5px] font-bold text-stone-500 font-mono">
+                            <span>{mData.count} owned · {state} active</span>
+                            {isProcuring && (
+                              <span className="text-amber-700 bg-amber-50 border border-amber-300 px-1 py-0.2 rounded text-[7.5px] font-bold flex items-center gap-0.5 animate-pulse">
+                                🚚 +{inTransit} transit
                               </span>
-                              {isProcuring && (
-                                <span className="text-amber-700 bg-amber-50 border border-amber-300 px-1 py-0.2 rounded text-[7.5px] font-bold flex items-center gap-0.5 animate-pulse">
-                                  🚚 +{inTransit} in transit
-                                </span>
-                              )}
-                              {brokenCount > 0 && repairDays > 0 && (
-                                <span className="text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded text-[7.5px] font-bold inline-flex items-center gap-1 shadow-2xs">
-                                  <span>⚠️ {brokenCount} broken</span>
-                                  <span className="text-stone-300">|</span>
-                                  <span className="text-red-600 font-extrabold">Repair: {repairDays}d</span>
-                                </span>
-                              )}
-                            </div>
+                            )}
+                            {brokenCount > 0 && repairDays > 0 && (
+                              <span className="text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.2 rounded text-[7.5px] font-bold inline-flex items-center gap-1 shadow-2xs">
+                                ⚠️ {brokenCount} broken · {repairDays}d
+                              </span>
+                            )}
                           </div>
                         </div>
+                      </div>
 
-                        {/* Right: Stepper controls */}
-                        <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-xs">
+                      {/* MIDDLE: Quantity Selector, Available Capacity, Operating Capacity */}
+                      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 justify-between md:justify-center">
+                        {/* Stepper controls (allows 0, never negative) */}
+                        <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-2xs h-8">
                           {isController ? (
                             <button
                               type="button"
-                              disabled={state <= 1}
+                              disabled={state <= 0}
                               onClick={() => {
-                                const newVal = Math.max(1, state - 1);
+                                const newVal = Math.max(0, state - 1);
                                 setter(newVal);
                                 updateSingle(type, newVal);
                               }}
-                              title={state <= 1 ? `Minimum 1 ${label} must remain active` : `Deactivate one ${label}`}
-                              className={`w-7 h-7 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-sm flex items-center justify-center transition-all border-none select-none leading-none ${
-                                state <= 1 ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                              title={state <= 0 ? `${label} active count is already 0` : `Deactivate one ${label}`}
+                              className={`w-7 h-full bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-sm flex items-center justify-center transition-all border-none select-none leading-none ${
+                                state <= 0 ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
                               }`}
                             >
                               −
                             </button>
                           ) : null}
                           <div
-                            className="px-2 h-7 bg-white text-[#1c1917] text-xs font-extrabold flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none min-w-[48px]"
-                            title={`${state} active / ${totalCount} total (${mData.count} floor${isProcuring ? `, ${inTransit} transit` : ''})`}
+                            className="px-2 h-full bg-white text-[#1c1917] text-xs font-black flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none min-w-[52px]"
+                            title={`${state} active of ${mData.count} owned floor machines`}
                           >
-                            {state} : {totalCount}
+                            {state} / {mData.count}
                           </div>
                           {isController ? (
                             <button
@@ -407,7 +425,7 @@ function MachinePanel() {
                                     : `All available ${label} machines are active`
                                   : `Activate one more ${label}`
                               }
-                              className={`w-7 h-7 bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-sm flex items-center justify-center transition-all border-none select-none leading-none ${
+                              className={`w-7 h-full bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-sm flex items-center justify-center transition-all border-none select-none leading-none ${
                                 state >= mData.count ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
                               }`}
                             >
@@ -415,118 +433,76 @@ function MachinePanel() {
                             </button>
                           ) : null}
                         </div>
-                      </div>
 
-                      {/* Bottom Section: Available Capacity Box + Operating Capacity Box + Buy Button */}
-                      <div className="flex items-center gap-1.5 pt-2 border-t border-dashed border-stone-100">
                         {/* Available Capacity Box */}
                         <div
-                          className="flex-1 rounded-xl bg-emerald-50/80 border border-emerald-200/90 px-1.5 py-1 flex flex-col justify-center items-center text-center shadow-xs"
-                          title={`Available Capacity: ${mData.count} owned machine(s) × ${unitCapacity} units/day = ${availableCapacity} units/day`}
+                          className="w-[96px] h-8.5 rounded-xl bg-emerald-50/80 border border-emerald-200/90 px-1 py-0.5 flex flex-col justify-center items-center text-center shadow-2xs"
+                          title={`Available Capacity: ${mData.count} owned × ${unitCapacity}/day = ${availableCapacity} units/day`}
                         >
                           <div className="text-[7px] font-extrabold text-emerald-700 uppercase tracking-tight flex items-center justify-center gap-0.5 leading-none">
                             <Zap className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
-                            <span>AVAILABLE CAPACITY</span>
+                            <span>AVAILABLE CAP</span>
                           </div>
-                          <div className="text-xs font-black text-emerald-800 font-mono mt-0.5 leading-none">
-                            {availableCapacity}
-                          </div>
-                          <div className="text-[7px] font-bold text-emerald-600/80 uppercase tracking-tight mt-0.5 leading-none">
-                            {mData.count} × {unitCapacity} un/d
+                          <div className="text-[11px] font-black text-emerald-800 font-mono mt-0.5 leading-none">
+                            {availableCapacity} <span className="text-[7.5px] font-normal text-emerald-600">un/d</span>
                           </div>
                         </div>
 
                         {/* Operating Capacity Box */}
                         <div
-                          className="flex-1 rounded-xl bg-purple-50/80 border border-purple-200/90 px-1.5 py-1 flex flex-col justify-center items-center text-center shadow-xs"
-                          title={`Shared Factory Operating Capacity = MIN(Mixer, Oven, Icing, Packaging) = ${factoryOperatingCapacity} units/day (Stage capacity: ${operatingCapacity} units/day)`}
+                          className="w-[96px] h-8.5 rounded-xl bg-purple-50/80 border border-purple-200/90 px-1 py-0.5 flex flex-col justify-center items-center text-center shadow-2xs"
+                          title={`Operating Capacity for ${label}: ${runningCount} active × ${unitCapacity}/day = ${operatingCapacity} units/day`}
                         >
                           <div className="text-[7px] font-extrabold text-purple-700 uppercase tracking-tight flex items-center justify-center gap-0.5 leading-none">
                             <Activity className="w-2.5 h-2.5 text-purple-600 shrink-0" />
-                            <span>OPERATING CAPACITY</span>
+                            <span>OPERATING CAP</span>
                           </div>
-                          <div className="text-xs font-black text-purple-800 font-mono mt-0.5 leading-none">
-                            {factoryOperatingCapacity}
+                          <div className={`text-[11px] font-black font-mono mt-0.5 leading-none ${operatingCapacity === 0 ? 'text-rose-600' : 'text-purple-800'}`}>
+                            {operatingCapacity} <span className="text-[7.5px] font-normal text-purple-600">un/d</span>
                           </div>
-                          <div className="text-[7px] font-bold text-purple-600/80 uppercase tracking-tight mt-0.5 leading-none">
-                            Factory Bottleneck Min
+                        </div>
+                      </div>
+
+                      {/* RIGHT: Buy Button & Machine Utilization */}
+                      <div className="flex items-center justify-end gap-2.5 shrink-0">
+                        {/* Utilization Indicator */}
+                        <div className="flex items-center gap-1.5" title={`${label} Utilization: ${currentUtil}%`}>
+                          <ProgressRing value={currentUtil} color={meta.utilColor} />
+                          <div className="flex flex-col text-left">
+                            <span className="text-[7px] font-extrabold text-stone-400 uppercase tracking-tight leading-none">UTIL</span>
+                            <span className="text-[10px] font-extrabold text-stone-700 font-mono leading-tight">{currentUtil}%</span>
                           </div>
                         </div>
 
                         {/* Buy Button */}
-                        <div className="shrink-0 flex items-center">
-                          {isController ? (
-                            <button
-                              type="button"
-                              disabled={!canAfford || isBuying === type}
-                              onClick={() => handleBuy(type)}
-                              title={
-                                !canAfford
-                                  ? `Need ₹${cost.toLocaleString()} (Cash: ₹${teamState.cash.toLocaleString()})`
-                                  : isProcuring
-                                  ? `Buy another ${label} for ₹${cost.toLocaleString()} (+${inTransit} already in transit)`
-                                  : `Procure additional ${label} for ₹${cost.toLocaleString()}`
-                              }
-                              className={`h-8 px-3 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[9.5px] font-extrabold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm border-none shrink-0 select-none ${
-                                !canAfford || isBuying === type ? 'opacity-40 cursor-not-allowed' : ''
-                              }`}
-                            >
-                              <ShoppingCart className="w-3 h-3" />
-                              <span>{isBuying === type ? 'BUYING...' : 'BUY'}</span>
-                            </button>
-                          ) : (
-                            <div className="h-8 w-12 bg-stone-100 rounded-xl flex items-center justify-center text-[8px] text-stone-400 font-bold uppercase shrink-0">
-                              Locked
-                            </div>
-                          )}
-                        </div>
+                        {isController ? (
+                          <button
+                            type="button"
+                            disabled={!canAfford || isBuying === type}
+                            onClick={() => handleBuy(type)}
+                            title={
+                              !canAfford
+                                ? `Need ₹${cost.toLocaleString()} (Cash: ₹${teamState.cash.toLocaleString()})`
+                                : isProcuring
+                                ? `Buy another ${label} for ₹${cost.toLocaleString()} (+${inTransit} already in transit)`
+                                : `Procure additional ${label} for ₹${cost.toLocaleString()}`
+                            }
+                            className={`h-8 px-2.5 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[9.5px] font-extrabold flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-95 shadow-2xs border-none shrink-0 select-none ${
+                              !canAfford || isBuying === type ? 'opacity-40 cursor-not-allowed' : ''
+                            }`}
+                          >
+                            <ShoppingCart className="w-3 h-3" />
+                            <span>{isBuying === type ? 'BUYING...' : `BUY ₹${cost.toLocaleString()}`}</span>
+                          </button>
+                        ) : (
+                          <div className="h-8 w-14 bg-stone-100 rounded-xl flex items-center justify-center text-[8px] text-stone-400 font-bold uppercase shrink-0">
+                            Locked
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
                 })}
-              </div>
-
-              {/* ══════════════ 5. UTILIZATION SECTION ══════════════ */}
-              <div className="shrink-0 bg-white border border-purple-100 rounded-2xl p-2.5 sm:p-3 shadow-2xs">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <div className="h-px bg-stone-200 flex-1" />
-                  <span className="text-[9px] font-extrabold text-[#7b1fa2] tracking-widest uppercase">Machine Utilization</span>
-                  <div className="h-px bg-stone-200 flex-1" />
-                </div>
-                <div className="rounded-xl border border-rose-100/50 bg-[#fffdfa] px-3 py-1.5 grid grid-cols-4 gap-2 text-center">
-                  {([ 'mixing', 'baking', 'icing', 'packaging' ] as MachineType[]).map((type) => {
-                    const meta = MACHINE_META[type];
-                    const labels: Record<MachineType, string> = { mixing: 'Mixer', baking: 'Oven', icing: 'Icing', packaging: 'Packer' };
-                    const histUtil = teamState.history?.utilization?.[type];
-                    let currentUtil = 0;
-                    if (histUtil && histUtil.length > 0) {
-                      currentUtil = histUtil[histUtil.length - 1];
-                    } else if ((teamState.report as any)?.machineUtilization?.[type] !== undefined) {
-                      currentUtil = (teamState.report as any).machineUtilization[type];
-                    } else {
-                      const unitCap = CAPACITY_PER_MACHINE[type];
-                      const act = (teamState.machines as any)?.[type]?.active ?? 1;
-                      const brk = getMachineBreakdown(type).brokenCount;
-                      const operCap = Math.max(0, act - brk) * unitCap;
-                      const allRunningCaps = ([ 'mixing', 'baking', 'icing', 'packaging' ] as MachineType[]).map(t => {
-                        const a = (teamState.machines as any)?.[t]?.active ?? 1;
-                        const b = getMachineBreakdown(t).brokenCount;
-                        return Math.max(0, a - b) * CAPACITY_PER_MACHINE[t];
-                      });
-                      const bottleneckCap = Math.min(...allRunningCaps);
-                      currentUtil = operCap > 0 ? Math.min(100, Math.round((bottleneckCap / operCap) * 100)) : 0;
-                    }
-                    return (
-                      <div key={type} className="flex flex-col items-center justify-between min-w-0">
-                        <span className="text-[8.5px] font-bold text-stone-600 truncate">{labels[type]}</span>
-                        <div className="my-0.5 shrink-0">
-                          <ProgressRing value={currentUtil} color={meta.utilColor} />
-                        </div>
-                        <div className={`size-1.5 rounded-full ${meta.dotClass}`} />
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
 
               {/* ══════════════ 6. OUTPUT ALLOCATION STRATEGY SECTION ══════════════ */}

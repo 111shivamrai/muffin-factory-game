@@ -73,8 +73,8 @@ const StepperRow = React.memo(function StepperRow({
       <span className="text-xs font-black text-[#1c1917] tracking-wide font-sans select-none">
         {label}
       </span>
-      <div className="w-[176px] h-10.5 flex items-center rounded-2xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-2xs">
-        {isController ? (
+      <div className={`w-[180px] h-10 grid ${isController ? 'grid-cols-[44px_1fr_44px]' : 'grid-cols-1'} rounded-2xl border border-[#d8ccbb] overflow-hidden bg-white shrink-0 shadow-2xs`}>
+        {isController && (
           <button
             type="button"
             onClick={() => {
@@ -83,11 +83,11 @@ const StepperRow = React.memo(function StepperRow({
               setLocalStr(String(next));
               onChange(next);
             }}
-            className="w-12 h-full bg-gradient-to-b from-[#faf5eb] to-[#f4e8d4] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f0e0ca] active:opacity-85 transition-all border-none select-none leading-none"
+            className="w-full h-full bg-gradient-to-b from-[#faf5eb] to-[#f4e8d4] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f0e0ca] active:opacity-85 transition-all border-r border-[#d8ccbb] border-y-0 border-l-0 select-none leading-none"
           >
             −
           </button>
-        ) : null}
+        )}
         <input
           type="text"
           inputMode="numeric"
@@ -98,9 +98,9 @@ const StepperRow = React.memo(function StepperRow({
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           disabled={!isController}
-          className="w-[80px] h-full bg-white text-[#1c1917] text-sm font-black font-mono flex items-center justify-center text-center outline-none border-x border-[#d8ccbb] border-y-0 selection:bg-rose-200"
+          className="w-full h-full bg-white text-[#1c1917] text-sm font-black font-mono flex items-center justify-center text-center outline-none border-none selection:bg-rose-200"
         />
-        {isController ? (
+        {isController && (
           <button
             type="button"
             onClick={() => {
@@ -109,11 +109,11 @@ const StepperRow = React.memo(function StepperRow({
               setLocalStr(String(next));
               onChange(next);
             }}
-            className="w-12 h-full bg-gradient-to-b from-[#faf5eb] to-[#f4e8d4] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f0e0ca] active:opacity-85 transition-all border-none select-none leading-none"
+            className="w-full h-full bg-gradient-to-b from-[#faf5eb] to-[#f4e8d4] text-[#4a3d30] font-bold text-xl flex items-center justify-center cursor-pointer hover:from-[#fdf6eb] hover:to-[#f0e0ca] active:opacity-85 transition-all border-l border-[#d8ccbb] border-y-0 border-r-0 select-none leading-none"
           >
             +
           </button>
-        ) : null}
+        )}
       </div>
     </div>
   );

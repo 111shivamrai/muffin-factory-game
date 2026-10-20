@@ -537,31 +537,31 @@ describe('Muffin Mega Factory - Simulation Engine Tests', () => {
     expect(mixerB?.daysRemaining.length).toBe(0);
   });
 
-  test('Minimum active machines: active machine count cannot be reduced below 1 by user control', () => {
+  test('Active machines can be zero (never negative), and zero machines produce zero muffins', () => {
     const state = createMockTeamState();
     // Simulate user control updating machine active status
     const requestedStatuses: Record<MachineType, number> = {
-      mixing: 0, // User attempted to reduce to 0
-      baking: -1, // User attempted negative value
-      icing: 1,
-      packaging: 2
+      mixing: 1,
+      baking: 0, // User set Oven to 0
+      icing: -2, // User attempted negative value -> must clamp to 0
+      packaging: 2 // Clamped to owned count (1)
     };
 
-    // Apply the minimum boundary rule: Math.max(1, Math.min(count, requested))
+    // Apply the boundary rule: Math.max(0, Math.min(count, requested))
     for (const [mType, reqCount] of Object.entries(requestedStatuses)) {
       const m = state.machines[mType as MachineType];
       if (m) {
-        m.active = Math.max(1, Math.min(m.count, reqCount));
+        m.active = Math.max(0, Math.min(m.count, reqCount));
       }
     }
 
-    // Mixer and Baking must be clamped to minimum 1, not 0
+    // Baking is 0, icing is clamped to 0, packaging is 1, mixing is 1
     expect(state.machines.mixing.active).toBe(1);
-    expect(state.machines.baking.active).toBe(1);
-    expect(state.machines.icing.active).toBe(1);
-    expect(state.machines.packaging.active).toBe(1); // count is 1, clamped to min(1, 2) = 1
+    expect(state.machines.baking.active).toBe(0);
+    expect(state.machines.icing.active).toBe(0);
+    expect(state.machines.packaging.active).toBe(1);
 
-    // Verify that simulation running logic still operates safely with active=1
+    // Verify that zero operating capacity at required stages results in exactly 0 production
     const dayRoom = { ...mockRoom, currentDay: 1 };
     const nextState = runSimDay(
       dayRoom,
@@ -574,7 +574,8 @@ describe('Muffin Mega Factory - Simulation Engine Tests', () => {
       2.5,
       false
     );
-    expect(nextState.history.bottleneckCapacity[0]).toBeGreaterThan(0);
+    expect(nextState.currentBottleneck.capacity).toBe(0);
+    expect(nextState.history.production[0]).toBe(0);
   });
 
   test('Cumulative Customer Satisfaction (fillRate) stays accurate across multiple days', () => {

@@ -99,36 +99,36 @@ function ReportsPanel() {
     <div className="font-sans">
       
       {/* ── 4 Clickable Cards in a 2x2 Grid directly below Factory Live Feed ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
         
         {/* Card 1: Performance Analytics (Row 1, Col 1) */}
         <button
           type="button"
           onClick={() => setActiveModal('performance')}
-          className="group text-left p-3 rounded-2xl bg-white border border-rose-200/90 shadow-2xs hover:shadow-md hover:border-rose-400 active:scale-[0.99] transition-all cursor-pointer flex flex-col justify-between h-[100px] sm:h-[105px] relative overflow-hidden"
+          className="group text-left p-2.5 sm:p-3 rounded-2xl bg-white border border-rose-200/90 shadow-2xs hover:shadow-md hover:border-rose-400 active:scale-[0.99] transition-all cursor-pointer flex flex-col justify-between h-[82px] sm:h-[88px] xl:h-[94px] relative overflow-hidden"
           title="Click to view interactive graphs and metrics"
         >
           <div className="flex items-start justify-between gap-2 w-full">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                <TrendingUp className="w-4 h-4" />
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div className="min-w-0">
-                <span className="text-[11px] font-black tracking-wide uppercase text-stone-800 block truncate font-sans">
+                <span className="text-[10.5px] sm:text-[11px] font-black tracking-wide uppercase text-stone-800 block truncate font-sans">
                   Performance Analytics
                 </span>
-                <span className="text-[9px] font-medium text-stone-500 block truncate">
+                <span className="text-[8.5px] sm:text-[9px] font-medium text-stone-500 block truncate">
                   Graphs, trends & trajectories
                 </span>
               </div>
             </div>
-            <span className="text-[9px] font-mono font-bold text-rose-700 bg-rose-50 border border-rose-200/70 px-2 py-0.5 rounded-full shrink-0">
+            <span className="text-[8.5px] sm:text-[9px] font-mono font-bold text-rose-700 bg-rose-50 border border-rose-200/70 px-2 py-0.5 rounded-full shrink-0">
               Day {history.days.length}
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] font-extrabold text-rose-600 pt-2 border-t border-rose-100/60 mt-1 w-full">
-            <span className="text-[10px] text-stone-500 font-mono">4 Live Graphs</span>
+          <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-extrabold text-rose-600 pt-1.5 border-t border-rose-100/60 mt-0.5 w-full">
+            <span className="text-[9.5px] sm:text-[10px] text-stone-500 font-mono">4 Live Graphs</span>
             <span className="inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
               View Analytics <span>→</span>
             </span>
@@ -139,30 +139,30 @@ function ReportsPanel() {
         <button
           type="button"
           onClick={() => setActiveModal('reports')}
-          className="group text-left p-3 rounded-2xl bg-white border border-amber-200/90 shadow-2xs hover:shadow-md hover:border-amber-400 active:scale-[0.99] transition-all cursor-pointer flex flex-col justify-between h-[100px] sm:h-[105px] relative overflow-hidden"
+          className="group text-left p-2.5 sm:p-3 rounded-2xl bg-white border border-amber-200/90 shadow-2xs hover:shadow-md hover:border-amber-400 active:scale-[0.99] transition-all cursor-pointer flex flex-col justify-between h-[82px] sm:h-[88px] xl:h-[94px] relative overflow-hidden"
           title="Click to view financial statements and operational summary"
         >
           <div className="flex items-start justify-between gap-2 w-full">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                <Receipt className="w-4 h-4" />
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div className="min-w-0">
-                <span className="text-[11px] font-black tracking-wide uppercase text-stone-800 block truncate font-sans">
+                <span className="text-[10.5px] sm:text-[11px] font-black tracking-wide uppercase text-stone-800 block truncate font-sans">
                   Reports & Analytics
                 </span>
-                <span className="text-[9px] font-medium text-stone-500 block truncate">
+                <span className="text-[8.5px] sm:text-[9px] font-medium text-stone-500 block truncate">
                   Financial & operational audit
                 </span>
               </div>
             </div>
-            <span className="text-[9px] font-mono font-bold text-amber-700 bg-amber-50 border border-amber-200/70 px-2 py-0.5 rounded-full shrink-0">
+            <span className="text-[8.5px] sm:text-[9px] font-mono font-bold text-amber-700 bg-amber-50 border border-amber-200/70 px-2 py-0.5 rounded-full shrink-0">
               {report.fillRate}% Fill
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] font-extrabold text-amber-700 pt-2 border-t border-amber-100/60 mt-1 w-full">
-            <span className="text-[10px] text-stone-600 font-mono font-bold">
+          <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-extrabold text-amber-700 pt-1.5 border-t border-amber-100/60 mt-0.5 w-full">
+            <span className="text-[9.5px] sm:text-[10px] text-stone-600 font-mono font-bold">
               ₹{report.profit.toLocaleString()} Profit
             </span>
             <span className="inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
@@ -175,30 +175,30 @@ function ReportsPanel() {
         <button
           type="button"
           onClick={() => setActiveModal('academic')}
-          className="group text-left p-3 rounded-2xl bg-white border border-indigo-200/90 shadow-2xs hover:shadow-md hover:border-indigo-400 active:scale-[0.99] transition-all cursor-pointer flex flex-col justify-between h-[100px] sm:h-[105px] relative overflow-hidden"
+          className="group text-left p-2.5 sm:p-3 rounded-2xl bg-white border border-indigo-200/90 shadow-2xs hover:shadow-md hover:border-indigo-400 active:scale-[0.99] transition-all cursor-pointer flex flex-col justify-between h-[82px] sm:h-[88px] xl:h-[94px] relative overflow-hidden"
           title="Click to view weighted academic score and evaluation rubric"
         >
           <div className="flex items-start justify-between gap-2 w-full">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                <GraduationCap className="w-4 h-4" />
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div className="min-w-0">
-                <span className="text-[11px] font-black tracking-wide uppercase text-stone-800 block truncate font-sans">
+                <span className="text-[10.5px] sm:text-[11px] font-black tracking-wide uppercase text-stone-800 block truncate font-sans">
                   Academic Performance
                 </span>
-                <span className="text-[9px] font-medium text-stone-500 block truncate">
+                <span className="text-[8.5px] sm:text-[9px] font-medium text-stone-500 block truncate">
                   Score, weights & rubric grade
                 </span>
               </div>
             </div>
-            <span className="text-[9px] font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-2 py-0.5 rounded-full shrink-0">
+            <span className="text-[8.5px] sm:text-[9px] font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-2 py-0.5 rounded-full shrink-0">
               {academicScore.totalScore >= 1 ? academicScore.totalScore : `.${Math.round(academicScore.totalScore * 100)}`}/100
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] font-extrabold text-indigo-600 pt-2 border-t border-indigo-100/60 mt-1 w-full">
-            <span className="text-[10px] text-stone-500 font-mono">
+          <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-extrabold text-indigo-600 pt-1.5 border-t border-indigo-100/60 mt-0.5 w-full">
+            <span className="text-[9.5px] sm:text-[10px] text-stone-500 font-mono">
               {academicScore.totalScore >= 80 ? '🌟 Distinction' : academicScore.totalScore >= 60 ? '✨ Satisfactory' : '⚠️ Needs Review'}
             </span>
             <span className="inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
@@ -211,38 +211,37 @@ function ReportsPanel() {
         <button
           type="button"
           onClick={() => setActiveModal('pdf_preview')}
-          className="group text-left p-3 rounded-2xl bg-white border border-emerald-200/90 shadow-2xs hover:shadow-md hover:border-emerald-400 active:scale-[0.99] transition-all cursor-pointer flex flex-col justify-between h-[100px] sm:h-[105px] relative overflow-hidden"
+          className="group text-left p-2.5 sm:p-3 rounded-2xl bg-white border border-emerald-200/90 shadow-2xs hover:shadow-md hover:border-emerald-400 active:scale-[0.99] transition-all cursor-pointer flex flex-col justify-between h-[82px] sm:h-[88px] xl:h-[94px] relative overflow-hidden"
           title="Click to preview and download comprehensive PDF simulation report"
         >
           <div className="flex items-start justify-between gap-2 w-full">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-                <Download className="w-4 h-4" />
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
+                <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div className="min-w-0">
-                <span className="text-[11px] font-black tracking-wide uppercase text-stone-800 block truncate font-sans">
+                <span className="text-[10.5px] sm:text-[11px] font-black tracking-wide uppercase text-stone-800 block truncate font-sans">
                   Generate PDF Report
                 </span>
-                <span className="text-[9px] font-medium text-stone-500 block truncate">
+                <span className="text-[8.5px] sm:text-[9px] font-medium text-stone-500 block truncate">
                   Download a report of the simulation
                 </span>
               </div>
             </div>
-            <span className="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/70 px-2 py-0.5 rounded-full shrink-0">
+            <span className="text-[8.5px] sm:text-[9px] font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/70 px-2 py-0.5 rounded-full shrink-0">
               Official PDF
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-[11px] font-extrabold text-emerald-700 pt-2 border-t border-emerald-100/60 mt-1 w-full">
-            <span className="text-[10px] text-stone-500 font-mono">
+          <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-extrabold text-emerald-700 pt-1.5 border-t border-emerald-100/60 mt-0.5 w-full">
+            <span className="text-[9.5px] sm:text-[10px] text-stone-500 font-mono">
               Audit Ledger
             </span>
             <span className="inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-              Preview & Download <span>→</span>
+              PDF Preview <span>→</span>
             </span>
           </div>
         </button>
-
       </div>
 
       {/* ── Modal Pop-up Overlays ── */}
