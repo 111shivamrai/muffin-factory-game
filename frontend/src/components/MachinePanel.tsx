@@ -58,8 +58,8 @@ const MACHINE_META: Record<MachineType, {
   },
 };
 
-// ─── SVG Circular Progress Ring ────────────────────────────────────────────────
-function ProgressRing({ value, color, size = 44 }: { value: number; color: string; size?: number }) {
+// ─── SVG Circular Progress Ring (Enlarged size=48 for enhanced readability) ───
+function ProgressRing({ value, color, size = 48 }: { value: number; color: string; size?: number }) {
   const radius = size / 2;
   const stroke = 3.5;
   const normalizedRadius = radius - stroke * 1.5;
@@ -76,7 +76,7 @@ function ProgressRing({ value, color, size = 44 }: { value: number; color: strin
         className="transition-all duration-300" strokeLinecap="round"
         transform={`rotate(-90 ${radius} ${radius})`} />
       <text x="50%" y="50%" dy=".35em" textAnchor="middle"
-        className="text-[10px] font-black fill-stone-800 font-mono">
+        className="text-[11px] sm:text-xs font-black fill-stone-800 font-mono">
         {value}%
       </text>
     </svg>
@@ -98,10 +98,10 @@ function MachinePanel() {
 
   const isController = role === 'controller';
 
-  const [mixActive, setMixActive] = useState(1);
-  const [bakeActive, setBakeActive] = useState(1);
-  const [iceActive, setIceActive] = useState(1);
-  const [packActive, setPackActive] = useState(1);
+  const [mixActive, setMixActive] = useState(() => teamState?.machines?.mixing?.active ?? 1);
+  const [bakeActive, setBakeActive] = useState(() => teamState?.machines?.baking?.active ?? 1);
+  const [iceActive, setIceActive] = useState(() => teamState?.machines?.icing?.active ?? 1);
+  const [packActive, setPackActive] = useState(() => teamState?.machines?.packaging?.active ?? 1);
   const [isBuying, setIsBuying] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -224,10 +224,10 @@ function MachinePanel() {
   const runningPackagers = Math.max(0, packActive - getMachineBreakdown('packaging').brokenCount);
 
   const stageOperatingCaps: Record<MachineType, number> = {
-    mixing: runningMixers * CAPACITY_PER_MACHINE.mixing,
-    baking: runningBakers * CAPACITY_PER_MACHINE.baking,
-    icing: runningIcers * CAPACITY_PER_MACHINE.icing,
-    packaging: runningPackagers * CAPACITY_PER_MACHINE.packaging,
+    mixing: runningMixers * ((room?.scenarioConfig?.machineSettings?.mixing as any)?.capacityPerMachine || CAPACITY_PER_MACHINE.mixing),
+    baking: runningBakers * ((room?.scenarioConfig?.machineSettings?.baking as any)?.capacityPerMachine || CAPACITY_PER_MACHINE.baking),
+    icing: runningIcers * ((room?.scenarioConfig?.machineSettings?.icing as any)?.capacityPerMachine || CAPACITY_PER_MACHINE.icing),
+    packaging: runningPackagers * ((room?.scenarioConfig?.machineSettings?.packaging as any)?.capacityPerMachine || CAPACITY_PER_MACHINE.packaging),
   };
 
   // The factory-wide bottleneck: MINIMUM of the 4 stages
@@ -334,7 +334,8 @@ function MachinePanel() {
                   const inTransit    = mData.inTransit || 0;
                   const canAfford    = teamState.cash >= cost;
                   const isProcuring  = inTransit > 0;
-                  const unitCapacity = CAPACITY_PER_MACHINE[type];
+                  const unitCapacity = (room?.scenarioConfig?.machineSettings?.[type] as any)?.capacityPerMachine
+                    || CAPACITY_PER_MACHINE[type];
                   const leadTime     = (room?.scenarioConfig?.machineSettings?.[type] as any)?.leadTime
                     || (room?.scenarioConfig?.leadTimes as any)?.machines?.[type]
                     || room?.scenarioConfig?.leadTimes?.machineProcurement
@@ -369,13 +370,13 @@ function MachinePanel() {
                         brokenCount > 0 ? 'border-red-300 bg-red-50/25' : 'border-stone-200/90 hover:border-purple-300'
                       }`}
                     >
-                      {/* 1. MACHINE IDENTITY: Icon, Name, Lead Time, Desc, Status */}
-                      <div className="flex items-center gap-3 w-[260px] shrink-0">
+                      {/* 1. MACHINE IDENTITY: Icon, Name, Lead Time badge (Strict single-line), Desc, Status */}
+                      <div className="flex items-center gap-3 w-[295px] lg:w-[310px] shrink-0">
                         <span className="size-11 sm:size-12 shrink-0 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-center text-2xl shadow-2xs">
                           {meta.icon}
                         </span>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 whitespace-nowrap">
                             <span className="text-sm font-black text-stone-800 font-sans tracking-tight leading-tight">
                               {label}
                             </span>
@@ -403,123 +404,129 @@ function MachinePanel() {
                         </div>
                       </div>
 
-                      {/* 2. QUANTITY STEPPER (allows 0, never negative) */}
-                      <div className="shrink-0">
-                        <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shadow-2xs h-[38px] w-[115px]">
-                          {isController ? (
-                            <button
-                              type="button"
-                              disabled={state <= 0}
-                              onClick={() => {
-                                const newVal = Math.max(0, state - 1);
-                                setter(newVal);
-                                updateSingle(type, newVal);
-                              }}
-                              title={state <= 0 ? `${label} active count is already 0` : `Deactivate one ${label}`}
-                              className={`w-9 h-full bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center transition-all border-none select-none leading-none ${
-                                state <= 0 ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
-                              }`}
+                      {/* 2-6. CONTROLS GROUP (Equally spaced, consistently aligned columns with zero excess gap) */}
+                      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+
+                        {/* 2. QUANTITY STEPPER (Guaranteed single horizontal line e.g. '1 / 1', '0 / 1') */}
+                        <div className="shrink-0">
+                          <div className="flex items-center rounded-xl border border-[#d8ccbb] overflow-hidden bg-white shadow-2xs h-[38px] w-[122px]">
+                            {isController ? (
+                              <button
+                                type="button"
+                                disabled={state <= 0}
+                                onClick={() => {
+                                  const newVal = Math.max(0, state - 1);
+                                  setter(newVal);
+                                  updateSingle(type, newVal);
+                                }}
+                                title={state <= 0 ? `${label} active count is already 0` : `Deactivate one ${label}`}
+                                className={`w-8.5 h-full bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center transition-all border-none select-none leading-none shrink-0 ${
+                                  state <= 0 ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                                }`}
+                              >
+                                −
+                              </button>
+                            ) : null}
+                            <div
+                              className="flex-1 h-full bg-white text-[#1c1917] text-xs sm:text-[13px] font-black flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none whitespace-nowrap px-1 leading-none"
+                              title={`${state} active of ${mData.count} owned floor machines`}
                             >
-                              −
-                            </button>
-                          ) : null}
+                              {state} / {mData.count}
+                            </div>
+                            {isController ? (
+                              <button
+                                type="button"
+                                disabled={state >= mData.count}
+                                onClick={() => {
+                                  const newVal = Math.min(mData.count, state + 1);
+                                  setter(newVal);
+                                  updateSingle(type, newVal);
+                                }}
+                                title={
+                                  state >= mData.count
+                                    ? isProcuring
+                                      ? `Cannot activate: purchased machine is still in transit`
+                                      : `All available ${label} machines are active`
+                                    : `Activate one more ${label}`
+                                }
+                                className={`w-8.5 h-full bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center transition-all border-none select-none leading-none shrink-0 ${
+                                  state >= mData.count ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                                }`}
+                              >
+                                +
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {/* 3. AVAILABLE CAPACITY BADGE */}
+                        <div className="shrink-0">
                           <div
-                            className="flex-1 h-full bg-white text-[#1c1917] text-xs sm:text-sm font-black flex items-center justify-center font-mono border-x border-[#d8ccbb] select-none"
-                            title={`${state} active of ${mData.count} owned floor machines`}
+                            className="w-[108px] h-[44px] rounded-xl bg-emerald-50/90 border border-emerald-200/90 px-2 flex flex-col justify-center items-center text-center shadow-2xs"
+                            title={`Available Capacity: ${mData.count} owned × ${unitCapacity}/day = ${availableCapacity} units/day`}
                           >
-                            {state} / {mData.count}
+                            <div className="text-[7.5px] font-extrabold text-emerald-700 uppercase tracking-tight flex items-center justify-center gap-0.5 leading-none">
+                              <Zap className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                              <span>AVAILABLE CAP</span>
+                            </div>
+                            <div className="text-xs sm:text-[13px] font-black text-emerald-800 font-mono mt-0.5 leading-none">
+                              {availableCapacity} <span className="text-[8px] font-medium text-emerald-600">un/d</span>
+                            </div>
                           </div>
+                        </div>
+
+                        {/* 4. OPERATING CAPACITY BADGE (Shows shared factory bottleneck across all 4 rows) */}
+                        <div className="shrink-0">
+                          <div
+                            className="w-[108px] h-[44px] rounded-xl bg-purple-50/90 border border-purple-200/90 px-2 flex flex-col justify-center items-center text-center shadow-2xs"
+                            title={`Factory Bottleneck Capacity: min(${stageOperatingCaps.mixing}, ${stageOperatingCaps.baking}, ${stageOperatingCaps.icing}, ${stageOperatingCaps.packaging}) = ${factoryOperatingCapacity} units/day`}
+                          >
+                            <div className="text-[7.5px] font-extrabold text-purple-700 uppercase tracking-tight flex items-center justify-center gap-0.5 leading-none">
+                              <Activity className="w-2.5 h-2.5 text-purple-600 shrink-0" />
+                              <span>OPERATING CAP</span>
+                            </div>
+                            <div className={`text-xs sm:text-[13px] font-black font-mono mt-0.5 leading-none ${factoryOperatingCapacity === 0 ? 'text-rose-600' : 'text-purple-800'}`}>
+                              {factoryOperatingCapacity} <span className="text-[8px] font-medium text-purple-600">un/d</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 5. UTILIZATION (Label directly above circle, enlarged size=48, percentage inside only, close to Oper Cap) */}
+                        <div className="shrink-0 w-[68px] flex flex-col items-center justify-center" title={`${label} Utilization: ${currentUtil}%`}>
+                          <span className="text-[7.5px] font-extrabold text-stone-400 uppercase tracking-wider mb-0.5 font-sans">UTILIZATION</span>
+                          <ProgressRing value={currentUtil} color={currentUtil === 0 ? '#d1d5db' : meta.utilColor} size={48} />
+                        </div>
+
+                        {/* 6. BUY BUTTON */}
+                        <div className="shrink-0">
                           {isController ? (
                             <button
                               type="button"
-                              disabled={state >= mData.count}
-                              onClick={() => {
-                                const newVal = Math.min(mData.count, state + 1);
-                                setter(newVal);
-                                updateSingle(type, newVal);
-                              }}
+                              disabled={!canAfford || isBuying === type}
+                              onClick={() => handleBuy(type)}
                               title={
-                                state >= mData.count
-                                  ? isProcuring
-                                    ? `Cannot activate: purchased machine is still in transit`
-                                    : `All available ${label} machines are active`
-                                  : `Activate one more ${label}`
+                                !canAfford
+                                  ? `Need ₹${cost.toLocaleString()} (Cash: ₹${teamState.cash.toLocaleString()})`
+                                  : isProcuring
+                                  ? `Buy another ${label} for ₹${cost.toLocaleString()} (+${inTransit} already in transit)`
+                                  : `Procure additional ${label} for ₹${cost.toLocaleString()}`
                               }
-                              className={`w-9 h-full bg-gradient-to-b from-[#fffaf4] to-[#f8ecd9] text-[#4a3d30] font-bold text-base flex items-center justify-center transition-all border-none select-none leading-none ${
-                                state >= mData.count ? 'opacity-35 cursor-not-allowed' : 'cursor-pointer hover:from-[#fdf6eb] hover:to-[#f2e2cb] active:opacity-85'
+                              className={`h-[38px] px-3.5 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[10.5px] font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs border-none shrink-0 select-none ${
+                                !canAfford || isBuying === type ? 'opacity-40 cursor-not-allowed' : ''
                               }`}
                             >
-                              +
+                              <ShoppingCart className="w-3.5 h-3.5" />
+                              <span>{isBuying === type ? 'BUYING...' : `BUY ₹${cost.toLocaleString()}`}</span>
                             </button>
-                          ) : null}
+                          ) : (
+                            <div className="h-[38px] w-20 bg-stone-100 rounded-xl flex items-center justify-center text-[9px] text-stone-400 font-bold uppercase shrink-0">
+                              Locked
+                            </div>
+                          )}
                         </div>
+
                       </div>
 
-                      {/* 3. AVAILABLE CAPACITY BADGE */}
-                      <div className="shrink-0">
-                        <div
-                          className="w-[108px] h-[44px] rounded-xl bg-emerald-50/90 border border-emerald-200/90 px-2 flex flex-col justify-center items-center text-center shadow-2xs"
-                          title={`Available Capacity: ${mData.count} owned × ${unitCapacity}/day = ${availableCapacity} units/day`}
-                        >
-                          <div className="text-[7.5px] font-extrabold text-emerald-700 uppercase tracking-tight flex items-center justify-center gap-0.5 leading-none">
-                            <Zap className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
-                            <span>AVAILABLE CAP</span>
-                          </div>
-                          <div className="text-xs sm:text-[13px] font-black text-emerald-800 font-mono mt-0.5 leading-none">
-                            {availableCapacity} <span className="text-[8px] font-medium text-emerald-600">un/d</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 4. OPERATING CAPACITY BADGE (Shows shared factory bottleneck across all 4 rows) */}
-                      <div className="shrink-0">
-                        <div
-                          className="w-[108px] h-[44px] rounded-xl bg-purple-50/90 border border-purple-200/90 px-2 flex flex-col justify-center items-center text-center shadow-2xs"
-                          title={`Factory Bottleneck Capacity: min(${stageOperatingCaps.mixing}, ${stageOperatingCaps.baking}, ${stageOperatingCaps.icing}, ${stageOperatingCaps.packaging}) = ${factoryOperatingCapacity} units/day`}
-                        >
-                          <div className="text-[7.5px] font-extrabold text-purple-700 uppercase tracking-tight flex items-center justify-center gap-0.5 leading-none">
-                            <Activity className="w-2.5 h-2.5 text-purple-600 shrink-0" />
-                            <span>OPERATING CAP</span>
-                          </div>
-                          <div className={`text-xs sm:text-[13px] font-black font-mono mt-0.5 leading-none ${factoryOperatingCapacity === 0 ? 'text-rose-600' : 'text-purple-800'}`}>
-                            {factoryOperatingCapacity} <span className="text-[8px] font-medium text-purple-600">un/d</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 5. UTILIZATION (Label above, percentage inside circle only) */}
-                      <div className="shrink-0 w-[76px] flex flex-col items-center justify-center" title={`${label} Utilization: ${currentUtil}%`}>
-                        <span className="text-[7.5px] font-extrabold text-stone-400 uppercase tracking-wider mb-0.5 font-sans">UTILIZATION</span>
-                        <ProgressRing value={currentUtil} color={currentUtil === 0 ? '#d1d5db' : meta.utilColor} size={42} />
-                      </div>
-
-                      {/* 6. BUY BUTTON */}
-                      <div className="shrink-0">
-                        {isController ? (
-                          <button
-                            type="button"
-                            disabled={!canAfford || isBuying === type}
-                            onClick={() => handleBuy(type)}
-                            title={
-                              !canAfford
-                                ? `Need ₹${cost.toLocaleString()} (Cash: ₹${teamState.cash.toLocaleString()})`
-                                : isProcuring
-                                ? `Buy another ${label} for ₹${cost.toLocaleString()} (+${inTransit} already in transit)`
-                                : `Procure additional ${label} for ₹${cost.toLocaleString()}`
-                            }
-                            className={`h-[38px] px-3.5 bg-gradient-to-b from-[#8e24aa] to-[#7b1fa2] hover:from-[#9c27b0] hover:to-[#6a1b9a] text-white rounded-xl text-[10.5px] font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-2xs border-none shrink-0 select-none ${
-                              !canAfford || isBuying === type ? 'opacity-40 cursor-not-allowed' : ''
-                            }`}
-                          >
-                            <ShoppingCart className="w-3.5 h-3.5" />
-                            <span>{isBuying === type ? 'BUYING...' : `BUY ₹${cost.toLocaleString()}`}</span>
-                          </button>
-                        ) : (
-                          <div className="h-[38px] w-20 bg-stone-100 rounded-xl flex items-center justify-center text-[9px] text-stone-400 font-bold uppercase shrink-0">
-                            Locked
-                          </div>
-                        )}
-                      </div>
                     </div>
                   );
                 })}
