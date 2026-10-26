@@ -50,7 +50,7 @@ interface GameStore {
   loadScenarios: () => Promise<void>;
   loadRooms: () => Promise<void>;
   createScenario: (scenario: Partial<SavedScenario>) => Promise<SavedScenario>;
-  duplicateScenario: (id: string) => Promise<void>;
+  duplicateScenario: (id: string) => Promise<any>;
   deleteScenario: (id: string) => Promise<void>;
   createRoom: (name: string, difficulty: string, tickRate: number, maxDays: number, scenarioId?: string) => Promise<Room>;
   deleteRoom: (id: string) => Promise<void>;
@@ -423,7 +423,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
     const saved = await res.json();
     if (saved.error) alert(saved.error);
-    get().loadScenarios();
+    await get().loadScenarios();
+    return saved;
   },
 
   deleteScenario: async (id) => {

@@ -8,6 +8,21 @@ import {
 } from 'lucide-react';
 import { SavedScenario, Room, TeamState } from '../../../backend/src/types/index.js';
 
+export const SYSTEM_PRESET_IDS = new Set([
+  'scenario_beginner_preset',
+  'scenario_intermediate_preset',
+  'scenario_intermediate_10min_preset',
+  'scenario_advanced_preset',
+  'scenario_advanced_10min_preset'
+]);
+
+export const isSystemPreset = (sc: SavedScenario): boolean => {
+  if (!sc) return false;
+  if (SYSTEM_PRESET_IDS.has(sc.id)) return true;
+  if (sc.name?.includes('(Copy)') || sc.name?.includes('(Custom)')) return false;
+  return sc.id.endsWith('_preset') && (sc.creatorId?.includes('admin') ?? false);
+};
+
 export default function InstructorDashboard({ navigate }: { navigate?: (to: string) => void } = {}) {
   const { 
     logout, exitRoom, scenarios, loadScenarios, roomsList, loadRooms, createRoom, deleteRoom,
@@ -126,10 +141,12 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   const [elapsedTime, setElapsedTime] = useState('00:00');
 
   // Pre-computed Scenario presets and custom scenarios
-  const beginnerSc = useMemo(() => scenarios.find(s => s.id === 'scenario_beginner_preset' || s.difficulty === 'beginner'), [scenarios]);
-  const interSc = useMemo(() => scenarios.find(s => s.id === 'scenario_intermediate_preset' || s.difficulty === 'intermediate'), [scenarios]);
-  const advSc = useMemo(() => scenarios.find(s => s.id === 'scenario_advanced_preset' || s.difficulty === 'advanced'), [scenarios]);
-  const customScs = useMemo(() => scenarios.filter(s => s.id !== beginnerSc?.id && s.id !== interSc?.id && s.id !== advSc?.id && !s.creatorId?.includes('admin') && !s.id?.includes('preset')), [scenarios, beginnerSc, interSc, advSc]);
+  const beginnerSc = useMemo(() => scenarios.find(s => s.id === 'scenario_beginner_preset'), [scenarios]);
+  const interSc = useMemo(() => scenarios.find(s => s.id === 'scenario_intermediate_preset'), [scenarios]);
+  const inter10MinSc = useMemo(() => scenarios.find(s => s.id === 'scenario_intermediate_10min_preset'), [scenarios]);
+  const advSc = useMemo(() => scenarios.find(s => s.id === 'scenario_advanced_preset'), [scenarios]);
+  const adv10MinSc = useMemo(() => scenarios.find(s => s.id === 'scenario_advanced_10min_preset'), [scenarios]);
+  const customScs = useMemo(() => scenarios.filter(s => !isSystemPreset(s)), [scenarios]);
 
   // Keep a ref of previously chosen scenario so cancellation doesn't corrupt it
   const prevScenarioRef = useRef<string>('');
@@ -477,12 +494,12 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   };
 
   // Wizard Helper: Initialize wizard fields for a scenario (new, copy or edit)
-  const openScenarioWizard = (sc?: SavedScenario | null) => {
+  const openScenarioWizard = (sc?: SavedScenario | null, asNewCopy: boolean = false) => {
     playTone(440, 'sine', 0.05);
     prevScenarioRef.current = selectedScenarioId;
     if (sc) {
-      setEditingScenarioId(sc.id);
-      setScName(sc.name);
+      setEditingScenarioId(asNewCopy ? null : sc.id);
+      setScName(asNewCopy ? `${sc.name} (Custom Copy)` : sc.name);
       setScDesc(sc.description);
       setScMaxDays(sc.maxDays);
       setScRealTime(Math.round((sc.maxDays * sc.tickRate) / 60) || 15);
@@ -717,8 +734,13 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   const handleDuplicateScenario = (sc: SavedScenario) => {
     playTone(440, 'sine', 0.05);
     useGameStore.getState().duplicateScenario(sc.id).then(() => {
-      alert(`Copied scenario: "${sc.name}"`);
+      alert(`Copied scenario: "${sc.name} (Copy)". You can now edit its config or select it for room creation.`);
     });
+  };
+
+  const handleCustomizePreset = (sc: SavedScenario) => {
+    playTone(440, 'sine', 0.05);
+    openScenarioWizard(sc, true);
   };
 
   const handleDeleteScenario = (id: string, name: string) => {
@@ -729,8 +751,8 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   };
 
   // Filter presets vs custom
-  const presets = scenarios.filter(s => s.creatorId?.includes('admin') || s.id?.includes('preset'));
-  const customScenarios = scenarios.filter(s => !s.creatorId?.includes('admin') && !s.id?.includes('preset'));
+  const presets = scenarios.filter(s => isSystemPreset(s));
+  const customScenarios = scenarios.filter(s => !isSystemPreset(s));
 
   return (
     <div className={`instructor-dashboard min-h-screen h-screen overflow-hidden ${isDarkMode ? "dark" : ""}`}>
@@ -959,28 +981,44 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         className="w-full bg-white dark:bg-zinc-900 border border-muffin-brown/20 p-2.5 font-mono text-xs rounded outline-none focus:border-muffin-gold text-dynamic-text"
                       >
                         <option value="">-- Select Scenario Calibrator --</option>
-                        {beginnerSc && (
-                          <option value={beginnerSc.id}>
-                            1. Beginner Muffin Operations ({beginnerSc.maxDays} Days)
-                          </option>
+                        <optgroup label="Standard Presets">
+                          {beginnerSc && (
+                            <option value={beginnerSc.id}>
+                              1. Beginner Muffin Operations ({beginnerSc.maxDays} Days / {Math.round((beginnerSc.maxDays * beginnerSc.tickRate) / 60)} Mins)
+                            </option>
+                          )}
+                          {interSc && (
+                            <option value={interSc.id}>
+                              2. Intermediate Supply Chain ({interSc.maxDays} Days / {Math.round((interSc.maxDays * interSc.tickRate) / 60)} Mins)
+                            </option>
+                          )}
+                          {inter10MinSc && (
+                            <option value={inter10MinSc.id}>
+                              ⭐ 3. Medium 10-Min Fast Track (Extra Contracts) ({inter10MinSc.maxDays} Days / 10 Mins)
+                            </option>
+                          )}
+                          {advSc && (
+                            <option value={advSc.id}>
+                              4. Advanced Operations Crisis ({advSc.maxDays} Days / {Math.round((advSc.maxDays * advSc.tickRate) / 60)} Mins)
+                            </option>
+                          )}
+                          {adv10MinSc && (
+                            <option value={adv10MinSc.id}>
+                              ⚡ 5. High 10-Min Fast-Paced Gameplay ({adv10MinSc.maxDays} Days / 10 Mins)
+                            </option>
+                          )}
+                        </optgroup>
+                        {customScs.length > 0 && (
+                          <optgroup label="Custom & Copied Scenarios (Editable)">
+                            {customScs.map(sc => (
+                              <option key={sc.id} value={sc.id}>
+                                Custom: {sc.name} ({sc.maxDays} Days / {Math.round((sc.maxDays * sc.tickRate) / 60) || 10} Mins)
+                              </option>
+                            ))}
+                          </optgroup>
                         )}
-                        {interSc && (
-                          <option value={interSc.id}>
-                            2. Intermediate Supply Chain Challenge ({interSc.maxDays} Days)
-                          </option>
-                        )}
-                        {advSc && (
-                          <option value={advSc.id}>
-                            3. Advanced Operations Crisis ({advSc.maxDays} Days)
-                          </option>
-                        )}
-                        {customScs.map(sc => (
-                          <option key={sc.id} value={sc.id}>
-                            Custom: {sc.name} ({sc.maxDays} Days)
-                          </option>
-                        ))}
                         <option value="CREATE_CUSTOM">
-                          4. Create Custom Scenario...
+                          + Create New Custom Scenario...
                         </option>
                       </select>
                     </div>
@@ -1675,15 +1713,20 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 text-left">
-                {presets.concat(customScenarios).map((sc, scidx) => {
-                  const isPreset = scidx < presets.length;
+                {presets.concat(customScenarios).map((sc) => {
+                  const isPreset = isSystemPreset(sc);
                   return (
                     <div key={sc.id} className="border border-muffin-brown/15 hover:border-muffin-gold/60 p-5 rounded-2xl bg-zinc-950/5 dark:bg-white/5 space-y-4 relative overflow-hidden transition-all duration-300">
-                      <div className="absolute top-0 right-0 px-2 py-0.5 text-[8px] font-mono font-bold uppercase tracking-wider rounded-bl bg-muffin-brown/10 text-muffin-brown dark:text-muffin-cream shadow-xs">
-                        {isPreset ? "🎯 PRESET STANDARD" : "🛡️ CUSTOM"}
+                      <div className={`absolute top-0 right-0 px-2.5 py-0.5 text-[8px] font-mono font-bold uppercase tracking-wider rounded-bl shadow-xs ${
+                        isPreset ? 'bg-muffin-brown/10 text-muffin-brown dark:text-muffin-cream' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-l border-b border-emerald-500/20'
+                      }`}>
+                        {isPreset ? "🎯 PRESET STANDARD" : "🛡️ CUSTOM / COPIED"}
                       </div>
                       <div className="space-y-1 text-left">
-                        <h3 className="font-sans font-black text-sm text-dynamic-text uppercase tracking-tight">{sc.name}</h3>
+                        <h3 className="font-sans font-black text-sm text-dynamic-text uppercase tracking-tight flex items-center gap-2">
+                          <span>{sc.name}</span>
+                          {!isPreset && <span className="text-[9px] bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded font-mono font-normal">Editable</span>}
+                        </h3>
                         <p className="text-[11.5px] text-dynamic-text/70 leading-relaxed font-serif italic">
                           "{sc.description || sc.learningObjective}"
                         </p>
@@ -1696,34 +1739,46 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         <div>
                           <span className="text-[7.5px] block font-bold text-gray-400 leading-none mb-1">REAL TIME LIMIT</span>
                           <span className="text-xs text-[#2D4A6B] dark:text-[#5c8dbe] font-bold">
-                            {Math.round((sc.maxDays * sc.tickRate) / 60) || 15} Mins
+                            {Math.round((sc.maxDays * sc.tickRate) / 60) || 10} Mins
                           </span>
                         </div>
                         <div>
-                          <span className="text-[7.5px] block font-bold text-gray-400 leading-none mb-1">ORDER COST (S)</span>
+                          <span className="text-[7.5px] block font-bold text-gray-400 leading-none mb-1">CONTRACTS</span>
                           <span className="text-xs text-[#2D4A6B] dark:text-[#5c8dbe] font-bold">
-                            ₹{(sc.rawMaterialCosts?.orderCost ?? 150).toLocaleString()} setup
+                            {sc.contracts?.length ?? 0} Wholesale
                           </span>
                         </div>
                       </div>
                       <div className="flex gap-2 justify-end pt-2 border-t border-muffin-brown/10">
                         <button
                           onClick={() => handleDuplicateScenario(sc)}
-                          className="p-1.5 px-3 border border-muffin-brown/20 rounded-lg bg-white dark:bg-zinc-900 hover:bg-slate-50 text-[9px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 text-dynamic-text"
+                          className="p-1.5 px-3 border border-muffin-brown/20 rounded-lg bg-white dark:bg-zinc-900 hover:bg-slate-50 text-[9px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 text-dynamic-text flex items-center gap-1"
+                          title="Create a duplicate copy of this scenario"
                         >
-                          Copy Preset
+                          <Copy className="w-3 h-3 text-gray-500" />
+                          <span>{isPreset ? "Copy Preset" : "Duplicate"}</span>
                         </button>
-                        {!isPreset && (
+                        {isPreset ? (
+                          <button
+                            onClick={() => handleCustomizePreset(sc)}
+                            className="p-1.5 px-3 border border-[#2D4A6B] text-[#2D4A6B] dark:text-[#5c8dbe] rounded-lg bg-white dark:bg-zinc-900 hover:bg-slate-50 text-[9px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 font-bold"
+                            title="Open wizard pre-filled with this preset to customize and save as your own"
+                          >
+                            ✏️ Customize & Edit
+                          </button>
+                        ) : (
                           <>
                             <button
-                              onClick={() => openScenarioWizard(sc)}
-                              className="p-1.5 px-3 border border-[#2D4A6B] text-[#2D4A6B] dark:text-[#5c8dbe] rounded-lg bg-white dark:bg-zinc-900 hover:bg-slate-50 text-[9px] font-black uppercase transition-all cursor-pointer select-none active:scale-95"
+                              onClick={() => openScenarioWizard(sc, false)}
+                              className="p-1.5 px-3 border border-emerald-600 text-emerald-700 dark:text-emerald-400 rounded-lg bg-white dark:bg-zinc-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-[9px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 font-bold"
+                              title="Edit parameters for this scenario copy"
                             >
-                              Edit Config
+                              ✏️ Edit Config
                             </button>
                             <button
                               onClick={() => handleDeleteScenario(sc.id, sc.name)}
                               className="p-2 bg-red-500/5 border border-red-500/20 rounded-lg text-red-650 hover:bg-red-650 hover:text-white cursor-pointer"
+                              title="Delete this scenario copy"
                             >
                               <Trash className="w-3.5 h-3.5" />
                             </button>
@@ -1964,7 +2019,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
               <div className="space-y-0.5">
                 <h3 className="font-sans font-black text-sm uppercase text-[#2c1a0a] tracking-wide flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-muffin-gold animate-spin" />
-                  <span>Custom Scenario Wizard</span>
+                  <span>{editingScenarioId ? `Editing: ${scName || 'Scenario'}` : 'Custom Scenario Wizard'}</span>
                 </h3>
                 <span className="font-mono text-[8px] uppercase tracking-wider text-muffin-gold block">
                   Experience calibrations and starting configurations

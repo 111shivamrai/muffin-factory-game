@@ -42,7 +42,17 @@ router.post('/', authenticateJWT, authorizeRoles(['admin', 'instructor']), async
 
   try {
     const creatorId = req.user!.id;
-    const scenarioId = id || `scenario_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    const SYSTEM_PRESET_IDS = [
+      'scenario_beginner_preset',
+      'scenario_intermediate_preset',
+      'scenario_intermediate_10min_preset',
+      'scenario_advanced_preset',
+      'scenario_advanced_10min_preset'
+    ];
+    let scenarioId = id;
+    if (!scenarioId || (SYSTEM_PRESET_IDS.includes(scenarioId) && req.user?.role !== 'admin')) {
+      scenarioId = `scenario_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    }
     
     const sc: SavedScenario = {
       id: scenarioId,
@@ -93,6 +103,7 @@ router.post('/:id/duplicate', authenticateJWT, authorizeRoles(['admin', 'instruc
       ...original,
       id: `scenario_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       name: `${original.name} (Copy)`,
+      creatorId: req.user!.id,
       createdAt: new Date()
     };
 
@@ -107,6 +118,17 @@ router.post('/:id/duplicate', authenticateJWT, authorizeRoles(['admin', 'instruc
 // Delete Scenario
 router.delete('/:id', authenticateJWT, authorizeRoles(['admin', 'instructor']), async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const SYSTEM_PRESET_IDS = [
+      'scenario_beginner_preset',
+      'scenario_intermediate_preset',
+      'scenario_intermediate_10min_preset',
+      'scenario_advanced_preset',
+      'scenario_advanced_10min_preset'
+    ];
+    if (SYSTEM_PRESET_IDS.includes(req.params.id)) {
+      res.status(403).json({ error: 'System standard presets cannot be deleted' });
+      return;
+    }
     const original = await db.getScenarioById(req.params.id);
     if (!original) {
       res.status(404).json({ error: 'Scenario not found' });
