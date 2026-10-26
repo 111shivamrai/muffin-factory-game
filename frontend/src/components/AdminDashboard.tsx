@@ -18,6 +18,7 @@ import {
   Clock, 
   UserMinus, 
   AlertTriangle,
+  RefreshCw,
   X
 } from 'lucide-react';
 
@@ -37,8 +38,10 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
   // Collapsible sidebar state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Licenses state (Mock persisted client-side to localStorage)
+  // Licenses state
   const [licenses, setLicenses] = useState<any[]>([]);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'local_only' | 'checking'>('checking');
+  const [isSyncingLicenses, setIsSyncingLicenses] = useState(false);
 
   const [newLicCustomer, setNewLicCustomer] = useState('');
   const [newLicEmail, setNewLicEmail] = useState('');
@@ -68,6 +71,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
 
   // Load licenses from backend API or local storage
   const loadLicenses = async () => {
+    setIsSyncingLicenses(true);
     try {
       const token = useGameStore.getState().token || (typeof window !== 'undefined' ? (sessionStorage.getItem('muffin_token') || localStorage.getItem('muffin_token')) : null);
       const res = await fetch(`${API_URL}/api/licenses`, {
@@ -78,11 +82,18 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
         if (Array.isArray(data)) {
           setLicenses(data);
           localStorage.setItem('admin_licenses', JSON.stringify(data));
+          setCloudSyncStatus('synced');
+          setIsSyncingLicenses(false);
           return;
         }
+      } else {
+        setCloudSyncStatus('local_only');
       }
     } catch (err) {
+      setCloudSyncStatus('local_only');
       console.warn('Could not fetch licenses from backend API, using local storage:', err);
+    } finally {
+      setIsSyncingLicenses(false);
     }
 
     const storedLic = localStorage.getItem('admin_licenses');
@@ -256,7 +267,8 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
         setLicenses(updated);
         localStorage.setItem('admin_licenses', JSON.stringify(updated));
         setSelectedLicenseForCreds(createdLicense);
-        setLicSuccessMsg(`License "${createdLicense.id}" created! Valid for ${validityDaysNum} day(s) until ${expiry.toLocaleDateString()}. Instructor credentials ready.`);
+        setCloudSyncStatus('synced');
+        setLicSuccessMsg(`✅ License "${createdLicense.id}" created and synced to Central Database! Valid for ${validityDaysNum} day(s) until ${expiry.toLocaleDateString()}.`);
         setNewLicCustomer('');
         setNewLicEmail('');
         setNewLicSeats(40);
@@ -270,6 +282,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
     }
 
     // Fallback if backend API unavailable
+    setCloudSyncStatus('local_only');
     const code = 'LIC-' + Math.random().toString(36).substr(2, 6).toUpperCase();
     const newLic = {
       id: code,
@@ -291,7 +304,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
     localStorage.setItem('admin_licenses', JSON.stringify(updated));
     setSelectedLicenseForCreds(newLic);
 
-    setLicSuccessMsg(`License "${code}" created! Valid for ${validityDaysNum} day(s) until ${expiry.toLocaleDateString()}.`);
+    setLicSuccessMsg(`⚠️ License "${code}" saved in THIS browser only (Render backend /api/licenses returned 404). To see this license across all laptops, redeploy the backend on Render.`);
     setNewLicCustomer('');
     setNewLicEmail('');
     setNewLicSeats(40);
@@ -948,9 +961,38 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
 
               {/* Active Licenses List */}
               <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white pb-3 border-b border-slate-150 dark:border-slate-800">
-                  License Registry Archive
-                </h3>
+                <div className="flex items-center justify-between pb-3 border-b border-slate-150 dark:border-slate-800 flex-wrap gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                      License Registry Archive
+                    </h3>
+                    {cloudSyncStatus === 'synced' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="Connected to centralized PostgreSQL cloud database">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Cloud Synced
+                      </span>
+                    ) : cloudSyncStatus === 'local_only' ? (
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="Licenses are stored only in this laptop's local browser memory because Render /api/licenses returned 404. Redeploy Render backend to sync across all laptops.">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        Local Browser Storage
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono text-slate-400">
+                        Checking sync...
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={loadLicenses}
+                    disabled={isSyncingLicenses}
+                    className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold uppercase transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                    title="Reload and sync licenses from central database"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isSyncingLicenses ? 'animate-spin' : ''}`} />
+                    <span>Sync</span>
+                  </button>
+                </div>
 
                 {filteredLicenses.length === 0 ? (
                   <p className="text-center py-8 text-slate-450 italic text-xs">No licenses registered.</p>
