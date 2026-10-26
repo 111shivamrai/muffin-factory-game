@@ -4,7 +4,7 @@ import {
   Play, Pause, StepForward, Settings, Radio, Sparkles, LogOut, Plus, Trash2, 
   Copy, ShieldAlert, Award, FileSpreadsheet, Eye, RefreshCw, BarChart2, Landmark,
   Volume2, VolumeX, Zap, Download, Trash, ChevronLeft, ChevronRight, Check,
-  AlertTriangle, Monitor, Clock, X, HelpCircle
+  AlertTriangle, Monitor, Clock, X, HelpCircle, ExternalLink
 } from 'lucide-react';
 import { SavedScenario, Room, TeamState } from '../../../backend/src/types/index.js';
 
@@ -235,6 +235,86 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       return () => clearInterval(interval);
     }
   }, [anyBreach, soundEnabled, room?.status]);
+
+  // BroadcastChannel for instant dual-screen Projector Board synchronization
+  const projectorChannelRef = useRef<BroadcastChannel | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
+    const ch = new BroadcastChannel('muffin_projector_channel');
+    projectorChannelRef.current = ch;
+
+    ch.onmessage = (event) => {
+      if (event.data?.type === 'PROJECTOR_REQUEST_SYNC' && room) {
+        ch.postMessage({
+          type: 'PROJECTOR_SYNC',
+          room,
+          instructorTeams,
+          members,
+          scenarios
+        });
+      }
+    };
+
+    return () => {
+      ch.close();
+    };
+  }, [room, instructorTeams, members, scenarios]);
+
+  // Synchronize state changes to external projector window
+  useEffect(() => {
+    if (projectorChannelRef.current && room) {
+      try {
+        projectorChannelRef.current.postMessage({
+          type: 'PROJECTOR_SYNC',
+          room,
+          instructorTeams,
+          members,
+          scenarios
+        });
+      } catch (e) {}
+    }
+  }, [room, instructorTeams, members, scenarios]);
+
+  // Open Projector Board in a separate window or tab
+  const openProjectorWindow = (mode: 'window' | 'tab' = 'window') => {
+    if (!room) return;
+    playTone(587.33, 'triangle', 0.1);
+    const token = useGameStore.getState().token || '';
+    const roomCode = room.code;
+
+    try {
+      localStorage.setItem('muffin_projector_token', token);
+      localStorage.setItem('muffin_projector_room', roomCode);
+      if (user) {
+        localStorage.setItem('muffin_projector_user', JSON.stringify(user));
+      }
+    } catch (e) {}
+
+    const url = `/projector?room=${encodeURIComponent(roomCode)}#token=${encodeURIComponent(token)}`;
+
+    let newWin: Window | null = null;
+    if (mode === 'window') {
+      const width = 1366;
+      const height = 768;
+      const left = Math.max(0, Math.floor((window.screen.availWidth - width) / 2));
+      const top = Math.max(0, Math.floor((window.screen.availHeight - height) / 2));
+      newWin = window.open(
+        url,
+        `muffin_projector_${roomCode}`,
+        `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes`
+      );
+    } else {
+      newWin = window.open(url, '_blank');
+    }
+
+    if (newWin) {
+      newWin.focus();
+    } else {
+      // If popup blocker intervened, open in-dashboard modal
+      setProjectorOpen(true);
+    }
+  };
 
   // Calculate student stars based on thresholds
   const calculateStars = (cash: number, thresholds?: number[]) => {
@@ -798,13 +878,24 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
             <span>{room ? "Exit Room" : "Exit Dashboard"}</span>
           </button>
           {room && (
-            <button
-              onClick={() => { playTone(587.33, 'triangle', 0.1); setProjectorOpen(true); }}
-              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 px-3.5 py-1.5 rounded-lg text-[9px] uppercase font-black text-white transition-all shadow-md cursor-pointer select-none active:scale-95"
-            >
-              <Monitor className="w-3.5 h-3.5 fill-current" />
-              <span>📺 Projector Board</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => openProjectorWindow('window')}
+                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-lg text-[9px] uppercase font-black text-white transition-all shadow-md cursor-pointer select-none active:scale-95"
+                title="Open Projector Board in a separate window (for classroom projector / second screen)"
+              >
+                <Monitor className="w-3.5 h-3.5 fill-current" />
+                <span>📺 Projector Window</span>
+                <ExternalLink className="w-3 h-3 opacity-80" />
+              </button>
+              <button
+                onClick={() => { playTone(587.33, 'triangle', 0.1); setProjectorOpen(true); }}
+                className="bg-white/5 hover:bg-white/10 border border-white/10 px-2 py-1.5 rounded-lg text-[9px] uppercase font-black text-gray-300 hover:text-white transition-all cursor-pointer select-none active:scale-95"
+                title="View Leaderboard overlay in this tab"
+              >
+                In-Tab
+              </button>
+            </div>
           )}
           <button
             onClick={() => { playTone(523, 'triangle', 0.08); setIsDarkMode(!isDarkMode); }}
@@ -1665,12 +1756,25 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                 </span>
               </div>
             </div>
-            <button
-              onClick={() => { playTone(200, 'sine', 0.05); setProjectorOpen(false); }}
-              className="bg-zinc-900 border border-zinc-750 text-white hover:text-muffin-gold font-mono font-black px-4 py-2 rounded-xl text-xs cursor-pointer active:scale-95 shadow-md transition-all"
-            >
-              Exit Projector Board
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  openProjectorWindow('window');
+                  setProjectorOpen(false);
+                }}
+                className="bg-emerald-700 hover:bg-emerald-600 border border-emerald-500/60 text-white font-mono font-black px-4 py-2 rounded-xl text-xs cursor-pointer active:scale-95 shadow-md transition-all flex items-center gap-1.5"
+                title="Pop out this Projector Board into a separate window to share on a projector"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Pop Out to Separate Window</span>
+              </button>
+              <button
+                onClick={() => { playTone(200, 'sine', 0.05); setProjectorOpen(false); }}
+                className="bg-zinc-900 border border-zinc-750 text-white hover:text-muffin-gold font-mono font-black px-4 py-2 rounded-xl text-xs cursor-pointer active:scale-95 shadow-md transition-all"
+              >
+                Exit Projector Board
+              </button>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto custom-scroll pr-2 space-y-4">

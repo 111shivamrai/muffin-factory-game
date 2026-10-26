@@ -14,6 +14,7 @@ import { isTeamSimulationCompleted, getCompletionReason } from './utils/gameLife
 const ReportsPanel = React.lazy(() => import('./components/ReportsPanel.tsx'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard.tsx'));
 const InstructorDashboard = React.lazy(() => import('./components/InstructorDashboard.tsx'));
+const ProjectorBoard = React.lazy(() => import('./components/ProjectorBoard.tsx'));
 const AdminLoginPage = React.lazy(() => import('./components/AdminLoginPage.tsx'));
 const InstructorLoginPage = React.lazy(() => import('./components/InstructorLoginPage.tsx'));
 
@@ -158,6 +159,15 @@ export default function App() {
   }
 
   // Route 3: Active Simulation Workfloor (only when actively inside a room with team state)
+  // Dedicated Projector Board (Separate Window / Tab for Classrooms)
+  if (path === '/projector' || path === '/projector-board' || path.startsWith('/projector/')) {
+    return (
+      <React.Suspense fallback={<RouteLoadingFallback />}>
+        <ProjectorBoard navigate={navigate} />
+      </React.Suspense>
+    );
+  }
+
   if (isAuthenticated && user && room && teamState) {
     // Continue to full Operations Dashboard below
   } else {
