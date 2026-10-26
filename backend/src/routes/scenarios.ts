@@ -42,17 +42,7 @@ router.post('/', authenticateJWT, authorizeRoles(['admin', 'instructor']), async
 
   try {
     const creatorId = req.user!.id;
-    const SYSTEM_PRESET_IDS = [
-      'scenario_beginner_preset',
-      'scenario_intermediate_preset',
-      'scenario_intermediate_10min_preset',
-      'scenario_advanced_preset',
-      'scenario_advanced_10min_preset'
-    ];
-    let scenarioId = id;
-    if (!scenarioId || (SYSTEM_PRESET_IDS.includes(scenarioId) && req.user?.role !== 'admin')) {
-      scenarioId = `scenario_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
-    }
+    const scenarioId = id || `scenario_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     
     const sc: SavedScenario = {
       id: scenarioId,

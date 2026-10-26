@@ -72,6 +72,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   // Wizard Fields
   const [scName, setScName] = useState('');
   const [scDesc, setScDesc] = useState('');
+  const [scDifficulty, setScDifficulty] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
   const [scMaxDays, setScMaxDays] = useState<number | ''>('');
   const [scRealTime, setScRealTime] = useState<number | ''>('');
   const [scBaseMixCost, setScBaseMixCost] = useState<number | ''>('');
@@ -501,6 +502,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       setEditingScenarioId(asNewCopy ? null : sc.id);
       setScName(asNewCopy ? `${sc.name} (Custom Copy)` : sc.name);
       setScDesc(sc.description);
+      setScDifficulty(sc.difficulty || 'intermediate');
       setScMaxDays(sc.maxDays);
       setScRealTime(Math.round((sc.maxDays * sc.tickRate) / 60) || 15);
       setScBaseMixCost(sc.rawMaterialCosts.baseMix);
@@ -549,6 +551,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       setEditingScenarioId(null);
       setScName('');
       setScDesc('');
+      setScDifficulty('intermediate');
       setScMaxDays('');
       setScRealTime('');
       setScBaseMixCost('');
@@ -606,7 +609,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       name: scName.trim() || 'Muffin Experience Preset',
       description: scDesc.trim() || 'Custom crafted baking operations scenario',
       learningObjective: scDesc.trim() || 'Custom crafted baking operations scenario',
-      difficulty: 'custom' as any,
+      difficulty: scDifficulty || (editingScenarioId ? (scenarios.find(s => s.id === editingScenarioId)?.difficulty || 'intermediate') : 'intermediate'),
       maxDays: maxDaysVal,
       tickRate: tickRate || 8,
       startCash: typeof scStartCash === 'number' && scStartCash >= 0 ? scStartCash : 100000,
@@ -1065,6 +1068,18 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                               <span className="font-extrabold text-stone-700 dark:text-stone-300">{machLT} Days</span>
                             </div>
                           </div>
+                          {sc && (
+                            <div className="flex justify-end pt-0.5">
+                              <button
+                                type="button"
+                                onClick={() => openScenarioWizard(sc, false)}
+                                className="text-[10px] font-mono font-bold text-[#2D4A6B] dark:text-[#5c8dbe] hover:underline flex items-center gap-1 cursor-pointer select-none"
+                                title={`Edit ${sc.name} configuration`}
+                              >
+                                <span>✏️ Edit "{sc.name}" Config</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
@@ -1743,9 +1758,9 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                           </span>
                         </div>
                         <div>
-                          <span className="text-[7.5px] block font-bold text-gray-400 leading-none mb-1">CONTRACTS</span>
+                          <span className="text-[7.5px] block font-bold text-gray-400 leading-none mb-1">ORDER COST (S)</span>
                           <span className="text-xs text-[#2D4A6B] dark:text-[#5c8dbe] font-bold">
-                            {sc.contracts?.length ?? 0} Wholesale
+                            ₹{(sc.rawMaterialCosts?.orderCost ?? 150).toLocaleString()} setup
                           </span>
                         </div>
                       </div>
@@ -1758,31 +1773,21 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                           <Copy className="w-3 h-3 text-gray-500" />
                           <span>{isPreset ? "Copy Preset" : "Duplicate"}</span>
                         </button>
-                        {isPreset ? (
+                        <button
+                          onClick={() => openScenarioWizard(sc, false)}
+                          className="p-1.5 px-3 border border-[#2D4A6B] bg-[#2D4A6B] text-white hover:bg-[#34557b] rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 flex items-center gap-1 shadow-xs font-bold"
+                          title={`Edit ${sc.name} parameters`}
+                        >
+                          <span>✏️ Edit Config</span>
+                        </button>
+                        {!isPreset && (
                           <button
-                            onClick={() => handleCustomizePreset(sc)}
-                            className="p-1.5 px-3 border border-[#2D4A6B] text-[#2D4A6B] dark:text-[#5c8dbe] rounded-lg bg-white dark:bg-zinc-900 hover:bg-slate-50 text-[9px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 font-bold"
-                            title="Open wizard pre-filled with this preset to customize and save as your own"
+                            onClick={() => handleDeleteScenario(sc.id, sc.name)}
+                            className="p-2 bg-red-500/5 border border-red-500/20 rounded-lg text-red-650 hover:bg-red-650 hover:text-white cursor-pointer"
+                            title="Delete this scenario copy"
                           >
-                            ✏️ Customize & Edit
+                            <Trash className="w-3.5 h-3.5" />
                           </button>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => openScenarioWizard(sc, false)}
-                              className="p-1.5 px-3 border border-emerald-600 text-emerald-700 dark:text-emerald-400 rounded-lg bg-white dark:bg-zinc-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-[9px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 font-bold"
-                              title="Edit parameters for this scenario copy"
-                            >
-                              ✏️ Edit Config
-                            </button>
-                            <button
-                              onClick={() => handleDeleteScenario(sc.id, sc.name)}
-                              className="p-2 bg-red-500/5 border border-red-500/20 rounded-lg text-red-650 hover:bg-red-650 hover:text-white cursor-pointer"
-                              title="Delete this scenario copy"
-                            >
-                              <Trash className="w-3.5 h-3.5" />
-                            </button>
-                          </>
                         )}
                       </div>
                     </div>
@@ -2063,6 +2068,18 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         placeholder="Enter a brief description"
                         className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
                       />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Difficulty Rating <span className="text-red-500">*</span></label>
+                      <select
+                        value={scDifficulty}
+                        onChange={e => setScDifficulty(e.target.value as any)}
+                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
+                      >
+                        <option value="beginner">Beginner (Stable Operations / No Breakdowns)</option>
+                        <option value="intermediate">Intermediate (Seasonal Demand / Contracts)</option>
+                        <option value="advanced">Advanced (Volatile Hybrid / High Crisis)</option>
+                      </select>
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Number of Simulated Days <span className="text-red-500">*</span></label>
