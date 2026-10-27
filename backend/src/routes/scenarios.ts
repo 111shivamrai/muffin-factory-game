@@ -9,7 +9,8 @@ const router = Router();
 router.get('/', authenticateJWT, authorizeRoles(['admin', 'instructor']), async (req: AuthenticatedRequest, res: Response) => {
   try {
     const list = await db.getScenarios();
-    res.json(list);
+    const filtered = list.filter(sc => sc.id !== 'scenario_intermediate_10min_preset' && sc.id !== 'scenario_advanced_10min_preset' && !sc.name?.includes('10-Min') && !sc.name?.includes('10 Min'));
+    res.json(filtered);
   } catch (err) {
     console.error('Error fetching scenarios:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -111,9 +112,7 @@ router.delete('/:id', authenticateJWT, authorizeRoles(['admin', 'instructor']), 
     const SYSTEM_PRESET_IDS = [
       'scenario_beginner_preset',
       'scenario_intermediate_preset',
-      'scenario_intermediate_10min_preset',
-      'scenario_advanced_preset',
-      'scenario_advanced_10min_preset'
+      'scenario_advanced_preset'
     ];
     if (SYSTEM_PRESET_IDS.includes(req.params.id)) {
       res.status(403).json({ error: 'System standard presets cannot be deleted' });

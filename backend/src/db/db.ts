@@ -334,95 +334,6 @@ class DatabaseManager {
           creatorId: 'user_admin_001',
           createdAt: new Date()
         },
-        {
-          id: 'scenario_intermediate_10min_preset',
-          name: 'Medium Challenge - 10 Min (Extra Contracts)',
-          description: '10-minute dynamic operations run (60 Days @ 10s/day). Features 4 varied wholesale contracts, seasonal demand swings, and safety stock challenges.',
-          learningObjective: 'Master safety stock buffering, order batching (EOQ), and multiple wholesale contract schedules within a strict 10-minute clock.',
-          instructorNotes: '60 days timeline with 10s per day = exactly 10 minutes. 4 overlapping wholesale contracts test students ability to expand production capacity without running out of cash.',
-          difficulty: 'intermediate',
-          maxDays: 60,
-          tickRate: 10,
-          startCash: 100000,
-          holdingCostRate: 0.02,
-          lostSalesPenaltyRate: 2.5,
-          startInventory: { rawMaterial: 12000, packagingMaterial: 10000 },
-          rawMaterialCosts: { baseMix: 5.0, packaging: 1.0, orderCost: 150.0 },
-          leadTimes: { rawMaterial: 3, packagingMaterial: 2, machineProcurement: 4 },
-          breakdownsEnabled: true,
-          demand: {
-            type: 'seasonal',
-            baseVal: 105,
-            amplitude: 35,
-            period: 18,
-            randomNoise: 0.1,
-            customSchedule: []
-          },
-          machineSettings: {
-            mixing: { capacityPerMachine: 100, purchaseCost: 2000, operatingCost: 50, breakdownProbability: 0.015, breakdownDuration: 2, repairCost: 300, leadTime: 4 },
-            baking: { capacityPerMachine: 80, purchaseCost: 3000, operatingCost: 80, breakdownProbability: 0.015, breakdownDuration: 2, repairCost: 500, leadTime: 4 },
-            icing: { capacityPerMachine: 120, purchaseCost: 1500, operatingCost: 40, breakdownProbability: 0.01, breakdownDuration: 1, repairCost: 200, leadTime: 4 },
-            packaging: { capacityPerMachine: 150, purchaseCost: 1000, operatingCost: 30, breakdownProbability: 0.01, breakdownDuration: 1, repairCost: 150, leadTime: 4 }
-          },
-          contracts: [
-            { name: 'Metro Cafe Morning Delivery', startDay: 8, endDay: 20, dailyQuantity: 35, priceMultiplier: 1.6, penalty: 4.0 },
-            { name: 'University Campus Festival', startDay: 22, endDay: 34, dailyQuantity: 45, priceMultiplier: 1.85, penalty: 5.5 },
-            { name: 'Corporate Catering Summit', startDay: 36, endDay: 48, dailyQuantity: 40, priceMultiplier: 1.7, penalty: 5.0 },
-            { name: 'City Marathon Weekend Celebration', startDay: 50, endDay: 58, dailyQuantity: 55, priceMultiplier: 2.1, penalty: 7.5 }
-          ],
-          events: [
-            { name: 'Food Blogger Spotlight', startDay: 18, endDay: 24, description: 'Viral food review boosts daily retail demand by 35%!', targetVariable: 'demand', modifier: 0.35 },
-            { name: 'Regional Transport Stoppage', startDay: 38, endDay: 42, description: 'Supply logistics congestion adds 1 day to raw material lead time.', targetVariable: 'lead_time', modifier: 1.0 }
-          ],
-          objectives: ['max_cash', 'max_fill_rate', 'max_contract_revenue'],
-          starsThresholds: [110000, 160000, 240000],
-          creatorId: 'user_admin_001',
-          createdAt: new Date()
-        },
-        {
-          id: 'scenario_advanced_10min_preset',
-          name: 'High Intensity Operations - 10 Min Gameplay',
-          description: 'Fast-paced 10-minute executive crisis (60 Days @ 10s/day). High demand volatility, intense wholesale commitments, and tight breakdown management.',
-          learningObjective: 'Execute rapid capacity expansion, volatile demand hedging, and aggressive contract fulfillment under high volatility and time pressure.',
-          instructorNotes: '60 days timeline with 10s per day = exactly 10 minutes. High hybrid demand fluctuations, higher breakdown risks, and massive penalties for missed contracts.',
-          difficulty: 'advanced',
-          maxDays: 60,
-          tickRate: 10,
-          startCash: 150000,
-          holdingCostRate: 0.02,
-          lostSalesPenaltyRate: 2.5,
-          startInventory: { rawMaterial: 15000, packagingMaterial: 12000 },
-          rawMaterialCosts: { baseMix: 6.0, packaging: 1.2, orderCost: 200.0 },
-          leadTimes: { rawMaterial: 4, packagingMaterial: 2, machineProcurement: 5 },
-          breakdownsEnabled: true,
-          demand: {
-            type: 'hybrid',
-            baseVal: 125,
-            amplitude: 60,
-            period: 15,
-            randomNoise: 0.2,
-            customSchedule: []
-          },
-          machineSettings: {
-            mixing: { capacityPerMachine: 100, purchaseCost: 2500, operatingCost: 60, breakdownProbability: 0.025, breakdownDuration: 2, repairCost: 400, leadTime: 5 },
-            baking: { capacityPerMachine: 80, purchaseCost: 3500, operatingCost: 90, breakdownProbability: 0.025, breakdownDuration: 2, repairCost: 600, leadTime: 5 },
-            icing: { capacityPerMachine: 120, purchaseCost: 1800, operatingCost: 50, breakdownProbability: 0.02, breakdownDuration: 2, repairCost: 250, leadTime: 5 },
-            packaging: { capacityPerMachine: 150, purchaseCost: 1200, operatingCost: 40, breakdownProbability: 0.02, breakdownDuration: 2, repairCost: 200, leadTime: 5 }
-          },
-          contracts: [
-            { name: 'Airline In-Flight Breakfast Order', startDay: 10, endDay: 26, dailyQuantity: 50, priceMultiplier: 1.65, penalty: 7.0 },
-            { name: 'National Supermarket Mega Contract', startDay: 28, endDay: 44, dailyQuantity: 70, priceMultiplier: 1.85, penalty: 9.0 },
-            { name: 'Luxury Hotel Chain Gala Deal', startDay: 46, endDay: 58, dailyQuantity: 65, priceMultiplier: 2.0, penalty: 10.0 }
-          ],
-          events: [
-            { name: 'Global Ingredient Shortage', startDay: 15, endDay: 25, description: 'Supply disruption increases raw material unit price by 25%.', targetVariable: 'raw_material_cost', modifier: 0.25 },
-            { name: 'Oven Maintenance Surge', startDay: 35, endDay: 40, description: 'Severe weather increases machinery breakdown risk by 80%.', targetVariable: 'breakdowns', modifier: 0.8 }
-          ],
-          objectives: ['max_cash', 'balanced_score', 'min_stockouts'],
-          starsThresholds: [160000, 240000, 350000],
-          creatorId: 'user_admin_001',
-          createdAt: new Date()
-        },
       ];
 
     for (const sc of defaultScenarios) {
@@ -432,6 +343,9 @@ class DatabaseManager {
       }
     }
       console.log('Seeded default scenarios (Beginner, Intermediate, Advanced).');
+      // Purge deprecated 10-min presets
+      await this.deleteScenario('scenario_intermediate_10min_preset');
+      await this.deleteScenario('scenario_advanced_10min_preset');
 
       // Seed default licenses if empty
       const existingLics = await this.getLicenses();
@@ -911,7 +825,7 @@ class DatabaseManager {
   async getScenarios(): Promise<SavedScenario[]> {
     if (this.isPostgres && this.pool) {
       const res = await this.pool.query('SELECT * FROM saved_scenarios ORDER BY created_at DESC');
-      return res.rows.map(row => {
+      return res.rows.filter(row => row.id !== 'scenario_intermediate_10min_preset' && row.id !== 'scenario_advanced_10min_preset' && !row.name?.includes('10-Min') && !row.name?.includes('10 Min')).map(row => {
         const conf = JSON.parse(row.config_json);
         return {
           id: row.id,

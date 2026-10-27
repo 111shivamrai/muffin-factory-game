@@ -11,9 +11,7 @@ import { SavedScenario, Room, TeamState } from '../../../backend/src/types/index
 export const SYSTEM_PRESET_IDS = new Set([
   'scenario_beginner_preset',
   'scenario_intermediate_preset',
-  'scenario_intermediate_10min_preset',
-  'scenario_advanced_preset',
-  'scenario_advanced_10min_preset'
+  'scenario_advanced_preset'
 ]);
 
 export const isSystemPreset = (sc: SavedScenario): boolean => {
@@ -156,9 +154,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
     const tierOrder = [
       'scenario_beginner_preset',
       'scenario_intermediate_preset',
-      'scenario_advanced_preset',
-      'scenario_intermediate_10min_preset',
-      'scenario_advanced_10min_preset'
+      'scenario_advanced_preset'
     ];
     const list: SavedScenario[] = [];
     for (const id of tierOrder) {
@@ -166,14 +162,14 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       if (found) list.push(found);
     }
     for (const sc of scenarios) {
-      if (isSystemPreset(sc) && !list.some(item => item.id === sc.id)) {
+      if (isSystemPreset(sc) && !list.some(item => item.id === sc.id) && sc.id !== 'scenario_intermediate_10min_preset' && sc.id !== 'scenario_advanced_10min_preset' && !sc.name?.includes('10-Min') && !sc.name?.includes('10 Min')) {
         list.push(sc);
       }
     }
     return list;
   }, [scenarios]);
 
-  const customScs = useMemo(() => scenarios.filter(s => !isSystemPreset(s)), [scenarios]);
+  const customScs = useMemo(() => scenarios.filter(s => !isSystemPreset(s) && s.id !== 'scenario_intermediate_10min_preset' && s.id !== 'scenario_advanced_10min_preset' && !s.name?.includes('10-Min') && !s.name?.includes('10 Min')), [scenarios]);
 
   // Keep a ref of previously chosen scenario so cancellation doesn't corrupt it
   const prevScenarioRef = useRef<string>('');
@@ -780,8 +776,8 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   };
 
   // Filter presets vs custom
-  const presets = scenarios.filter(s => isSystemPreset(s));
-  const customScenarios = scenarios.filter(s => !isSystemPreset(s));
+  const presets = scenarios.filter(s => isSystemPreset(s) && s.id !== 'scenario_intermediate_10min_preset' && s.id !== 'scenario_advanced_10min_preset' && !s.name?.includes('10-Min') && !s.name?.includes('10 Min'));
+  const customScenarios = scenarios.filter(s => !isSystemPreset(s) && s.id !== 'scenario_intermediate_10min_preset' && s.id !== 'scenario_advanced_10min_preset' && !s.name?.includes('10-Min') && !s.name?.includes('10 Min'));
 
   return (
     <div className={`instructor-dashboard min-h-screen h-screen overflow-hidden ${isDarkMode ? "dark" : ""}`}>
