@@ -151,12 +151,28 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState('00:00');
 
-  // Pre-computed Scenario presets and custom scenarios
-  const beginnerSc = useMemo(() => scenarios.find(s => s.id === 'scenario_beginner_preset'), [scenarios]);
-  const interSc = useMemo(() => scenarios.find(s => s.id === 'scenario_intermediate_preset'), [scenarios]);
-  const inter10MinSc = useMemo(() => scenarios.find(s => s.id === 'scenario_intermediate_10min_preset'), [scenarios]);
-  const advSc = useMemo(() => scenarios.find(s => s.id === 'scenario_advanced_preset'), [scenarios]);
-  const adv10MinSc = useMemo(() => scenarios.find(s => s.id === 'scenario_advanced_10min_preset'), [scenarios]);
+  // Pre-computed Scenario presets and custom scenarios in canonical order
+  const standardPresets = useMemo(() => {
+    const tierOrder = [
+      'scenario_beginner_preset',
+      'scenario_intermediate_preset',
+      'scenario_advanced_preset',
+      'scenario_intermediate_10min_preset',
+      'scenario_advanced_10min_preset'
+    ];
+    const list: SavedScenario[] = [];
+    for (const id of tierOrder) {
+      const found = scenarios.find(s => s.id === id);
+      if (found) list.push(found);
+    }
+    for (const sc of scenarios) {
+      if (isSystemPreset(sc) && !list.some(item => item.id === sc.id)) {
+        list.push(sc);
+      }
+    }
+    return list;
+  }, [scenarios]);
+
   const customScs = useMemo(() => scenarios.filter(s => !isSystemPreset(s)), [scenarios]);
 
   // Keep a ref of previously chosen scenario so cancellation doesn't corrupt it
@@ -1026,31 +1042,24 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       >
                         <option value="">-- Select Scenario Calibrator --</option>
                         <optgroup label="Standard Presets">
-                          {beginnerSc && (
-                            <option value={beginnerSc.id}>
-                              1. Beginner Muffin Operations ({beginnerSc.maxDays} Days / {Math.round((beginnerSc.maxDays * beginnerSc.tickRate) / 60)} Mins)
-                            </option>
-                          )}
-                          {interSc && (
-                            <option value={interSc.id}>
-                              2. Intermediate Supply Chain ({interSc.maxDays} Days / {Math.round((interSc.maxDays * interSc.tickRate) / 60)} Mins)
-                            </option>
-                          )}
-                          {inter10MinSc && (
-                            <option value={inter10MinSc.id}>
-                              ⭐ 3. Medium 10-Min Fast Track (Extra Contracts) ({inter10MinSc.maxDays} Days / 10 Mins)
-                            </option>
-                          )}
-                          {advSc && (
-                            <option value={advSc.id}>
-                              4. Advanced Operations Crisis ({advSc.maxDays} Days / {Math.round((advSc.maxDays * advSc.tickRate) / 60)} Mins)
-                            </option>
-                          )}
-                          {adv10MinSc && (
-                            <option value={adv10MinSc.id}>
-                              ⚡ 5. High 10-Min Fast-Paced Gameplay ({adv10MinSc.maxDays} Days / 10 Mins)
-                            </option>
-                          )}
+                          {standardPresets.map((sc, idx) => {
+                            let labelTitle = sc.name;
+                            if (sc.id === 'scenario_beginner_preset') {
+                              labelTitle = 'Beginner Muffin Operations';
+                            } else if (sc.id === 'scenario_intermediate_preset') {
+                              labelTitle = 'Intermediate Supply Chain';
+                            } else if (sc.id === 'scenario_advanced_preset') {
+                              labelTitle = 'Advanced Operations Crisis';
+                            } else {
+                              labelTitle = labelTitle.replace(/^([⭐⚡\d\.\s]+)\s*/, '');
+                            }
+                            const estMins = Math.round((sc.maxDays * sc.tickRate) / 60) || 10;
+                            return (
+                              <option key={sc.id} value={sc.id}>
+                                {idx + 1}. {labelTitle} ({sc.maxDays} Days / {estMins} Mins)
+                              </option>
+                            );
+                          })}
                         </optgroup>
                         {customScs.length > 0 && (
                           <optgroup label="Custom & Copied Scenarios (Editable)">
