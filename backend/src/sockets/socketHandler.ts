@@ -506,6 +506,19 @@ export function registerSocketHandler(io: Server) {
       }
     });
 
+    // LEAVE ROOM
+    socket.on('leave_room', (payload?: { roomId?: string }) => {
+      const rId = payload?.roomId || joinedRoomId;
+      if (rId) {
+        socket.leave(`room_${rId}`);
+      }
+      if (joinedTeamId) {
+        socket.leave(`team_${joinedTeamId}`);
+        joinedTeamId = null;
+      }
+      joinedRoomId = null;
+    });
+
     // 3. INSTRUCTOR CONTROLS
     socket.on('instructor_control', async (payload: { controlType: string; details?: any }, callback: Function) => {
       if (!currentUser || (currentUser.role !== 'instructor' && currentUser.role !== 'admin')) {

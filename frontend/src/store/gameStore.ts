@@ -121,8 +121,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   exitRoom: () => {
-    // Clear room and related state, without logging out
+    // Clear room and related state, leave socket room and notify server
+    const s = get().socket;
+    const currentRoom = get().room;
+    if (s && currentRoom) {
+      s.emit('leave_room', { roomId: currentRoom.id });
+    }
     set({ room: null, teamState: null, instructorTeams: [], leaderboard: [], members: [] });
+    get().loadRooms();
   },
 
   // Sockets & Real-time State
@@ -147,7 +153,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     // Handle common real-time sync messages
     socket.on('room_updated', (updatedRoom: Room) => {
-      set({ room: updatedRoom });
+      const currentRoom = get().room;
+      if (currentRoom && currentRoom.id === updatedRoom.id) {
+        set({ room: updatedRoom });
+      }
     });
 
     socket.on('team_state_updated', (updatedTeam: TeamState) => {
@@ -354,10 +363,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   instructorControl: async (controlType, details) => {
     const s = get().socket;
     if (!s) return;
-    s.emit('instructor_control', { controlType, details }, (res: any) => {
-      if (res && res.error) {
-        alert(res.error);
-      }
+    return new Promise<void>((resolve, reject) => {
+      s.emit('instructor_control', { controlType, details }, (res: any) => {
+        if (res && res.error) {
+          alert(res.error);
+          reject(new Error(res.error));
+        } else {
+          resolve(res);
+        }
+      });
     });
   },
 
@@ -457,6 +471,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   deleteRoom: async (id) => {
     const t = get().token;
     if (!t) return;
+    const currentRoom = get().room;
+    if (currentRoom && currentRoom.id === id) {
+      get().exitRoom();
+    }
     await fetch(`${API_URL}/api/rooms/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${t}` }

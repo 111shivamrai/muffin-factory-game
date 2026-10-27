@@ -1197,11 +1197,24 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                 <section className="bcard space-y-4">
                   <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-2.5">
                     <h2 className="font-sans font-black text-sm uppercase tracking-wider text-slate-900 dark:text-white">
-                      Active Operations Room
+                      {room.status === 'finished' ? "Concluded Operations Room" : "Active Operations Room"}
                     </h2>
-                    <span className="font-mono text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-md">
-                      ● Live Session
-                    </span>
+                    {room.status === 'finished' ? (
+                      <span className="font-mono text-[9px] font-black text-slate-800 dark:text-slate-200 uppercase bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 px-2.5 py-0.5 rounded-md shadow-2xs flex items-center gap-1">
+                        <span>🏁</span>
+                        <span>Session Concluded</span>
+                      </span>
+                    ) : room.status === 'paused' ? (
+                      <span className="font-mono text-[9px] font-black text-amber-700 dark:text-amber-300 uppercase bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <span>⏸️</span>
+                        <span>Session Paused</span>
+                      </span>
+                    ) : (
+                      <span className="font-mono text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <span>●</span>
+                        <span>Live Session</span>
+                      </span>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-3.5 text-left">
                     <div className="bg-stone-50 dark:bg-zinc-900/90 p-3 rounded-xl border border-stone-200 dark:border-zinc-800 shadow-2xs">
@@ -1243,7 +1256,11 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     <div className="bg-stone-50 dark:bg-zinc-900/90 p-3 rounded-xl border border-stone-200 dark:border-zinc-800 shadow-2xs col-span-2">
                       <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">DAY PROGRESS</span>
                       <span className="font-mono font-black text-sm text-indigo-700 dark:text-indigo-300 block mt-0.5">
-                        {secondsRemaining !== null ? `${secondsRemaining}s remaining until next day` : "Paused / Manual advancement"}
+                        {room.status === 'finished'
+                          ? "🏁 Simulation Concluded (Student Controls Locked)"
+                          : secondsRemaining !== null
+                            ? `${secondsRemaining}s remaining until next day`
+                            : "Paused / Manual advancement"}
                       </span>
                     </div>
                   </div>
@@ -1258,49 +1275,100 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
 
                   <div className="space-y-2 border-t border-stone-200 dark:border-stone-800 pt-3.5 text-left">
                     <span className="text-[10px] font-mono uppercase font-black text-slate-700 dark:text-slate-300 block tracking-wider">SUPERVISOR OVERRIDE CONSOLE</span>
-                    <div className="grid grid-cols-3 gap-2">
-                      {room.status === 'paused' ? (
+                    {room.status === 'finished' ? (
+                      <div className="bg-slate-100 dark:bg-zinc-800/90 border-2 border-slate-300 dark:border-zinc-700 p-4 rounded-xl text-left space-y-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-black text-xs uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>🏁</span>
+                            <span>SIMULATION CONCLUDED & LOCKED</span>
+                          </span>
+                          <span className="text-[9px] font-mono font-bold text-slate-600 dark:text-slate-400 uppercase bg-slate-200 dark:bg-zinc-700 px-2 py-0.5 rounded">
+                            Finalized
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                          This simulation session has ended. Student screens are locked and no further production ticks or orders will process. You can export final student grades or return to the main lobby.
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={handleExportCSV}
+                            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5 shadow-xs cursor-pointer select-none active:scale-95"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Export Final CSV</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => exitRoom()}
+                            className="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-slate-800 dark:text-white rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5 cursor-pointer select-none active:scale-95"
+                          >
+                            <ChevronLeft className="w-3.5 h-3.5" />
+                            <span>Return to Sessions Lobby</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm('Permanently delete this finished session room?')) {
+                                deleteRoom(room.id);
+                              }
+                            }}
+                            className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-black uppercase flex items-center gap-1.5 shadow-xs cursor-pointer select-none active:scale-95 ml-auto"
+                          >
+                            <Trash className="w-3.5 h-3.5" />
+                            <span>Delete Session</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-3 gap-2">
+                        {room.status === 'paused' ? (
+                          <button
+                            onClick={() => { playTone(260, 'sine', 0.05); instructorControl('resume'); }}
+                            className="py-2.5 px-3 bg-amber-500 hover:bg-amber-600 text-zinc-950 border border-amber-600 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-xs"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>Resume</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => { playTone(260, 'sine', 0.05); instructorControl('pause'); }}
+                            className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300 dark:border-zinc-700 text-slate-800 dark:text-slate-100 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-xs"
+                          >
+                            <Pause className="w-3.5 h-3.5 fill-current" />
+                            <span>Pause Arena</span>
+                          </button>
+                        )}
                         <button
-                          onClick={() => { playTone(260, 'sine', 0.05); instructorControl('resume'); }}
-                          className="py-2.5 px-3 bg-amber-500 hover:bg-amber-600 text-zinc-950 border border-amber-600 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-xs"
+                          onClick={async () => {
+                            playTone(220, 'sawtooth', 0.2);
+                            if (confirm('Are you sure you want to end this simulation session? All student controls will lock immediately.')) {
+                              try {
+                                await instructorControl('end');
+                              } catch (e) {
+                                console.error('Error ending session:', e);
+                              }
+                            }
+                          }}
+                          className="py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white border border-red-700 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-sm"
+                          title="End this session and lock student factory controls"
                         >
-                          <Play className="w-3.5 h-3.5 fill-current" />
-                          <span>Resume</span>
+                          <X className="w-3.5 h-3.5" />
+                          <span>End Session</span>
                         </button>
-                      ) : (
                         <button
-                          onClick={() => { playTone(260, 'sine', 0.05); instructorControl('pause'); }}
-                          className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300 dark:border-zinc-700 text-slate-800 dark:text-slate-100 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-xs"
+                          onClick={() => {
+                            playTone(220, 'sawtooth', 0.2);
+                            if (confirm('EMERGENCY STOP: This will instantly stop all machines for all teams in the room. Proceed?')) {
+                              instructorControl('stop_all_machines');
+                            }
+                          }}
+                          className="py-2.5 px-3 bg-rose-700 hover:bg-rose-800 text-white border border-rose-800 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-sm"
                         >
-                          <Pause className="w-3.5 h-3.5 fill-current" />
-                          <span>Pause Arena</span>
+                          <span>🛑 Force Stop</span>
                         </button>
-                      )}
-                      <button
-                        onClick={() => {
-                          playTone(220, 'sawtooth', 0.2);
-                          if (confirm('Are you sure you want to terminate this simulation session? All student controls will lock.')) {
-                            instructorControl('end');
-                            exitRoom();
-                          }
-                        }}
-                        className="py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white border border-red-700 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-sm"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        <span>End Session</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          playTone(220, 'sawtooth', 0.2);
-                          if (confirm('EMERGENCY STOP: This will instantly stop all machines for all teams in the room. Proceed?')) {
-                            instructorControl('stop_all_machines');
-                          }
-                        }}
-                        className="py-2.5 px-3 bg-rose-700 hover:bg-rose-800 text-white border border-rose-800 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-sm"
-                      >
-                        <span>🛑 Force Stop</span>
-                      </button>
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   {room.status === 'paused' && (
