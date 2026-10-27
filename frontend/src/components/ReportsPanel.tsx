@@ -467,7 +467,7 @@ function ReportsPanel() {
                     </div>
 
                     {/* Operational Details Sub-card */}
-                    <div className="p-4 border-t border-stone-150 bg-stone-50/50 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-600 font-mono">
+                    <div className="p-4 border-t border-stone-200 bg-stone-50/50 flex flex-wrap items-center justify-between gap-3 text-xs text-stone-600 font-mono">
                       <div>
                         <span>Inventory Turnover: </span>
                         <strong className="text-stone-900 font-bold">{report.inventoryTurnover?.toFixed(2) || '0.00'}x</strong>

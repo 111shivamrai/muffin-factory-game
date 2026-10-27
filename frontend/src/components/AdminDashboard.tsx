@@ -557,13 +557,13 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder={activeTab === 'licenses' ? "Search customer, email..." : "Search lobby code..."}
-                  className="bg-slate-100 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 pl-8 pr-4 py-1.5 rounded-lg text-xs font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-700 dark:text-slate-350 w-52 placeholder:text-slate-400 transition-all"
+                  className="bg-slate-100 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 pl-8 pr-4 py-1.5 rounded-lg text-xs font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-700 dark:text-slate-300 w-52 placeholder:text-slate-400 transition-all"
                 />
               </div>
             )}
 
             {/* Time HUD */}
-            <div className="text-[10px] font-mono text-slate-450 dark:text-slate-500 flex items-center gap-1.5">
+            <div className="text-[10px] font-mono text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
               <span>{currentTime.toLocaleTimeString()}</span>
             </div>
@@ -812,7 +812,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
 
               {filteredRooms.length === 0 ? (
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-12 text-center shadow-xs">
-                  <Boxes className="w-8 h-8 mx-auto text-slate-350 dark:text-slate-600 mb-3" />
+                  <Boxes className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
                   <p className="text-sm font-bold text-slate-500 dark:text-slate-400">No active sessions found.</p>
                 </div>
               ) : (
@@ -836,25 +836,25 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                           <td className="p-4 text-center font-mono text-slate-400">#{i + 1}</td>
                           <td className="p-4 text-sm font-extrabold text-slate-800 dark:text-white">{room.name}</td>
                           <td className="p-4">
-                            <span className="bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-150 dark:border-indigo-900/60 px-2 py-1 rounded-lg text-indigo-600 dark:text-indigo-400 font-mono font-black tracking-widest select-all">
+                            <span className="bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900/60 px-2 py-1 rounded-lg text-indigo-600 dark:text-indigo-400 font-mono font-black tracking-widest select-all">
                               {room.code}
                             </span>
                           </td>
                           <td className="p-4">
                             <span className={`px-2.5 py-0.5 rounded-full text-[9px] uppercase font-bold ${
-                              room.difficulty === 'beginner' ? 'bg-emerald-50 text-emerald-600 border border-emerald-150 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/15' :
-                              room.difficulty === 'intermediate' ? 'bg-amber-50 text-amber-600 border border-amber-150 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/15' :
+                              room.difficulty === 'beginner' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/15' :
+                              room.difficulty === 'intermediate' ? 'bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/15' :
                               'bg-red-50 text-red-600 dark:text-red-400 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/15'
                             }`}>
                               {room.difficulty}
                             </span>
                           </td>
-                          <td className="p-4 font-mono text-slate-450 dark:text-slate-400">{room.tickRate}s / day</td>
+                          <td className="p-4 font-mono text-slate-400 dark:text-slate-400">{room.tickRate}s / day</td>
                           <td className="p-4 font-mono text-slate-600 dark:text-slate-400">Day {room.currentDay} / {room.maxDays}</td>
                           <td className="p-4">
                             <span className={`px-2 py-0.5 rounded-md text-[9px] uppercase font-bold border ${
-                              room.status === 'active' ? 'bg-emerald-50/80 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-550/20' :
-                              room.status === 'paused' ? 'bg-amber-50/80 border-amber-250 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-550/20' :
+                              room.status === 'active' ? 'bg-emerald-50/80 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' :
+                              room.status === 'paused' ? 'bg-amber-50/80 border-amber-300 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' :
                               'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-900 dark:text-slate-400'
                             }`}>
                               {room.status}
@@ -899,33 +899,33 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                   </div>
                   <div className="grid grid-cols-1 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Customer / University *</label>
+                      <label className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 ml-1">Customer / University *</label>
                       <input
                         type="text"
                         required
                         placeholder="NYU Stern"
                         value={newLicCustomer}
                         onChange={e => setNewLicCustomer(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white transition-all"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-900 dark:text-white transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Billing Email *</label>
+                      <label className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 ml-1">Billing Email *</label>
                       <input
                         type="email"
                         required
                         placeholder="admin@nyu.edu"
                         value={newLicEmail}
                         onChange={e => setNewLicEmail(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white font-mono transition-all"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-900 dark:text-white font-mono transition-all"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Max Logins *</label>
+                        <label className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 ml-1">Max Logins *</label>
                         <input
                           type="number"
                           min="1"
@@ -938,11 +938,11 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                               setNewLicSeats(val === '' ? '' : Number(val));
                             }
                           }}
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg text-slate-900 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Validity (Days) *</label>
+                        <label className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 ml-1">Validity (Days) *</label>
                         <input
                           type="number"
                           min="1"
@@ -956,7 +956,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                               setNewLicValidityDays(val === '' ? '' : Number(val));
                             }
                           }}
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg text-slate-900 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
                         />
                       </div>
                     </div>
@@ -964,25 +964,25 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Instructor Email *</label>
+                      <label className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 ml-1">Instructor Email *</label>
                       <input
                         type="email"
                         required
                         placeholder="instructor@nyu.edu"
                         value={newLicInstructorEmail}
                         onChange={e => setNewLicInstructorEmail(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white font-mono transition-all"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-900 dark:text-white font-mono transition-all"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Instructor Password *</label>
+                      <label className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 ml-1">Instructor Password *</label>
                       <input
                         type="text"
                         required
                         placeholder="sternpass123"
                         value={newLicInstructorPassword}
                         onChange={e => setNewLicInstructorPassword(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white font-mono transition-all"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-900 dark:text-white font-mono transition-all"
                       />
                     </div>
                   </div>
@@ -1044,7 +1044,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                 </div>
 
                 {filteredLicenses.length === 0 ? (
-                  <p className="text-center py-8 text-slate-450 italic text-xs">No licenses registered.</p>
+                  <p className="text-center py-8 text-slate-400 italic text-xs">No licenses registered.</p>
                 ) : (
                   <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
                     <table className="w-full text-left border-collapse font-sans text-xs">
@@ -1057,7 +1057,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                           <th className="p-3 text-right pr-4">Action</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-bold text-slate-700 dark:text-slate-350">
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-bold text-slate-700 dark:text-slate-300">
                         {filteredLicenses.map(l => (
                           <tr key={l.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
                             <td className="p-3">
@@ -1076,7 +1076,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                                 onClick={() => handleToggleLicenseStatus(l.id)}
                                 className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border cursor-pointer select-none transition-all ${
                                   l.status === 'active' 
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-550/20' 
+                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' 
                                     : 'bg-red-50 border-red-200 text-red-600 dark:text-red-400 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
                                 }`}
                               >
@@ -1086,7 +1086,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                             <td className="p-3 text-right pr-4 flex items-center justify-end gap-1.5">
                               <button
                                 onClick={() => setSelectedLicenseForCreds(l)}
-                                className="p-1.5 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 hover:text-white hover:bg-indigo-650 border border-indigo-100 dark:border-indigo-950 rounded-lg cursor-pointer transition-all active:scale-95"
+                                className="p-1.5 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 hover:text-white hover:bg-indigo-600 border border-indigo-100 dark:border-indigo-950 rounded-lg cursor-pointer transition-all active:scale-95"
                                 title="View Credentials Vault"
                               >
                                 <KeyRound className="w-3.5 h-3.5" />
@@ -1117,9 +1117,9 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-5 shadow-sm">
                 <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
                   <Megaphone className="w-4 h-4 text-emerald-500 animate-bounce" />
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-white">Broadcast System Announcement</h3>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Broadcast System Announcement</h3>
                   {broadcastActive && (
-                    <span className="text-[8px] bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-250 dark:border-emerald-550/20 animate-pulse ml-2">
+                    <span className="text-[8px] bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold border border-emerald-300 dark:border-emerald-500/20 animate-pulse ml-2">
                       ON AIR
                     </span>
                   )}
@@ -1128,11 +1128,11 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                 <form onSubmit={handleUpdateBroadcast} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Alert Notification Type</label>
+                      <label className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 ml-1">Alert Notification Type</label>
                       <select
                         value={broadcastType}
                         onChange={e => setBroadcastType(e.target.value as any)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg text-slate-900 dark:text-white font-mono focus:border-indigo-500 outline-none"
                       >
                         <option value="info">System Info (Blue)</option>
                         <option value="warning">System Warning (Yellow)</option>
@@ -1153,14 +1153,14 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[9px] font-bold uppercase text-slate-450 dark:text-slate-500 ml-1">Banner Announcement Message</label>
+                    <label className="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 ml-1">Banner Announcement Message</label>
                     <textarea
                       required
                       rows={3}
                       placeholder="e.g. System scheduled maintenance is active from 10 PM. Active session tickers will pause."
                       value={broadcastMsg}
                       onChange={e => setBroadcastMsg(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 text-xs rounded-xl focus:border-indigo-500 outline-none text-slate-850 dark:text-white transition-all resize-none"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 text-xs rounded-xl focus:border-indigo-500 outline-none text-slate-900 dark:text-white transition-all resize-none"
                     />
                   </div>
 
@@ -1207,7 +1207,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                         logFilter === sev
                           ? sev === 'all' ? 'bg-slate-800 dark:bg-white/10 text-white border-transparent' :
                             sev === 'warning' ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20' :
-                            sev === 'error' ? 'bg-red-55 border-red-200 text-red-700 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20' :
+                            sev === 'error' ? 'bg-red-50 border-red-200 text-red-700 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20' :
                             'bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700 dark:bg-fuchsia-500/10 dark:text-fuchsia-400 dark:border-fuchsia-500/20'
                           : 'bg-transparent text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-800 dark:hover:text-slate-200'
                       }`}
@@ -1243,24 +1243,24 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                         <th className="p-3.5">Exception Message</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-bold text-slate-700 dark:text-slate-350">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40 font-bold text-slate-700 dark:text-slate-300">
                       {filteredLogs.map(log => (
                         <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all font-mono">
-                          <td className="p-3.5 text-slate-450 dark:text-slate-500 text-[11px] whitespace-nowrap">
+                          <td className="p-3.5 text-slate-400 dark:text-slate-500 text-[11px] whitespace-nowrap">
                             {new Date(log.timestamp).toLocaleString()}
                           </td>
                           <td className="p-3.5">
                             <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
-                              log.severity === 'fatal' ? 'bg-fuchsia-50 border-fuchsia-200 text-fuchsia-600 dark:bg-fuchsia-500/10 dark:text-fuchsia-400 dark:border-fuchsia-550/20' :
+                              log.severity === 'fatal' ? 'bg-fuchsia-50 border-fuchsia-200 text-fuchsia-600 dark:bg-fuchsia-500/10 dark:text-fuchsia-400 dark:border-fuchsia-500/20' :
                               log.severity === 'error' ? 'bg-red-50 border-red-200 text-red-600 dark:text-red-400 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20' :
-                              'bg-amber-50 border-amber-250 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-550/20'
+                              'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20'
                             }`}>
                               {log.severity}
                             </span>
                           </td>
                           <td className="p-3.5 font-sans text-indigo-600 dark:text-indigo-400 font-extrabold">{log.component}</td>
-                          <td className="p-3.5 text-slate-500 dark:text-slate-450 font-sans">{log.userEmail}</td>
-                          <td className="p-3.5 text-slate-850 dark:text-slate-200 font-sans leading-relaxed">{log.errorMessage}</td>
+                          <td className="p-3.5 text-slate-500 dark:text-slate-400 font-sans">{log.userEmail}</td>
+                          <td className="p-3.5 text-slate-900 dark:text-slate-200 font-sans leading-relaxed">{log.errorMessage}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1275,7 +1275,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
             <div className="max-w-2xl mx-auto space-y-6">
               
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-4 shadow-sm">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-white pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-indigo-500" />
                   Supervisor Registry Account
                 </h3>
@@ -1285,7 +1285,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                     {adminDetails.avatar}
                   </div>
                   <div className="space-y-1">
-                    <h4 className="text-lg font-black text-slate-850 dark:text-white leading-none">{adminDetails.name}</h4>
+                    <h4 className="text-lg font-black text-slate-900 dark:text-white leading-none">{adminDetails.name}</h4>
                     <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono uppercase font-bold tracking-widest">{adminDetails.role}</p>
                     <p className="text-[10px] text-slate-400 font-mono">{adminDetails.email}</p>
                   </div>
@@ -1293,12 +1293,12 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
 
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                   <div className="space-y-1">
-                    <span className="text-[9px] uppercase font-bold text-slate-450 dark:text-slate-500 block">System Build version</span>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-350 block font-mono">v1.0.2-prod-release</span>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 block">System Build version</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block font-mono">v1.0.2-prod-release</span>
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[9px] uppercase font-bold text-slate-450 dark:text-slate-500 block">Core Architecture</span>
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-350 block font-mono">React / Zustand / Express API</span>
+                    <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 block">Core Architecture</span>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block font-mono">React / Zustand / Express API</span>
                   </div>
                 </div>
               </div>
@@ -1319,14 +1319,14 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                 <h3 className="font-serif font-black text-sm uppercase tracking-wider text-slate-800 dark:text-white">
                   License Credentials
                 </h3>
-                <p className="text-[10px] text-slate-450 font-mono mt-0.5 leading-none">
+                <p className="text-[10px] text-slate-400 font-mono mt-0.5 leading-none">
                   {selectedLicenseForCreds.customerName}
                 </p>
               </div>
             </div>
             <button 
               onClick={() => setSelectedLicenseForCreds(null)}
-              className="text-slate-450 hover:text-slate-700 dark:hover:text-white bg-transparent border-none cursor-pointer p-1"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-white bg-transparent border-none cursor-pointer p-1"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1360,11 +1360,11 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Login Email</span>
-                    <span className="text-xs font-mono font-bold text-slate-850 dark:text-white select-all">{selectedLicenseForCreds.instructorEmail || 'N/A'}</span>
+                    <span className="text-xs font-mono font-bold text-slate-900 dark:text-white select-all">{selectedLicenseForCreds.instructorEmail || 'N/A'}</span>
                   </div>
                   <div>
                     <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Password</span>
-                    <span className="text-xs font-mono font-bold text-slate-850 dark:text-white select-all">{selectedLicenseForCreds.instructorPassword || 'N/A'}</span>
+                    <span className="text-xs font-mono font-bold text-slate-900 dark:text-white select-all">{selectedLicenseForCreds.instructorPassword || 'N/A'}</span>
                   </div>
                 </div>
                 <button

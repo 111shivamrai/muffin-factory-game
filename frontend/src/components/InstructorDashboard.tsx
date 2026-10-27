@@ -1077,19 +1077,19 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         <div className="space-y-1.5 mt-2 animate-in fade-in duration-200">
                           <div className="grid grid-cols-3 gap-2 p-2.5 bg-muffin-brown/5 dark:bg-zinc-800/50 rounded-lg border border-muffin-brown/10 text-left">
                             <div>
-                              <span className="text-[8px] uppercase text-gray-500 block font-bold">Difficulty</span>
+                              <span className="text-[8px] uppercase text-slate-600 dark:text-slate-300 block font-bold">Difficulty</span>
                               <span className="text-[11px] font-mono font-black uppercase text-muffin-brown dark:text-muffin-cream capitalize">
                                 {roomDifficulty}
                               </span>
                             </div>
                             <div>
-                              <span className="text-[8px] uppercase text-gray-500 block font-bold">Speed</span>
+                              <span className="text-[8px] uppercase text-slate-600 dark:text-slate-300 block font-bold">Speed</span>
                               <span className="text-[11px] font-mono font-black text-muffin-brown dark:text-muffin-cream">
                                 {roomTickRate}s / day
                               </span>
                             </div>
                             <div>
-                              <span className="text-[8px] uppercase text-gray-500 block font-bold">Days Limit</span>
+                              <span className="text-[8px] uppercase text-slate-600 dark:text-slate-300 block font-bold">Days Limit</span>
                               <span className="text-[11px] font-mono font-black text-muffin-brown dark:text-muffin-cream">
                                 {roomMaxDays} Days
                               </span>
@@ -1427,7 +1427,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                           ₹{safeguards.cashMin.toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-[8px] text-gray-400 uppercase font-bold">Alarm if team capital falls below boundary.</p>
+                      <p className="text-[8px] text-slate-600 dark:text-slate-300 uppercase font-bold">Alarm if team capital falls below boundary.</p>
                       <input
                         type="range"
                         min={20000}
@@ -1455,7 +1455,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                           {safeguards.satisfactionMin}%
                         </span>
                       </div>
-                      <p className="text-[8px] text-gray-400 uppercase font-bold">Alarm if customer satisfaction breaches boundary.</p>
+                      <p className="text-[8px] text-slate-600 dark:text-slate-300 uppercase font-bold">Alarm if customer satisfaction breaches boundary.</p>
                       <input
                         type="range"
                         min={0}
@@ -1510,7 +1510,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
 
                   <div className="space-y-4 pt-3 text-left">
                     <div className="space-y-1.5">
-                      <span className="text-[9px] font-mono font-black uppercase text-gray-500 block">1. Select Disruption Category</span>
+                      <span className="text-[9px] font-mono font-black uppercase text-slate-600 dark:text-slate-300 block">1. Select Disruption Category</span>
                       <div className="grid grid-cols-3 gap-1.5">
                         <button
                           onClick={() => { playTone(330, 'sine', 0.04); setDisruptionType('demand_surge'); }}
@@ -1540,7 +1540,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     </div>
 
                     <div className="space-y-1.5">
-                      <span className="text-[9px] font-mono font-black uppercase text-gray-500 block">2. Severity Magnitude</span>
+                      <span className="text-[9px] font-mono font-black uppercase text-slate-600 dark:text-slate-300 block">2. Severity Magnitude</span>
                       <div className="grid grid-cols-3 gap-1.5">
                         {(['low', 'medium', 'high'] as const).map(sev => (
                           <button
@@ -1557,7 +1557,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     </div>
 
                     <div className="bg-zinc-950/5 dark:bg-white/5 border border-muffin-brown/15 p-2.5 rounded-xl text-[8.5px]/snug uppercase font-mono tracking-tight font-black">
-                      <span className="text-gray-500 block mb-1">🔍 PREVIEW DISRUPTION MATRIX:</span>
+                      <span className="text-slate-600 dark:text-slate-300 font-bold block mb-1">🔍 PREVIEW DISRUPTION MATRIX:</span>
                       {disruptionType === 'demand_surge' && (
                         <div className="text-blue-800 dark:text-blue-300 font-extrabold">
                           Surge Demand Volume: +{disruptionSeverity === 'low' ? '30%' : disruptionSeverity === 'medium' ? '60%' : '100%'} Walk-in orders!
@@ -1615,7 +1615,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                   {instructorTeams.length === 0 ? (
                     <div className="text-center py-20 bg-zinc-950/5 dark:bg-white/5 rounded-2xl border border-dashed border-muffin-brown/25">
                       <span className="text-6xl block animate-bounce mb-4">🧁</span>
-                      <p className="text-[10px] font-mono font-black uppercase text-gray-400 tracking-widest leading-relaxed">
+                      <p className="text-[10px] font-mono font-black uppercase text-slate-600 dark:text-slate-300 tracking-widest leading-relaxed">
                         Waiting for students to connect to factory floor...
                         <br />
                         <span className="text-slate-700 dark:text-zinc-200 bg-muffin-gold/15 border border-muffin-gold/30 px-3.5 py-1.5 text-[14px] rounded-xl mt-3.5 inline-flex items-center gap-2 font-sans lowercase">
@@ -1790,7 +1790,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     <div className="text-center py-12 px-4 border border-dashed border-muffin-brown/20 rounded-xl bg-zinc-950/2 dark:bg-white/2 space-y-2">
                       <div className="text-2xl select-none">📋</div>
                       <div className="font-sans font-bold text-xs text-dynamic-text">No Active Session Rooms</div>
-                      <div className="text-gray-400 font-mono text-[10px]">
+                      <div className="text-slate-600 dark:text-slate-300 font-mono text-[10px]">
                         Select a scenario calibrator on the left and click "Initialize Classroom Lobby" to launch a live cohort.
                       </div>
                     </div>
@@ -1873,7 +1873,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                   <h2 className="font-sans font-black text-lg text-dynamic-text uppercase tracking-tight">
                     Active Scenarios Catalog
                   </h2>
-                  <p className="text-[10px] uppercase font-mono font-bold text-gray-500">
+                  <p className="text-[10px] uppercase font-mono font-bold text-slate-600 dark:text-slate-300">
                     Configure parameters and launch specialized class runs
                   </p>
                 </div>
@@ -1970,7 +1970,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                 <h2 className="font-serif italic text-3xl text-muffin-gold uppercase tracking-wide leading-none">
                   Muffin Factory Cohorts Leaderboard
                 </h2>
-                <span className="font-mono text-[9px] uppercase tracking-wider text-gray-500 mt-1 block">
+                <span className="font-mono text-[9px] uppercase tracking-wider text-slate-600 dark:text-slate-300 mt-1 block">
                   Live Corporate Net treasury Liquidity rankings
                 </span>
               </div>
@@ -2101,48 +2101,48 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
             <div className="space-y-4 font-sans text-xs">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-bold text-gray-500 block">Ledger Cash Treasury (₹)</label>
+                  <label className="text-[9px] uppercase font-bold text-slate-700 block">Ledger Cash Treasury (₹)</label>
                   <input
                     type="number"
                     value={overrideCash}
                     onChange={e => setOverrideCash(e.target.value)}
-                    className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono font-bold"
+                    className="w-full p-2 bg-white text-slate-900 border border-muffin-brown/20 rounded font-mono font-bold focus:border-amber-600 focus:ring-1 focus:ring-amber-600 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-bold text-gray-500 block">Silo Stock Flour (un)</label>
+                  <label className="text-[9px] uppercase font-bold text-slate-700 block">Silo Stock Flour (un)</label>
                   <input
                     type="number"
                     value={overrideFlour}
                     onChange={e => setOverrideFlour(e.target.value)}
-                    className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono font-bold"
+                    className="w-full p-2 bg-white text-slate-900 border border-muffin-brown/20 rounded font-mono font-bold focus:border-amber-600 focus:ring-1 focus:ring-amber-600 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-bold text-gray-500 block">Stock Packaging (un)</label>
+                  <label className="text-[9px] uppercase font-bold text-slate-700 block">Stock Packaging (un)</label>
                   <input
                     type="number"
                     value={overridePackaging}
                     onChange={e => setOverridePackaging(e.target.value)}
-                    className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono font-bold"
+                    className="w-full p-2 bg-white text-slate-900 border border-muffin-brown/20 rounded font-mono font-bold focus:border-amber-600 focus:ring-1 focus:ring-amber-600 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-bold text-gray-500 block">Safety Order Size Q</label>
+                  <label className="text-[9px] uppercase font-bold text-slate-700 block">Safety Order Size Q</label>
                   <input
                     type="number"
                     value={overrideQ}
                     onChange={e => setOverrideQ(e.target.value)}
-                    className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono font-bold"
+                    className="w-full p-2 bg-white text-slate-900 border border-muffin-brown/20 rounded font-mono font-bold focus:border-amber-600 focus:ring-1 focus:ring-amber-600 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[9px] uppercase font-bold text-gray-500 block">Reorder trigger Point R</label>
+                  <label className="text-[9px] uppercase font-bold text-slate-700 block">Reorder trigger Point R</label>
                   <input
                     type="number"
                     value={overrideR}
                     onChange={e => setOverrideR(e.target.value)}
-                    className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono font-bold"
+                    className="w-full p-2 bg-white text-slate-900 border border-muffin-brown/20 rounded font-mono font-bold focus:border-amber-600 focus:ring-1 focus:ring-amber-600 outline-none"
                   />
                 </div>
               </div>

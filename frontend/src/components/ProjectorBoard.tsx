@@ -316,7 +316,7 @@ export default function ProjectorBoard({ navigate }: ProjectorBoardProps) {
                 ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-400' 
                 : room.status === 'paused'
                 ? 'bg-amber-950/40 border-amber-500/40 text-amber-400'
-                : 'bg-stone-900 border-stone-750 text-stone-300'
+                : 'bg-stone-900 border-stone-700 text-stone-300'
             }`}>
               <span className={`w-2 h-2 rounded-full ${
                 room.status === 'active' ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'
@@ -389,7 +389,7 @@ export default function ProjectorBoard({ navigate }: ProjectorBoardProps) {
                 value={roomInput}
                 onChange={(e) => setRoomInput(e.target.value.toUpperCase())}
                 placeholder="ROOM CODE"
-                className="flex-1 bg-stone-900 border-2 border-stone-750 focus:border-amber-400 text-white font-mono text-lg font-black tracking-widest text-center uppercase p-3 rounded-xl outline-none"
+                className="flex-1 bg-stone-900 border-2 border-stone-700 focus:border-amber-400 text-white font-mono text-lg font-black tracking-widest text-center uppercase p-3 rounded-xl outline-none"
                 autoFocus
               />
               <button
