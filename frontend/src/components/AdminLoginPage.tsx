@@ -71,7 +71,7 @@ export default function AdminLoginPage({ navigate }: AdminLoginPageProps) {
               <input 
                 type="email"
                 required
-                placeholder="aryajain1906@gmail.com"
+                placeholder="admin@factory.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-[#f9f9f7] border border-[#d8d8d0] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#1a1a18] placeholder-[#b0b0a8] focus:outline-none focus:border-[#1a1a18] transition-all"
