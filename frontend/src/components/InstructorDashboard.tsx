@@ -4,7 +4,7 @@ import {
   Play, Pause, StepForward, Settings, Radio, Sparkles, LogOut, Plus, Trash2, 
   Copy, ShieldAlert, Award, FileSpreadsheet, Eye, RefreshCw, BarChart2, Landmark,
   Volume2, VolumeX, Zap, Download, Trash, ChevronLeft, ChevronRight, Check,
-  AlertTriangle, Monitor, Clock, X, HelpCircle, ExternalLink
+  AlertTriangle, Monitor, Clock, X, HelpCircle, ExternalLink, Sun, Moon
 } from 'lucide-react';
 import { SavedScenario, Room, TeamState } from '../../../backend/src/types/index.js';
 
@@ -30,7 +30,17 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
   } = useGameStore();
 
   const [activeTab, setActiveTab] = useState<'live' | 'scenarios'>('live');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('muffin_instructor_theme') : null;
+    if (saved !== null) return saved === 'dark';
+    return typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('muffin_instructor_theme', isDarkMode ? 'dark' : 'light');
+    }
+  }, [isDarkMode]);
   const [projectorOpen, setProjectorOpen] = useState(false);
 
   // Sound Safeguard states
@@ -763,54 +773,54 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
       {/* Dynamic Style injection */}
       <style dangerouslySetInnerHTML={{ __html: `
         .instructor-dashboard {
-          --bg: #f7f0e6;
-          --bg2: #f0e6d6;
-          --bg3: #e8d9c4;
-          --bg4: #deccb0;
-          --ink: #120d07;
-          --brown: #2c1a0a;
-          --espresso: #1a0e05;
-          --caramel: #b06818;
-          --gold: #c8852a;
-          --amber: #e0a040;
-          --amber2: #f0b84e;
-          --sage: #3d7050;
-          --rust: #a03820;
-          --txt: #1e1408;
-          --txt2: #6b4e30;
-          --txt3: #9a7a52;
-          --b1: rgba(44,26,10,.08);
-          --b2: rgba(44,26,10,.14);
-          --b3: rgba(44,26,10,.22);
+          --bg: #f8f6f0;
+          --bg2: #ffffff;
+          --bg3: #f1ede4;
+          --bg4: #e5ded0;
+          --ink: #0f172a;
+          --brown: #1e293b;
+          --espresso: #0f172a;
+          --caramel: #b45309;
+          --gold: #d97706;
+          --amber: #f59e0b;
+          --amber2: #fbbf24;
+          --sage: #15803d;
+          --rust: #b91c1c;
+          --txt: #0f172a;
+          --txt2: #334155;
+          --txt3: #475569;
+          --b1: rgba(15, 23, 42, 0.08);
+          --b2: rgba(15, 23, 42, 0.15);
+          --b3: rgba(15, 23, 42, 0.25);
           --r1: 10px; --r2: 16px; --r3: 24px; --r4: 32px;
           
           background: var(--bg);
           color: var(--txt);
           font-family: 'DM Sans', sans-serif;
-          transition: background 0.3s, color 0.3s;
+          transition: background 0.25s ease, color 0.25s ease;
           position: relative;
         }
 
         .instructor-dashboard.dark {
-          --bg: #0d0c0a;
-          --bg2: #16130f;
-          --bg3: #221d17;
-          --bg4: #332b22;
-          --ink: #f7f0e6;
-          --brown: #e8d9c4;
-          --espresso: #16130f;
-          --caramel: #c8852a;
-          --gold: #b06818;
-          --amber: #f0b84e;
-          --amber2: #fbbf24;
-          --sage: #4ade80;
-          --rust: #f87171;
-          --txt: #f7f0e6;
-          --txt2: #d6c7b2;
-          --txt3: #9a7a52;
-          --b1: rgba(247,240,230,.08);
-          --b2: rgba(247,240,230,.14);
-          --b3: rgba(247,240,230,.22);
+          --bg: #0b0f19;
+          --bg2: #111827;
+          --bg3: #1f2937;
+          --bg4: #374151;
+          --ink: #f8fafc;
+          --brown: #f1f5f9;
+          --espresso: #0b0f19;
+          --caramel: #f59e0b;
+          --gold: #fbbf24;
+          --amber: #fcd34d;
+          --amber2: #fef08a;
+          --sage: #22c55e;
+          --rust: #ef4444;
+          --txt: #f8fafc;
+          --txt2: #e2e8f0;
+          --txt3: #94a3b8;
+          --b1: rgba(255, 255, 255, 0.08);
+          --b2: rgba(255, 255, 255, 0.15);
+          --b3: rgba(255, 255, 255, 0.25);
         }
 
         .instructor-dashboard::after {
@@ -922,13 +932,44 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
               </button>
             </div>
           )}
-          <button
-            onClick={() => { playTone(523, 'triangle', 0.08); setIsDarkMode(!isDarkMode); }}
-            className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center cursor-pointer text-xs select-none"
-            title="Toggle Color Theme"
-          >
-            {isDarkMode ? "🌙" : "☀️"}
-          </button>
+          <div className="flex items-center bg-zinc-900 border border-zinc-700/80 rounded-xl p-0.5 shadow-inner select-none">
+            <button
+              type="button"
+              onClick={() => {
+                if (isDarkMode) {
+                  playTone(523, 'sine', 0.05);
+                  setIsDarkMode(false);
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-mono tracking-wider font-extrabold transition-all cursor-pointer ${
+                !isDarkMode
+                  ? "bg-amber-400 text-zinc-950 shadow-sm"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+              title="Switch to Light Mode"
+            >
+              <Sun className="w-3.5 h-3.5" />
+              <span>LIGHT</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!isDarkMode) {
+                  playTone(523, 'sine', 0.05);
+                  setIsDarkMode(true);
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-mono tracking-wider font-extrabold transition-all cursor-pointer ${
+                isDarkMode
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+              title="Switch to Dark Mode"
+            >
+              <Moon className="w-3.5 h-3.5" />
+              <span>DARK</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -1098,13 +1139,13 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     Lobby Room Setup
                   </h2>
                   <div className="space-y-4 font-semibold text-xs text-left">
-                    <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10">
-                      <span className="text-[8px] uppercase text-gray-400 block font-bold">SESSION TITLE</span>
-                      <span className="font-sans font-black text-xs text-dynamic-text block truncate mt-0.5">{room.name}</span>
+                    <div className="bg-stone-50 dark:bg-zinc-900/90 p-3 rounded-xl border border-stone-200 dark:border-zinc-800 shadow-2xs">
+                      <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">SESSION TITLE</span>
+                      <span className="font-sans font-black text-sm text-slate-900 dark:text-white block truncate mt-0.5">{room.name}</span>
                     </div>
-                    <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10">
+                    <div className="bg-stone-50 dark:bg-zinc-900/90 p-3 rounded-xl border border-stone-200 dark:border-zinc-800 shadow-2xs">
                       <div className="flex items-center justify-between">
-                        <span className="text-[8px] uppercase text-gray-400 block font-bold">ROOM CODE</span>
+                        <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">ROOM CODE</span>
                         <button
                           type="button"
                           onClick={() => {
@@ -1114,26 +1155,26 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                               setTimeout(() => setCopiedCode(false), 2000);
                             }
                           }}
-                          className="text-[9px] font-bold text-muffin-gold hover:text-muffin-brown dark:hover:text-white flex items-center gap-1 cursor-pointer bg-transparent border-none p-0 transition-colors"
+                          className="text-[9.5px] font-mono font-black text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex items-center gap-1 cursor-pointer bg-transparent border-none p-0 transition-colors"
                           title="Copy Room Code"
                         >
-                          {copiedCode ? <><Check className="w-3 h-3 text-emerald-500" /><span className="text-emerald-500 font-mono">COPIED!</span></> : <><Copy className="w-3 h-3" /><span className="font-mono">COPY</span></>}
+                          {copiedCode ? <><Check className="w-3 h-3 text-emerald-500" /><span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">COPIED!</span></> : <><Copy className="w-3 h-3" /><span className="font-mono font-black">COPY</span></>}
                         </button>
                       </div>
-                      <span className="font-mono font-black text-lg text-muffin-gold block mt-0.5 tracking-wider uppercase select-all">{room.code}</span>
+                      <span className="font-mono font-black text-xl text-amber-600 dark:text-amber-400 block mt-0.5 tracking-widest uppercase select-all">{room.code}</span>
                     </div>
-                    <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10 grid grid-cols-3 gap-2">
+                    <div className="bg-stone-50 dark:bg-zinc-900/90 p-3 rounded-xl border border-stone-200 dark:border-zinc-800 shadow-2xs grid grid-cols-3 gap-2">
                       <div>
-                        <span className="text-[8px] uppercase text-gray-400 block font-bold">DIFFICULTY</span>
-                        <span className="font-mono font-black text-xs text-dynamic-text block mt-0.5 uppercase">{room.difficulty}</span>
+                        <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">DIFFICULTY</span>
+                        <span className="font-mono font-black text-xs text-slate-900 dark:text-white block mt-0.5 uppercase">{room.difficulty}</span>
                       </div>
                       <div>
-                        <span className="text-[8px] uppercase text-gray-400 block font-bold">DAYS LIMIT</span>
-                        <span className="font-mono font-black text-xs text-dynamic-text block mt-0.5">{room.maxDays} Days</span>
+                        <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">DAYS LIMIT</span>
+                        <span className="font-mono font-black text-xs text-slate-900 dark:text-white block mt-0.5">{room.maxDays} Days</span>
                       </div>
                       <div>
-                        <span className="text-[8px] uppercase text-gray-400 block font-bold">SPEED</span>
-                        <span className="font-mono font-black text-xs text-dynamic-text block mt-0.5">{room.tickRate}s/day</span>
+                        <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">SPEED</span>
+                        <span className="font-mono font-black text-xs text-slate-900 dark:text-white block mt-0.5">{room.tickRate}s/day</span>
                       </div>
                     </div>
                   </div>
@@ -1154,17 +1195,22 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
               ) : (
                 // Active Room Panel
                 <section className="bcard space-y-4">
-                  <h2 className="font-sans font-black text-xs uppercase tracking-wider text-muffin-brown dark:text-muffin-cream border-b border-muffin-brown/10 pb-2">
-                    Active Operations Room
-                  </h2>
+                  <div className="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-2.5">
+                    <h2 className="font-sans font-black text-sm uppercase tracking-wider text-slate-900 dark:text-white">
+                      Active Operations Room
+                    </h2>
+                    <span className="font-mono text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-md">
+                      ● Live Session
+                    </span>
+                  </div>
                   <div className="grid grid-cols-2 gap-3.5 text-left">
-                    <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10">
-                      <span className="text-[8px] uppercase text-gray-400 block font-bold">SESSION TITLE</span>
-                      <span className="font-sans font-black text-xs text-dynamic-text block truncate mt-0.5">{room.name}</span>
+                    <div className="bg-stone-50 dark:bg-zinc-900/90 p-3 rounded-xl border border-stone-200 dark:border-zinc-800 shadow-2xs">
+                      <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">SESSION TITLE</span>
+                      <span className="font-sans font-black text-sm text-slate-900 dark:text-white block truncate mt-0.5">{room.name}</span>
                     </div>
-                    <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10">
+                    <div className="bg-stone-50 dark:bg-zinc-900/90 p-3 rounded-xl border border-stone-200 dark:border-zinc-800 shadow-2xs">
                       <div className="flex items-center justify-between">
-                        <span className="text-[8px] uppercase text-gray-400 block font-bold">ROOM CODE</span>
+                        <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">ROOM CODE</span>
                         <button
                           type="button"
                           onClick={() => {
@@ -1174,59 +1220,59 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                               setTimeout(() => setCopiedCode(false), 2000);
                             }
                           }}
-                          className="text-[9px] font-bold text-muffin-gold hover:text-muffin-brown dark:hover:text-white flex items-center gap-1 cursor-pointer bg-transparent border-none p-0 transition-colors"
+                          className="text-[9.5px] font-mono font-black text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 flex items-center gap-1 cursor-pointer bg-transparent border-none p-0 transition-colors"
                           title="Copy Room Code"
                         >
-                          {copiedCode ? <><Check className="w-3 h-3 text-emerald-500" /><span className="text-emerald-500 font-mono">COPIED!</span></> : <><Copy className="w-3 h-3" /><span className="font-mono">COPY</span></>}
+                          {copiedCode ? <><Check className="w-3 h-3 text-emerald-500" /><span className="text-emerald-600 dark:text-emerald-400 font-mono font-black">COPIED!</span></> : <><Copy className="w-3 h-3" /><span className="font-mono font-black">COPY</span></>}
                         </button>
                       </div>
-                      <span className="font-mono font-black text-sm text-muffin-gold block mt-0.5 tracking-widest uppercase select-all">{room.code}</span>
+                      <span className="font-mono font-black text-base text-amber-600 dark:text-amber-400 block mt-0.5 tracking-widest uppercase select-all">{room.code}</span>
                     </div>
-                    <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10">
-                      <span className="text-[8px] uppercase text-gray-400 block font-bold">SIMULATED TIME</span>
-                      <span className="font-mono font-black text-base text-emerald-600 block mt-0.5">
-                        Day {Math.min(room.currentDay, room.maxDays)} <span className="text-[10px] text-gray-400 font-normal">/ {room.maxDays}</span>
+                    <div className="bg-stone-50 dark:bg-zinc-900/90 p-3 rounded-xl border border-stone-200 dark:border-zinc-800 shadow-2xs">
+                      <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">SIMULATED TIME</span>
+                      <span className="font-mono font-black text-base text-emerald-700 dark:text-emerald-400 block mt-0.5">
+                        Day {Math.min(room.currentDay, room.maxDays)} <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">/ {room.maxDays}</span>
                       </span>
                     </div>
-                    <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10">
-                      <span className="text-[8px] uppercase text-gray-400 block font-bold">HOURS COMPLETED</span>
-                      <span className="font-mono font-black text-base text-dynamic-text block mt-0.5">
+                    <div className="bg-stone-50 dark:bg-zinc-900/90 p-3 rounded-xl border border-stone-200 dark:border-zinc-800 shadow-2xs">
+                      <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">HOURS COMPLETED</span>
+                      <span className="font-mono font-black text-base text-slate-900 dark:text-white block mt-0.5">
                         {(room.currentDay * 24).toLocaleString()} hrs
                       </span>
                     </div>
-                    <div className="bg-zinc-950/5 dark:bg-white/5 p-3 rounded-xl border border-muffin-brown/10 col-span-2">
-                      <span className="text-[8px] uppercase text-gray-400 block font-bold">DAY PROGRESS</span>
-                      <span className="font-mono font-black text-sm text-indigo-600 dark:text-indigo-400 block mt-0.5">
+                    <div className="bg-stone-50 dark:bg-zinc-900/90 p-3 rounded-xl border border-stone-200 dark:border-zinc-800 shadow-2xs col-span-2">
+                      <span className="text-[9px] uppercase text-slate-600 dark:text-slate-400 block font-mono font-black tracking-wider">DAY PROGRESS</span>
+                      <span className="font-mono font-black text-sm text-indigo-700 dark:text-indigo-300 block mt-0.5">
                         {secondsRemaining !== null ? `${secondsRemaining}s remaining until next day` : "Paused / Manual advancement"}
                       </span>
                     </div>
                   </div>
 
-                  <div className="bg-emerald-500/10 border border-emerald-500/25 p-3.5 rounded-xl flex items-center justify-between text-left">
+                  <div className="bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-300 dark:border-emerald-700/60 p-3.5 rounded-xl flex items-center justify-between text-left shadow-xs">
                     <div>
-                      <span className="text-[8px] font-mono text-gray-400 block font-bold uppercase">Realtime Elapsed Clock</span>
-                      <span className="font-mono text-lg font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{elapsedTime}</span>
+                      <span className="text-[9px] font-mono text-emerald-900 dark:text-emerald-300 block font-black uppercase tracking-wider">REALTIME ELAPSED CLOCK</span>
+                      <span className="font-mono text-xl font-black text-emerald-700 dark:text-emerald-300 mt-0.5 block">{elapsedTime}</span>
                     </div>
-                    <Clock className="w-5.5 h-5.5 text-emerald-500/40" />
+                    <Clock className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                   </div>
 
-                  <div className="space-y-2 border-t border-muffin-brown/10 pt-4 text-left">
-                    <span className="text-[9.5px] font-mono uppercase font-bold text-gray-400 block">Supervisor override console</span>
+                  <div className="space-y-2 border-t border-stone-200 dark:border-stone-800 pt-3.5 text-left">
+                    <span className="text-[10px] font-mono uppercase font-black text-slate-700 dark:text-slate-300 block tracking-wider">SUPERVISOR OVERRIDE CONSOLE</span>
                     <div className="grid grid-cols-3 gap-2">
                       {room.status === 'paused' ? (
                         <button
                           onClick={() => { playTone(260, 'sine', 0.05); instructorControl('resume'); }}
-                          className="py-2 px-3 bg-amber-600 text-white border border-amber-700 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 animate-pulse"
+                          className="py-2.5 px-3 bg-amber-500 hover:bg-amber-600 text-zinc-950 border border-amber-600 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-xs"
                         >
-                          <Play className="w-3 h-3 fill-current" />
-                          <span>Resume Arena</span>
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Resume</span>
                         </button>
                       ) : (
                         <button
                           onClick={() => { playTone(260, 'sine', 0.05); instructorControl('pause'); }}
-                          className="py-2 px-3 bg-zinc-950/5 dark:bg-white/5 border border-muffin-brown/25 text-dynamic-text hover:bg-zinc-950/10 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95"
+                          className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-300 dark:border-zinc-700 text-slate-800 dark:text-slate-100 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-xs"
                         >
-                          <Pause className="w-3 h-3 fill-current" />
+                          <Pause className="w-3.5 h-3.5 fill-current" />
                           <span>Pause Arena</span>
                         </button>
                       )}
@@ -1238,7 +1284,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                             exitRoom();
                           }
                         }}
-                        className="py-2 px-3 bg-red-650 hover:bg-red-700 text-white border border-red-750 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95"
+                        className="py-2.5 px-3 bg-red-600 hover:bg-red-700 text-white border border-red-700 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-sm"
                       >
                         <X className="w-3.5 h-3.5" />
                         <span>End Session</span>
@@ -1250,7 +1296,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                             instructorControl('stop_all_machines');
                           }
                         }}
-                        className="py-2 px-3 bg-red-650 hover:bg-red-700 text-white border border-red-750 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95"
+                        className="py-2.5 px-3 bg-rose-700 hover:bg-rose-800 text-white border border-rose-800 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-1.5 transition-all select-none cursor-pointer active:scale-95 shadow-sm"
                       >
                         <span>🛑 Force Stop</span>
                       </button>
@@ -1260,17 +1306,17 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                   {room.status === 'paused' && (
                     <button
                       onClick={() => { playTone(587.33, 'triangle', 0.1); instructorControl('step'); }}
-                      className="w-full py-3.5 flex items-center justify-center gap-1.5 font-sans font-black uppercase text-xs tracking-widest rounded-xl border-b-4 bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-900 active:border-b shadow-md active:translate-y-0.5 transition-all select-none cursor-pointer"
+                      className="w-full py-3 flex items-center justify-center gap-1.5 font-sans font-black uppercase text-xs tracking-widest rounded-xl border-b-4 bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-900 active:border-b shadow-md active:translate-y-0.5 transition-all select-none cursor-pointer"
                     >
                       <StepForward className="w-4 h-4" />
                       <span>Advance Daily Cycle</span>
                     </button>
                   )}
 
-                  <div className="pt-3 border-t border-muffin-brown/10">
+                  <div className="pt-3 border-t border-stone-200 dark:border-stone-800">
                     <button
                       onClick={() => { playTone(587.33, 'triangle', 0.1); instructorControl('relief_credits'); }}
-                      className="w-full py-2 border border-dashed border-emerald-600/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/5 rounded-lg text-[9px] font-black uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                      className="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/40 border-2 border-dashed border-emerald-500/60 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 rounded-xl text-[10px] font-mono font-black uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
                     >
                       🎁 Dispatch +2,000 U Raw Flour relief credits (all teams)
                     </button>
@@ -1368,7 +1414,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                           return (
                             <div key={t.id} className="text-[9px] uppercase font-bold border-b border-muffin-brown/5 pb-1 last:border-0">
                               <span className="text-dynamic-text block font-black">{t.name}:</span>
-                              <ul className="list-disc list-inside mt-0.5 text-[8.5px] text-red-650 font-mono space-y-0.5 leading-snug">
+                              <ul className="list-disc list-inside mt-0.5 text-[8.5px] text-red-600 dark:text-red-400 font-mono space-y-0.5 leading-snug">
                                 {breaches.map((b, bidx) => (
                                   <li key={bidx} className="font-semibold">{b.message}</li>
                                 ))}
@@ -1450,7 +1496,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         </div>
                       )}
                       {disruptionType === 'material_shortage' && (
-                        <div className="text-red-750 dark:text-red-400 font-extrabold">
+                        <div className="text-red-700 dark:text-red-300 dark:text-red-400 font-extrabold">
                           Ingredients Cost Index: +{disruptionSeverity === 'low' ? '45%' : disruptionSeverity === 'medium' ? '90%' : '150%'} flour markup!
                         </div>
                       )}
@@ -1528,7 +1574,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     <div className="overflow-x-auto rounded-xl border border-muffin-brown/15">
                       <table className="w-full text-left border-collapse font-sans text-xs">
                         <thead>
-                          <tr className="bg-[#2D4A6B]/15 text-[#2d4a6b] font-black uppercase tracking-wider border-b border-muffin-brown/15 select-none">
+                          <tr className="bg-slate-100 dark:bg-zinc-800/90 text-slate-800 dark:text-slate-100 font-mono font-black text-[11px] uppercase tracking-wider border-b-2 border-slate-300 dark:border-zinc-700 select-none">
                             <th className="p-3 text-center">Rank</th>
                             <th className="p-3">Team Name</th>
                             <th className="p-3">Team Members</th>
@@ -1549,28 +1595,40 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                               const teamMembers = members?.filter(m => m.teamId === team.id || m.teamName === team.name) || [];
                               
                               return (
-                                <tr key={team.id} className={`transition-colors duration-200 ${breaches.length > 0 ? "bg-red-500/10 border-l-4 border-red-500" : "hover:bg-zinc-950/5 dark:hover:bg-white/5"}`}>
-                                  <td className="p-3 font-mono font-black text-center text-slate-500 w-14">#{idx + 1}</td>
+                                <tr
+                                  key={team.id}
+                                  className={`transition-colors duration-200 ${
+                                    breaches.length > 0
+                                      ? "bg-red-50/80 dark:bg-red-950/30 border-l-4 border-red-600 border-b border-red-200 dark:border-red-900/40"
+                                      : "hover:bg-slate-50 dark:hover:bg-zinc-800/50 border-b border-stone-200 dark:border-zinc-800"
+                                  }`}
+                                >
+                                  <td className="p-3 font-mono font-black text-center text-slate-700 dark:text-slate-300 w-14 text-sm">
+                                    #{idx + 1}
+                                  </td>
                                   <td className="p-3 text-left">
                                     <div className="space-y-1">
                                       <div className="flex items-center gap-2">
-                                        <span className="font-extrabold text-dynamic-text block text-sm tracking-tight">{team.name}</span>
+                                        <span className="font-extrabold text-slate-900 dark:text-white block text-sm tracking-tight">
+                                          {team.name}
+                                        </span>
                                         {breaches.length > 0 && (
-                                          <span className="inline-flex bg-red-650 text-white px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest animate-pulse leading-none border border-red-800">
-                                            Safeguard Alert
+                                          <span className="inline-flex items-center gap-1 bg-red-600 text-white px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider leading-none shadow-xs">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                                            <span>Safeguard Alert</span>
                                           </span>
                                         )}
                                       </div>
                                       <div className="flex gap-0.5">
                                         {Array.from({ length: 3 }).map((_, sidx) => (
-                                          <span key={sidx} className={`text-xs ${sidx < stars ? "text-yellow-500 font-extrabold" : "text-gray-300"}`}>⭐</span>
+                                          <span key={sidx} className={`text-xs ${sidx < stars ? "text-amber-500 font-extrabold" : "text-stone-300 dark:text-stone-700"}`}>⭐</span>
                                         ))}
                                       </div>
                                       {breaches.length > 0 && (
-                                        <div className="space-y-0.5 mt-1 border-t border-red-500/10 pt-1">
+                                        <div className="space-y-1 mt-1.5 pt-1 border-t border-red-200 dark:border-red-900/40">
                                           {breaches.map((b, bidx) => (
-                                            <div key={bidx} className="text-[7.5px] font-mono font-bold text-red-600 dark:text-red-400 tracking-wide flex items-center gap-1 lowercase">
-                                              <span className="w-1 h-1 bg-red-500 rounded-full inline-block"></span>
+                                            <div key={bidx} className="text-[10px] font-mono font-bold text-red-700 dark:text-red-300 bg-red-100/70 dark:bg-red-900/40 border border-red-300 dark:border-red-800 px-2 py-0.5 rounded flex items-center gap-1.5">
+                                              <span className="w-1.5 h-1.5 bg-red-600 rounded-full inline-block shrink-0"></span>
                                               <span>{b.message}</span>
                                             </div>
                                           ))}
@@ -1580,13 +1638,13 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                                   </td>
                                   <td className="p-3 text-left">
                                     {teamMembers.length === 0 ? (
-                                      <span className="text-[10px] text-gray-400 italic lowercase font-normal">no members joined</span>
+                                      <span className="text-[11px] text-slate-500 dark:text-slate-400 italic">no members joined</span>
                                     ) : (
-                                      <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                      <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                                         {teamMembers.map((m, midx) => (
                                           <span 
                                             key={midx} 
-                                            className="px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 rounded-md text-[10px] font-sans font-bold normal-case tracking-normal"
+                                            className="px-2.5 py-1 bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-slate-100 border border-slate-300 dark:border-zinc-700 rounded-md text-[11px] font-sans font-bold shadow-2xs"
                                           >
                                             {m.userName}
                                           </span>
@@ -1594,35 +1652,49 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                                       </div>
                                     )}
                                   </td>
-                                  <td className={`p-3 font-mono font-black text-[12.5px] transition-all duration-300 ${hasCashBreach ? "text-red-600 bg-red-500/15 rounded-lg border border-red-500/20 font-black animate-pulse" : "text-emerald-600"}`}>
-                                    ₹{team.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  <td className="p-3 font-mono font-black text-sm">
+                                    <span className={`inline-block px-2 py-1 rounded-lg ${
+                                      hasCashBreach
+                                        ? "text-red-700 dark:text-red-200 bg-red-100 dark:bg-red-900/60 border border-red-300 dark:border-red-700 animate-pulse"
+                                        : "text-emerald-700 dark:text-emerald-400"
+                                    }`}>
+                                      ₹{team.cash.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </span>
                                   </td>
-                                  <td className="p-3 font-mono font-extrabold text-dynamic-text/80">
+                                  <td className="p-3 font-mono font-black text-sm text-slate-800 dark:text-slate-200">
                                     {(team.inventory?.finished_muffin?.onHand ?? 0).toLocaleString()} un
                                   </td>
-                                  <td className={`p-3 font-mono font-black transition-all duration-300 ${hasSatBreach ? "text-red-600 bg-red-500/15 rounded-lg border border-red-500/20 font-black animate-pulse" : "text-orange-500"}`}>
-                                    {team.report?.fillRate ?? 100}% CSAT
+                                  <td className="p-3 font-mono font-black text-sm">
+                                    <span className={`inline-block px-2 py-1 rounded-lg ${
+                                      hasSatBreach
+                                        ? "text-red-700 dark:text-red-200 bg-red-100 dark:bg-red-900/60 border border-red-300 dark:border-red-700 font-black animate-pulse"
+                                        : (team.report?.fillRate ?? 100) >= 85
+                                        ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800"
+                                        : "text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800"
+                                    }`}>
+                                      {team.report?.fillRate ?? 100}% CSAT
+                                    </span>
                                   </td>
                                   <td className="p-3 text-right">
                                     <div className="flex flex-col items-end gap-1.5 justify-center">
                                       <button
                                         onClick={() => { playTone(440, 'sine', 0.05); handleOpenIntervene(team); }}
-                                        className="px-2.5 py-1 bg-zinc-950 hover:bg-zinc-800 text-white rounded-lg border border-[#3c3c3a] text-[9px] font-black uppercase inline-flex items-center gap-1 cursor-pointer select-none transition-all active:scale-95 shadow-xs"
+                                        className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 rounded-lg border border-slate-700 dark:border-slate-300 text-[10px] font-black uppercase inline-flex items-center gap-1.5 cursor-pointer select-none transition-all active:scale-95 shadow-xs"
                                       >
-                                        <Settings className="w-3 h-3" />
+                                        <Settings className="w-3.5 h-3.5" />
                                         <span>Inspect / Intervene</span>
                                       </button>
                                       <div className="flex gap-1.5">
                                         <button
                                           onClick={() => handleDownloadLedger(team.id, team.name)}
-                                          className="p-1 bg-zinc-950/5 dark:bg-white/5 text-emerald-600 hover:text-emerald-700 border border-muffin-brown/25 rounded-lg hover:bg-zinc-950/10 cursor-pointer"
-                                          title="Download team ledger report"
+                                          className="p-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-emerald-700 dark:text-emerald-400 border border-slate-300 dark:border-zinc-700 rounded-lg cursor-pointer transition-colors"
+                                          title="Download team ledger report (CSV)"
                                         >
-                                          <FileSpreadsheet className="w-3 h-3" />
+                                          <FileSpreadsheet className="w-3.5 h-3.5" />
                                         </button>
                                         <button
                                           onClick={() => handleKickTeam(team.id, team.name)}
-                                          className="p-1 bg-red-500/5 text-red-650 hover:text-white hover:bg-red-650 border border-red-500/20 rounded-lg cursor-pointer"
+                                          className="p-1.5 bg-red-50 hover:bg-red-600 hover:text-white dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg cursor-pointer transition-colors"
                                           title="Kick from session room"
                                         >
                                           <Trash className="w-3 h-3" />
@@ -1688,7 +1760,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                               </button>
                               <button
                                 onClick={() => { playTone(220, 'sawtooth', 0.1); deleteRoom(r.id); }}
-                                className="p-1 bg-red-500/5 text-red-650 hover:bg-red-650 hover:text-white border border-red-500/10 rounded-lg cursor-pointer"
+                                className="p-1 bg-red-500/5 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white border border-red-500/10 rounded-lg cursor-pointer"
                                 title="Delete Session"
                               >
                                 <Trash className="w-3.5 h-3.5" />
@@ -1731,35 +1803,35 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                 {presets.concat(customScenarios).map((sc) => {
                   const isPreset = isSystemPreset(sc);
                   return (
-                    <div key={sc.id} className="border border-muffin-brown/15 hover:border-muffin-gold/60 p-5 rounded-2xl bg-zinc-950/5 dark:bg-white/5 space-y-4 relative overflow-hidden transition-all duration-300">
-                      <div className={`absolute top-0 right-0 px-2.5 py-0.5 text-[8px] font-mono font-bold uppercase tracking-wider rounded-bl shadow-xs ${
-                        isPreset ? 'bg-muffin-brown/10 text-muffin-brown dark:text-muffin-cream' : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-l border-b border-emerald-500/20'
+                    <div key={sc.id} className="border border-stone-200 dark:border-stone-800 hover:border-amber-500/60 p-5 rounded-2xl bg-white dark:bg-slate-900 shadow-sm space-y-4 relative overflow-hidden transition-all duration-300">
+                      <div className={`absolute top-0 right-0 px-2.5 py-0.5 text-[8.5px] font-mono font-black uppercase tracking-wider rounded-bl shadow-2xs ${
+                        isPreset ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300 border-l border-b border-amber-300 dark:border-amber-800' : 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-300 border-l border-b border-emerald-300 dark:border-emerald-800'
                       }`}>
                         {isPreset ? "🎯 PRESET STANDARD" : "🛡️ CUSTOM / COPIED"}
                       </div>
                       <div className="space-y-1 text-left">
-                        <h3 className="font-sans font-black text-sm text-dynamic-text uppercase tracking-tight flex items-center gap-2">
+                        <h3 className="font-sans font-black text-sm text-slate-900 dark:text-white uppercase tracking-tight flex items-center gap-2">
                           <span>{sc.name}</span>
-                          {!isPreset && <span className="text-[9px] bg-blue-500/10 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded font-mono font-normal">Editable</span>}
+                          {!isPreset && <span className="text-[9.5px] bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded-md font-mono font-bold">Editable</span>}
                         </h3>
-                        <p className="text-[11.5px] text-dynamic-text/70 leading-relaxed font-serif italic">
+                        <p className="text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed font-sans font-medium">
                           "{sc.description || sc.learningObjective}"
                         </p>
                       </div>
-                      <div className="grid grid-cols-3 gap-3 font-mono text-[9px] uppercase tracking-wider font-extrabold text-dynamic-text/70 bg-white dark:bg-zinc-950 border border-muffin-brown/15 p-3 rounded-xl">
+                      <div className="grid grid-cols-3 gap-3 font-mono text-[9px] uppercase tracking-wider font-extrabold bg-stone-50 dark:bg-zinc-950 border border-stone-200 dark:border-zinc-800 p-3 rounded-xl shadow-2xs">
                         <div>
-                          <span className="text-[7.5px] block font-bold text-gray-400 leading-none mb-1">TIMELINE DAYS</span>
-                          <span className="text-xs text-[#2D4A6B] dark:text-[#5c8dbe] font-bold">{sc.maxDays} Days</span>
+                          <span className="text-[8.5px] block font-black text-slate-600 dark:text-slate-400 leading-none mb-1">TIMELINE DAYS</span>
+                          <span className="text-xs text-indigo-700 dark:text-indigo-400 font-black">{sc.maxDays} Days</span>
                         </div>
                         <div>
-                          <span className="text-[7.5px] block font-bold text-gray-400 leading-none mb-1">REAL TIME LIMIT</span>
-                          <span className="text-xs text-[#2D4A6B] dark:text-[#5c8dbe] font-bold">
+                          <span className="text-[8.5px] block font-black text-slate-600 dark:text-slate-400 leading-none mb-1">REAL TIME LIMIT</span>
+                          <span className="text-xs text-indigo-700 dark:text-indigo-400 font-black">
                             {Math.round((sc.maxDays * sc.tickRate) / 60) || 10} Mins
                           </span>
                         </div>
                         <div>
-                          <span className="text-[7.5px] block font-bold text-gray-400 leading-none mb-1">ORDER COST (S)</span>
-                          <span className="text-xs text-[#2D4A6B] dark:text-[#5c8dbe] font-bold">
+                          <span className="text-[8.5px] block font-black text-slate-600 dark:text-slate-400 leading-none mb-1">ORDER COST (S)</span>
+                          <span className="text-xs text-indigo-700 dark:text-indigo-400 font-black">
                             ₹{(sc.rawMaterialCosts?.orderCost ?? 150).toLocaleString()} setup
                           </span>
                         </div>
@@ -1767,15 +1839,15 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       <div className="flex gap-2 justify-end pt-2 border-t border-muffin-brown/10">
                         <button
                           onClick={() => handleDuplicateScenario(sc)}
-                          className="p-1.5 px-3 border border-muffin-brown/20 rounded-lg bg-white dark:bg-zinc-900 hover:bg-slate-50 text-[9px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 text-dynamic-text flex items-center gap-1"
+                          className="p-1.5 px-3 border border-stone-300 dark:border-stone-700 rounded-lg bg-stone-100 hover:bg-stone-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-[10px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 text-slate-800 dark:text-slate-200 flex items-center gap-1.5"
                           title="Create a duplicate copy of this scenario"
                         >
-                          <Copy className="w-3 h-3 text-gray-500" />
+                          <Copy className="w-3 h-3 text-slate-600 dark:text-slate-400" />
                           <span>{isPreset ? "Copy Preset" : "Duplicate"}</span>
                         </button>
                         <button
                           onClick={() => openScenarioWizard(sc, false)}
-                          className="p-1.5 px-3 border border-[#2D4A6B] bg-[#2D4A6B] text-white hover:bg-[#34557b] rounded-lg text-[9px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 flex items-center gap-1 shadow-xs font-bold"
+                          className="p-1.5 px-3.5 border border-indigo-700 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-black uppercase transition-all cursor-pointer select-none active:scale-95 flex items-center gap-1.5 shadow-sm"
                           title={`Edit ${sc.name} parameters`}
                         >
                           <span>✏️ Edit Config</span>
@@ -1783,7 +1855,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                         {!isPreset && (
                           <button
                             onClick={() => handleDeleteScenario(sc.id, sc.name)}
-                            className="p-2 bg-red-500/5 border border-red-500/20 rounded-lg text-red-650 hover:bg-red-650 hover:text-white cursor-pointer"
+                            className="p-2 bg-red-500/5 border border-red-500/20 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white cursor-pointer"
                             title="Delete this scenario copy"
                           >
                             <Trash className="w-3.5 h-3.5" />
@@ -1830,7 +1902,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
               </button>
               <button
                 onClick={() => { playTone(200, 'sine', 0.05); setProjectorOpen(false); }}
-                className="bg-zinc-900 border border-zinc-750 text-white hover:text-muffin-gold font-mono font-black px-4 py-2 rounded-xl text-xs cursor-pointer active:scale-95 shadow-md transition-all"
+                className="bg-zinc-900 border border-zinc-700 text-white hover:text-muffin-gold font-mono font-black px-4 py-2 rounded-xl text-xs cursor-pointer active:scale-95 shadow-md transition-all"
               >
                 Exit Projector Board
               </button>
@@ -2383,7 +2455,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                           <button
                             type="button"
                             onClick={() => setScBreakingPoints(scBreakingPoints.filter((_, idx) => idx !== bpidx))}
-                            className="text-red-650 font-sans font-bold uppercase text-[9px] cursor-pointer"
+                            className="text-red-600 dark:text-red-400 font-sans font-bold uppercase text-[9px] cursor-pointer"
                           >
                             Delete Point
                           </button>

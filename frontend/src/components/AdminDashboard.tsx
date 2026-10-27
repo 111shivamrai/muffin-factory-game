@@ -497,7 +497,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                 {!sidebarCollapsed && tab.badge !== undefined && (
                   <span className={`text-[8.5px] font-mono font-black px-2 py-0.5 rounded-full ${
                     tab.key === 'logs' && activeErrorsCount > 0
-                      ? 'bg-red-150 text-red-700 dark:bg-red-500/20 dark:text-red-400 animate-pulse'
+                      ? 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 animate-pulse'
                       : activeTab === tab.key ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-zinc-400'
                   }`}>
                     {tab.badge}
@@ -509,7 +509,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
         </div>
 
         {/* Sidebar Footer */}
-        <div className="p-1 border-t border-slate-150 dark:border-slate-850 space-y-3 pt-4">
+        <div className="p-1 border-t border-slate-200 dark:border-slate-800 space-y-3 pt-4">
           {!sidebarCollapsed && adminDetails && (
             <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center gap-2.5">
               <span className="text-xl shrink-0">{adminDetails.avatar}</span>
@@ -562,7 +562,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder={activeTab === 'licenses' ? "Search customer, email..." : "Search lobby code..."}
-                  className="bg-slate-100 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-850 pl-8 pr-4 py-1.5 rounded-lg text-xs font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-700 dark:text-slate-350 w-52 placeholder:text-slate-400 transition-all"
+                  className="bg-slate-100 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 pl-8 pr-4 py-1.5 rounded-lg text-xs font-mono focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-700 dark:text-slate-350 w-52 placeholder:text-slate-400 transition-all"
                 />
               </div>
             )}
@@ -656,7 +656,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                         <div className="text-3xl font-black mt-1.5 text-slate-850 dark:text-white">{stat.value}</div>
                         <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono block mt-1">{stat.suffix}</span>
                       </div>
-                      <div className={`w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-150 dark:border-slate-750 flex items-center justify-center text-${stat.color}-500`}>
+                      <div className={`w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-750 flex items-center justify-center text-${stat.color}-500`}>
                         {i === 0 && <Boxes className="w-5 h-5 text-indigo-500" />}
                         {i === 1 && <Activity className="w-5 h-5 text-violet-500" />}
                         {i === 2 && <KeyRound className="w-5 h-5 text-emerald-500" />}
@@ -755,7 +755,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                       }
                     }
                   }}
-                  className="py-1.5 px-3 bg-red-650 hover:bg-red-700 text-white rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+                  className="py-1.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
                 >
                   <span>🛑 Global Force Stop</span>
                 </button>
@@ -795,7 +795,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                             <span className={`px-2.5 py-0.5 rounded-full text-[9px] uppercase font-bold ${
                               room.difficulty === 'beginner' ? 'bg-emerald-50 text-emerald-600 border border-emerald-150 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/15' :
                               room.difficulty === 'intermediate' ? 'bg-amber-50 text-amber-600 border border-amber-150 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/15' :
-                              'bg-red-50 text-red-650 border border-red-150 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/15'
+                              'bg-red-50 text-red-600 dark:text-red-400 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/15'
                             }`}>
                               {room.difficulty}
                             </span>
@@ -814,7 +814,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                           <td className="p-4 text-right pr-6">
                             <button
                               onClick={() => deleteRoom(room.id)}
-                              className="p-1.5 bg-red-50 dark:bg-red-950/20 text-red-600 hover:text-white hover:bg-red-650 border border-red-100 dark:border-red-950 rounded-lg cursor-pointer transition-all active:scale-95"
+                              className="p-1.5 bg-red-50 dark:bg-red-950/20 text-red-600 hover:text-white hover:bg-red-600 border border-red-100 dark:border-red-950 rounded-lg cursor-pointer transition-all active:scale-95"
                               title="Terminate Session"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -835,7 +835,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
               
               {/* Generate License Key Form */}
               <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm h-fit">
-                <div className="flex items-center gap-2 pb-3 border-b border-slate-150 dark:border-slate-800">
+                <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
                   <KeyRound className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">Generate License Key</h3>
                 </div>
@@ -857,7 +857,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                         placeholder="NYU Stern"
                         value={newLicCustomer}
                         onChange={e => setNewLicCustomer(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white transition-all"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white transition-all"
                       />
                     </div>
                   </div>
@@ -871,7 +871,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                         placeholder="admin@nyu.edu"
                         value={newLicEmail}
                         onChange={e => setNewLicEmail(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white font-mono transition-all"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white font-mono transition-all"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -889,7 +889,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                               setNewLicSeats(val === '' ? '' : Number(val));
                             }
                           }}
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
                         />
                       </div>
                       <div className="space-y-1">
@@ -907,7 +907,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                               setNewLicValidityDays(val === '' ? '' : Number(val));
                             }
                           }}
-                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
+                          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none transition-all"
                         />
                       </div>
                     </div>
@@ -922,7 +922,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                         placeholder="instructor@nyu.edu"
                         value={newLicInstructorEmail}
                         onChange={e => setNewLicInstructorEmail(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white font-mono transition-all"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white font-mono transition-all"
                       />
                     </div>
                     <div className="space-y-1">
@@ -933,7 +933,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                         placeholder="sternpass123"
                         value={newLicInstructorPassword}
                         onChange={e => setNewLicInstructorPassword(e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white font-mono transition-all"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg focus:border-indigo-500 outline-none text-slate-850 dark:text-white font-mono transition-all"
                       />
                     </div>
                   </div>
@@ -953,7 +953,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                   </div>
                 )}
                 {licErrorMsg && (
-                  <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 text-red-650 rounded-xl text-[10px] font-black uppercase font-mono">
+                  <div className="mt-3 p-3 bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-[10px] font-black uppercase font-mono">
                     {licErrorMsg}
                   </div>
                 )}
@@ -961,7 +961,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
 
               {/* Active Licenses List */}
               <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-150 dark:border-slate-800 flex-wrap gap-2">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 flex-wrap gap-2">
                   <div className="flex items-center gap-2.5">
                     <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
                       License Registry Archive
@@ -1028,7 +1028,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                                 className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border cursor-pointer select-none transition-all ${
                                   l.status === 'active' 
                                     ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-550/20' 
-                                    : 'bg-red-50 border-red-150 text-red-650 dark:bg-red-500/10 dark:text-red-400 dark:border-red-550/20'
+                                    : 'bg-red-50 border-red-200 text-red-600 dark:text-red-400 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
                                 }`}
                               >
                                 {l.status}
@@ -1044,7 +1044,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                               </button>
                               <button
                                 onClick={() => handleDeleteLicense(l.id)}
-                                className="p-1.5 bg-red-50 dark:bg-red-950/20 text-red-650 hover:text-white hover:bg-red-650 border border-red-100 dark:border-red-950 rounded-lg cursor-pointer transition-all active:scale-95"
+                                className="p-1.5 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 hover:text-white hover:bg-red-600 border border-red-100 dark:border-red-950 rounded-lg cursor-pointer transition-all active:scale-95"
                                 title="Revoke Key"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1066,7 +1066,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
             <div className="max-w-2xl mx-auto space-y-6">
               
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-5 shadow-sm">
-                <div className="flex items-center gap-2 pb-3 border-b border-slate-150 dark:border-slate-800">
+                <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
                   <Megaphone className="w-4 h-4 text-emerald-500 animate-bounce" />
                   <h3 className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-white">Broadcast System Announcement</h3>
                   {broadcastActive && (
@@ -1083,7 +1083,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                       <select
                         value={broadcastType}
                         onChange={e => setBroadcastType(e.target.value as any)}
-                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none"
+                        className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-2.5 text-xs rounded-lg text-slate-850 dark:text-white font-mono focus:border-indigo-500 outline-none"
                       >
                         <option value="info">System Info (Blue)</option>
                         <option value="warning">System Warning (Yellow)</option>
@@ -1111,7 +1111,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                       placeholder="e.g. System scheduled maintenance is active from 10 PM. Active session tickers will pause."
                       value={broadcastMsg}
                       onChange={e => setBroadcastMsg(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 p-3 text-xs rounded-xl focus:border-indigo-500 outline-none text-slate-850 dark:text-white transition-all resize-none"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 text-xs rounded-xl focus:border-indigo-500 outline-none text-slate-850 dark:text-white transition-all resize-none"
                     />
                   </div>
 
@@ -1171,7 +1171,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                 <button
                   onClick={handleClearLogs}
                   disabled={logs.length === 0}
-                  className="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-650 hover:border-red-200 text-[10px] font-extrabold text-slate-500 uppercase rounded-xl cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none transition-all active:scale-95"
+                  className="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:text-red-400 hover:border-red-200 text-[10px] font-extrabold text-slate-500 uppercase rounded-xl cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none transition-all active:scale-95"
                 >
                   Clear Buffer Logs
                 </button>
@@ -1203,7 +1203,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                           <td className="p-3.5">
                             <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
                               log.severity === 'fatal' ? 'bg-fuchsia-50 border-fuchsia-200 text-fuchsia-600 dark:bg-fuchsia-500/10 dark:text-fuchsia-400 dark:border-fuchsia-550/20' :
-                              log.severity === 'error' ? 'bg-red-50 border-red-150 text-red-650 dark:bg-red-500/10 dark:text-red-400 dark:border-red-550/20' :
+                              log.severity === 'error' ? 'bg-red-50 border-red-200 text-red-600 dark:text-red-400 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20' :
                               'bg-amber-50 border-amber-250 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-550/20'
                             }`}>
                               {log.severity}
@@ -1226,7 +1226,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
             <div className="max-w-2xl mx-auto space-y-6">
               
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-4 shadow-sm">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-white pb-3 border-b border-slate-150 dark:border-slate-800 flex items-center gap-2">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-850 dark:text-white pb-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
                   <ShieldAlert className="w-4 h-4 text-indigo-500" />
                   Supervisor Registry Account
                 </h3>
@@ -1242,7 +1242,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-150 dark:border-slate-800">
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                   <div className="space-y-1">
                     <span className="text-[9px] uppercase font-bold text-slate-450 dark:text-slate-500 block">System Build version</span>
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-350 block font-mono">v1.0.2-prod-release</span>
@@ -1263,7 +1263,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-xl w-full flex flex-col shadow-2xl overflow-hidden animate-fade-in">
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-slate-150 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
+          <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60">
             <div className="flex items-center gap-2">
               <KeyRound className="w-5 h-5 text-indigo-500" />
               <div>
@@ -1288,15 +1288,15 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
             
             {/* License Info */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-850">
+              <div className="bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800">
                 <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">License Key</span>
                 <span className="text-[11px] font-mono font-black text-indigo-600 dark:text-indigo-400 select-all tracking-wider">{selectedLicenseForCreds.id}</span>
               </div>
-              <div className="bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-850">
+              <div className="bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800">
                 <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Max Students</span>
                 <span className="text-[11px] font-mono font-black text-slate-800 dark:text-white">{selectedLicenseForCreds.maxSeats === 999 ? '∞ Unlimited' : `${selectedLicenseForCreds.maxSeats} students`}</span>
               </div>
-              <div className="bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-850">
+              <div className="bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800">
                 <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Valid Until</span>
                 <span className="text-[11px] font-mono font-black text-slate-800 dark:text-white">{selectedLicenseForCreds.endDate}</span>
               </div>
@@ -1335,7 +1335,7 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
           </div>
 
           {/* Footer */}
-          <div className="p-4 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-150 dark:border-slate-800 flex justify-end">
+          <div className="p-4 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800 flex justify-end">
             <button
               onClick={() => setSelectedLicenseForCreds(null)}
               className="px-5 py-2 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 text-slate-800 dark:text-white text-xs font-bold rounded-lg border-none cursor-pointer"
