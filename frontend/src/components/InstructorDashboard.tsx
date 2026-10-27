@@ -986,23 +986,23 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
               {/* Lobby setup (if no room joined, or room is waiting) */}
               {!room ? (
                 <section className="bcard space-y-4">
-                  <h2 className="font-sans font-black text-xs uppercase tracking-wider text-muffin-brown dark:text-muffin-cream border-b border-muffin-brown/10 pb-2 flex items-center gap-1.5">
-                    <Landmark className="w-4 h-4 text-muffin-gold" />
+                  <h2 className="font-sans font-black text-sm uppercase tracking-wider text-slate-900 dark:text-white border-b border-stone-200 dark:border-stone-800 pb-2.5 flex items-center gap-2">
+                    <Landmark className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     <span>Lobby Room Creator</span>
                   </h2>
                   <div className="space-y-4 font-semibold text-xs text-left">
-                    <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 block">1. Session Title / Section Name</label>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-mono font-black text-slate-700 dark:text-slate-300 block tracking-wider">1. Session Title / Section Name</label>
                       <input
                         type="text"
                         value={roomName}
                         onChange={e => setRoomName(e.target.value)}
                         placeholder="e.g. MBA Section 102 Assembly"
-                        className="w-full bg-white dark:bg-zinc-900 border border-muffin-brown/20 p-2.5 font-mono text-xs rounded outline-none focus:border-muffin-gold text-dynamic-text"
+                        className="w-full bg-white dark:bg-zinc-900 border-2 border-stone-300 dark:border-stone-700 p-2.5 font-mono font-bold text-xs rounded-xl outline-none focus:border-amber-500 text-slate-900 dark:text-white placeholder-slate-400 shadow-2xs"
                       />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] uppercase text-gray-500 block">2. Select Scenario Calibrator</label>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-mono font-black text-slate-700 dark:text-slate-300 block tracking-wider">2. Select Scenario Calibrator</label>
                       <select
                         value={selectedScenarioId}
                         onChange={e => {
@@ -1022,7 +1022,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                             setRoomMaxDays(sc.maxDays);
                           }
                         }}
-                        className="w-full bg-white dark:bg-zinc-900 border border-muffin-brown/20 p-2.5 font-mono text-xs rounded outline-none focus:border-muffin-gold text-dynamic-text"
+                        className="w-full bg-white dark:bg-zinc-900 border-2 border-stone-300 dark:border-stone-700 p-2.5 font-mono font-bold text-xs rounded-xl outline-none focus:border-amber-500 text-slate-900 dark:text-white shadow-2xs"
                       >
                         <option value="">-- Select Scenario Calibrator --</option>
                         <optgroup label="Standard Presets">
@@ -1799,36 +1799,55 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       {uniqueRooms.map(r => {
                         const scenarioName = r.scenarioConfig?.name || scenarios.find(s => s.id === r.scenarioId)?.name || (r.difficulty ? `${r.difficulty.charAt(0).toUpperCase() + r.difficulty.slice(1)} Operations` : 'Custom Operations');
                         return (
-                          <div key={r.id} className="border border-muffin-brown/15 p-4 rounded-xl bg-zinc-950/5 dark:bg-white/5 flex flex-col justify-between space-y-3">
-                            <div className="text-left space-y-1">
-                              <div className="flex justify-between items-start">
-                                <h3 className="font-sans font-black text-sm text-dynamic-text truncate uppercase">{r.name}</h3>
-                                <span className={`px-1.5 py-0.5 rounded text-[8px] font-mono font-bold uppercase ${
-                                  r.difficulty === 'beginner' ? 'bg-green-150 text-green-700 border border-green-300' :
-                                  r.difficulty === 'intermediate' ? 'bg-orange-150 text-orange-700 border border-orange-300' :
-                                  'bg-red-150 text-red-700 border border-red-300'
+                          <div key={r.id} className="border-2 border-stone-200 dark:border-stone-800 p-4.5 rounded-xl bg-white dark:bg-zinc-900 shadow-sm flex flex-col justify-between space-y-3.5 hover:border-amber-500/60 transition-all">
+                            <div className="text-left space-y-2">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-sans font-black text-base text-slate-900 dark:text-white truncate uppercase">{r.name}</h3>
+                                <span className={`px-2 py-0.5 rounded-md text-[9px] font-mono font-black uppercase tracking-wider border shadow-2xs ${
+                                  r.difficulty === 'beginner' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700' :
+                                  r.difficulty === 'intermediate' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300 dark:border-amber-700' :
+                                  'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300 dark:border-rose-700'
                                 }`}>
                                   {r.difficulty}
                                 </span>
                               </div>
-                              <div className="font-mono text-[10px] text-gray-500 space-y-0.5">
-                                <div>Scenario: <span className="font-bold text-dynamic-text">{scenarioName}</span></div>
-                                <div>Day: <span className="font-bold text-dynamic-text">{r.currentDay} / {r.maxDays}</span></div>
-                                <div>Tick speed: <span className="font-bold text-dynamic-text">{r.tickRate}s/day</span></div>
-                                <div>Status: <span className="font-bold text-emerald-600 uppercase">{r.status}</span></div>
+                              <div className="font-mono text-[11px] space-y-1.5 bg-stone-50 dark:bg-zinc-950/60 p-3 rounded-lg border border-stone-200 dark:border-zinc-800">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-slate-600 dark:text-slate-400 font-bold">Scenario:</span>
+                                  <span className="font-black text-slate-900 dark:text-white truncate max-w-[200px]">{scenarioName}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-slate-600 dark:text-slate-400 font-bold">Simulated Day:</span>
+                                  <span className="font-black text-indigo-700 dark:text-indigo-400">{r.currentDay} / {r.maxDays}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-slate-600 dark:text-slate-400 font-bold">Tick Speed:</span>
+                                  <span className="font-black text-slate-800 dark:text-slate-200">{r.tickRate}s / day</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-1 border-t border-stone-200 dark:border-zinc-800">
+                                  <span className="text-slate-600 dark:text-slate-400 font-bold">Status:</span>
+                                  <span className={`font-mono font-black text-[10px] uppercase px-2 py-0.5 rounded border ${
+                                    r.status === 'active' ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700' :
+                                    r.status === 'paused' ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700' :
+                                    'bg-slate-200 text-slate-800 border-slate-300 dark:bg-zinc-800 dark:text-slate-300 dark:border-zinc-700'
+                                  }`}>
+                                    {r.status === 'finished' ? "🏁 FINISHED" : r.status === 'active' ? "● ACTIVE" : "⏸️ PAUSED"}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                            <div className="flex gap-2 justify-end pt-2 border-t border-muffin-brown/10">
+                            <div className="flex gap-2 justify-end pt-2 border-t border-stone-200 dark:border-stone-800">
                               <button
                                 onClick={() => { playTone(587.33, 'triangle', 0.1); joinRoom(r.code); }}
-                                className="px-3 py-1 bg-emerald-650 hover:bg-emerald-700 text-white rounded-lg text-[9px] font-black uppercase inline-flex items-center gap-1 cursor-pointer transition-all active:scale-95 shadow-sm"
+                                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-black uppercase inline-flex items-center gap-1.5 cursor-pointer transition-all active:scale-95 shadow-sm"
+                                title={`Enter and monitor session room ${r.code}`}
                               >
-                                <Eye className="w-3 h-3" />
+                                <Eye className="w-3.5 h-3.5" />
                                 <span>Monitor Room [{r.code}]</span>
                               </button>
                               <button
                                 onClick={() => { playTone(220, 'sawtooth', 0.1); deleteRoom(r.id); }}
-                                className="p-1 bg-red-500/5 text-red-600 dark:text-red-400 hover:bg-red-600 hover:text-white border border-red-500/10 rounded-lg cursor-pointer"
+                                className="p-2 bg-red-50 hover:bg-red-600 hover:text-white dark:bg-red-950/40 text-red-600 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg cursor-pointer transition-colors shadow-2xs"
                                 title="Delete Session"
                               >
                                 <Trash className="w-3.5 h-3.5" />
@@ -2519,7 +2538,7 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                     <div className="space-y-1 max-h-36 overflow-y-auto custom-scroll">
                       {scBreakingPoints.map((bp, bpidx) => (
                         <div key={bpidx} className="flex justify-between items-center bg-white border border-muffin-brown/15 p-2 text-xs rounded-lg font-mono font-bold">
-                          <span>Day <span className="font-black text-slate-800">{bp.day}</span> → Demand Volume <span className="font-black text-emerald-650">{bp.demand} Muffins</span></span>
+                          <span>Day <span className="font-black text-slate-800">{bp.day}</span> → Demand Volume <span className="font-black text-emerald-600 dark:text-emerald-400 font-bold">{bp.demand} Muffins</span></span>
                           <button
                             type="button"
                             onClick={() => setScBreakingPoints(scBreakingPoints.filter((_, idx) => idx !== bpidx))}
