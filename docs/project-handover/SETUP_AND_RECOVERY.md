@@ -4,17 +4,23 @@ Follow this guide to restore and run the Muffin Factory Game on a freshly format
 
 ---
 
-## 1. Prerequisites Installation (macOS M2 / Homebrew)
+## 1. Prerequisites Installation (macOS Apple Silicon / Homebrew)
 
 Open Terminal and verify/install:
 ```bash
-# 1. Install Node.js (Version 20 LTS recommended)
-node -v   # Should be >= 20.0.0
-# If not installed or older:
-brew install node@20
+# 1. Verify Node.js (Version 20+ LTS recommended)
+export PATH="/Users/shivamrai/.local/bin:$PATH"
+node -v   # Verified: v22.12.0
+npm -v    # Verified: 10.9.0
 
 # 2. Verify Git
 git --version
+```
+
+If Node is not in your default `$PATH`, add it to your `~/.zshrc`:
+```bash
+echo 'export PATH="/Users/shivamrai/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
 ```
 
 ---
@@ -32,18 +38,10 @@ cd muffin-factory-game
 ```bash
 cd backend
 
-# Install dependencies
+# Install dependencies (automatically runs build via postinstall)
 npm install
 
-# (Optional) Setup environment variables
-cp .env.example .env 2>/dev/null || cat << 'EOF' > .env
-PORT=5001
-NODE_ENV=development
-JWT_SECRET=muffin_secret_key_development_only_123
-# DATABASE_URL=postgresql://user:password@localhost:5432/muffindb  # (Optional: fallback uses in-memory)
-EOF
-
-# Run test suite to verify simulation math
+# Run test suite to verify 100% deterministic simulation math
 npm test
 
 # Build backend TypeScript
@@ -65,12 +63,7 @@ cd muffin-factory-game/frontend
 # Install dependencies
 npm install
 
-# (Optional) Verify or set local API target
-cat << 'EOF' > .env.development
-VITE_API_URL=http://localhost:5001
-EOF
-
-# Build frontend to verify bundles
+# Build frontend to verify production bundle compilation
 npm run build
 
 # Start frontend development server
@@ -80,14 +73,36 @@ The frontend starts at `http://localhost:3000`.
 
 ---
 
-## 5. Environment Variables Reference
+## 5. One-Click Startup Script
+
+For fast local development on macOS:
+```bash
+# From the repository root:
+./START_SERVERS.sh
+```
+This script clears ports `3000` and `5001`, launches the backend in one Terminal tab, launches the frontend in another, and displays direct URLs to all dashboards.
+
+---
+
+## 6. Access Points & Seed Credentials
+
+| Portal | URL | Default Credentials |
+| :--- | :--- | :--- |
+| **Landing Page** | `http://localhost:3000` | Team name + Room code |
+| **Instructor Dashboard** | `http://localhost:3000/instructor` | `instructor@factory.com` / `muffin123` |
+| **Super Admin Portal** | `http://localhost:3000/saas-admin` | `aryajain1906@gmail.com` / `@Aryajain19` |
+| **Backend Health Check** | `http://localhost:5001/health` | Public JSON check |
+
+---
+
+## 7. Environment Variables Reference
 
 ### Backend (`backend/.env`)
-- `PORT`: Server port (default: `5001`, Render assigns automatically in production).
+- `PORT`: Server port (default: `5001`, assigned by hosting provider in production).
 - `NODE_ENV`: `development` | `production`.
-- `JWT_SECRET`: Secret key for signing instructor and operator auth tokens.
-- `DATABASE_URL`: (Optional) PostgreSQL connection URI. If omitted, uses in-memory database.
-- `FRONTEND_URL`: Primary frontend domain for strict CORS matching.
+- `JWT_SECRET`: Secret key for signing tokens (defaults to development key if omitted).
+- `DATABASE_URL`: (Optional) PostgreSQL connection URI. If omitted, uses local JSON database fallback (`backend/data/db.json`).
+- `FRONTEND_URL`: Primary frontend domain for CORS matching.
 
 ### Frontend (`frontend/.env.production`)
-- `VITE_API_URL`: Points to the production backend server (`https://muffin-factory-game.onrender.com`).
+- `VITE_API_URL`: Points to the production backend server (`https://muffin-factory-game.onrender.com`). In local development, the client automatically defaults to `http://localhost:5001` when hosted on `localhost`.
