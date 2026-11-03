@@ -2234,18 +2234,6 @@ export default function InstructorDashboard({ navigate }: { navigate?: (to: stri
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Difficulty Rating <span className="text-red-500">*</span></label>
-                      <select
-                        value={scDifficulty}
-                        onChange={e => setScDifficulty(e.target.value as any)}
-                        className="w-full p-2 bg-white border border-muffin-brown/20 rounded font-mono text-xs text-[#1c1917]"
-                      >
-                        <option value="beginner">Beginner (Stable Operations / No Breakdowns)</option>
-                        <option value="intermediate">Intermediate (Seasonal Demand / Contracts)</option>
-                        <option value="advanced">Advanced (Volatile Hybrid / High Crisis)</option>
-                      </select>
-                    </div>
-                    <div className="space-y-1">
                       <label className="text-[10px] uppercase text-[#1c1917] font-extrabold block">Number of Simulated Days <span className="text-red-500">*</span></label>
                       <input
                         type="number"
