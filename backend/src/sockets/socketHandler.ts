@@ -760,6 +760,15 @@ export function registerSocketHandler(io: Server) {
 
     // 4. DISCONNECT
     socket.on('disconnect', async () => {
+      if (currentUser && currentUser.role === 'instructor') {
+        const loginEventId = (currentUser as any).loginEventId;
+        if (loginEventId) {
+          db.recordInstructorLogout(loginEventId).catch(() => {});
+        } else {
+          db.recordInstructorLogoutByUserId(currentUser.id, currentUser.email).catch(() => {});
+        }
+      }
+
       if (currentUser && joinedTeamId && joinedRoomId) {
         console.log(`User ${currentUser.name} disconnected from team ${joinedTeamId}`);
         // Handle controller handover if the controller disconnected

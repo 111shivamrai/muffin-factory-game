@@ -84,70 +84,40 @@ router.post('/login', async (req, res) => {
 
   try {
     let user = await db.getUserByEmail(cleanEmail);
+    
+    // Find institutional license associated with this email
+    let instructorLicense = await db.getLicenseByInstructorEmail(cleanEmail);
+    if (!instructorLicense) {
+      const allLics = await db.getLicenses();
+      instructorLicense = allLics.find(l => (l.instructorEmail || '').trim().toLowerCase() === cleanEmail && l.instructorPassword?.trim() === cleanPassword) ||
+                          allLics.find(l => (l.instructorEmail || '').trim().toLowerCase() === cleanEmail) || null;
+    }
+
     if (!user) {
       // 1. Check if institutional license exists with matching instructor password
-      const license = await db.getLicenseByInstructorEmail(cleanEmail);
-      if (license && license.instructorPassword && license.instructorPassword.trim() === cleanPassword) {
+      if (instructorLicense && instructorLicense.instructorPassword && instructorLicense.instructorPassword.trim() === cleanPassword) {
         const passwordHash = await bcrypt.hash(cleanPassword, 10);
         user = {
           id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-          name: `Instructor (${license.customerName || 'Faculty'})`,
+          name: `Instructor (${instructorLicense.customerName || 'Faculty'})`,
           email: cleanEmail,
           role: 'instructor',
           createdAt: new Date(),
           passwordHash
         };
         await db.saveUserRaw(user);
-      } else if (cleanEmail.includes('shivam') || cleanEmail === '3shivamrai@gmail.com' || cleanEmail === '1shivam@gmail.com') {
-        const passwordHash = await bcrypt.hash(cleanPassword, 10);
-        user = {
-          id: `user_shivam_${Date.now()}`,
-          name: 'Shivam Rai',
-          email: cleanEmail,
-          role: 'instructor',
-          createdAt: new Date(),
-          passwordHash
-        };
-        await db.saveUserRaw(user);
-
-        // Ensure active license exists so room creation is unlocked
-        const today = new Date();
-        const oneYear = new Date(today.getTime() + 365 * 24 * 60 * 60 * 1000);
-        await db.saveLicense({
-          id: 'LIC-SHIVAM-2026',
-          customerName: 'Shivam Rai Academic Console',
-          email: cleanEmail,
-          maxSeats: 100,
-          validityDays: 365,
-          status: 'active',
-          createdAt: today.toISOString(),
-          expiresAt: oneYear.toISOString(),
-          startDate: today.toISOString().split('T')[0],
-          endDate: oneYear.toISOString().split('T')[0],
-          instructorEmail: cleanEmail,
-          instructorPassword: cleanPassword
-        });
       } else {
         res.status(401).json({ error: 'Invalid email or password' });
         return;
       }
     } else {
       let isValid = await bcrypt.compare(cleanPassword, user.passwordHash);
-      if (!isValid) {
-        const license = await db.getLicenseByInstructorEmail(cleanEmail);
-        if (license && license.instructorPassword && license.instructorPassword.trim() === cleanPassword) {
-          const passwordHash = await bcrypt.hash(cleanPassword, 10);
-          user.passwordHash = passwordHash;
-          user.role = 'instructor';
-          await db.saveUserRaw(user);
-          isValid = true;
-        } else if (cleanEmail.includes('shivam') || cleanEmail === '3shivamrai@gmail.com' || cleanEmail === '1shivam@gmail.com') {
-          const passwordHash = await bcrypt.hash(cleanPassword, 10);
-          user.passwordHash = passwordHash;
-          user.role = 'instructor';
-          await db.saveUserRaw(user);
-          isValid = true;
-        }
+      if (!isValid && instructorLicense && instructorLicense.instructorPassword && instructorLicense.instructorPassword.trim() === cleanPassword) {
+        const passwordHash = await bcrypt.hash(cleanPassword, 10);
+        user.passwordHash = passwordHash;
+        user.role = 'instructor';
+        await db.saveUserRaw(user);
+        isValid = true;
       }
       if (!isValid) {
         res.status(401).json({ error: 'Invalid email or password' });
@@ -156,9 +126,10 @@ router.post('/login', async (req, res) => {
     }
 
     // Enforce license validity if instructor
-    let instructorLicense = null;
     if (user.role === 'instructor') {
-      instructorLicense = await db.getLicenseByInstructorEmail(cleanEmail);
+      if (!instructorLicense) {
+        instructorLicense = await db.getLicenseByInstructorEmail(cleanEmail);
+      }
       if (instructorLicense && db.isLicenseExpired(instructorLicense)) {
         res.status(403).json({ error: 'Your institution license has expired. Access is disabled. Please contact your administrator.' });
         return;
@@ -169,14 +140,15 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // Record login event for instructors associated with a license
+    // Record login event for instructors
     let loginEventId = undefined;
-    if (user.role === 'instructor' && instructorLicense) {
+    if (user.role === 'instructor') {
       try {
         loginEventId = `login_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+        const assignedLicenseId = instructorLicense ? instructorLicense.id : 'LIC-STANDALONE';
         await db.recordInstructorLogin({
           id: loginEventId,
-          licenseId: instructorLicense.id,
+          licenseId: assignedLicenseId,
           instructorId: user.id,
           instructorEmail: user.email,
           instructorName: user.name,
@@ -190,13 +162,27 @@ router.post('/login', async (req, res) => {
       }
     }
 
-    // Sign JWT
-    const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role, loginEventId }, JWT_SECRET, { expiresIn: '365d' });
+    // Sign JWT with user info and license tracking metadata
+    const token = jwt.sign({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      loginEventId,
+      licenseId: instructorLicense?.id
+    }, JWT_SECRET, { expiresIn: '365d' });
 
     res.json({
       token,
       loginEventId,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        loginEventId,
+        licenseId: instructorLicense?.id
+      }
     });
   } catch (err) {
     console.error('Error logging in user:', err);
@@ -306,13 +292,16 @@ router.get('/me', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
 
 // Logout endpoint to record session duration accurately
 router.post('/logout', authenticateJWT, async (req: AuthenticatedRequest, res: Response) => {
-  const { loginEventId } = req.body;
-  if (loginEventId) {
-    try {
+  const loginEventId = req.body.loginEventId || (req.user as any)?.loginEventId;
+  const user = req.user;
+  try {
+    if (loginEventId) {
       await db.recordInstructorLogout(loginEventId);
-    } catch (err) {
-      console.error('Error recording logout event:', err);
+    } else if (user) {
+      await db.recordInstructorLogoutByUserId(user.id, user.email);
     }
+  } catch (err) {
+    console.error('Error recording logout event:', err);
   }
   res.json({ success: true });
 });

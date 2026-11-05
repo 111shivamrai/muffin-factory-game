@@ -6,6 +6,8 @@ export interface User {
   email: string;
   role: UserRole;
   createdAt: Date;
+  loginEventId?: string;
+  licenseId?: string;
 }
 
 export type SimulationStatus = 'configuring' | 'active' | 'paused' | 'finished';
@@ -215,6 +217,9 @@ export interface Room {
   pausedAt?: string;
   totalPausedMs?: number;
   actualDurationSeconds?: number;
+  licenseId?: string;
+  creatorEmail?: string;
+  loginEventId?: string;
 }
 
 export interface InstructorLoginEvent {
@@ -249,6 +254,19 @@ export interface LicenseActivitySummary {
       }[];
     }[];
   })[];
+  allSessions?: {
+    room: Room;
+    teamCount: number;
+    participantCount: number;
+    actualDurationMinutes: number;
+    teams: {
+      id: string;
+      name: string;
+      status: string;
+      cash: number;
+      members: { userId: string; userName: string; joinedAt?: string }[];
+    }[];
+  }[];
   totals: {
     totalLogins: number;
     totalVisits: number;

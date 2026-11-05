@@ -189,6 +189,35 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
     return false;
   };
 
+  const formatDateTime12h = (dateStr?: string | Date | null): string => {
+    if (!dateStr) return 'N/A';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  };
+
+  const formatDate12h = (dateStr?: string | Date | null): string => {
+    if (!dateStr) return 'N/A';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   // Audit Log helper for real events
   const addAuditLog = (severity: 'info' | 'warning' | 'error', component: string, message: string) => {
     const newEntry = {
@@ -1071,13 +1100,13 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                                   {l.instructorEmail || 'N/A'}
                                 </td>
                                 <td className="p-3 font-mono text-[11px]">
-                                  <div>{new Date(l.createdAt).toLocaleDateString()}</div>
-                                  <div className="text-[9px] text-slate-400 font-normal">{new Date(l.createdAt).toLocaleTimeString()}</div>
+                                  <div>{formatDate12h(l.createdAt)}</div>
+                                  <div className="text-[9px] text-slate-400 font-normal">{formatDateTime12h(l.createdAt)}</div>
                                 </td>
                                 <td className="p-3 font-mono text-[11px]">
                                   <div>{l.validityDays ? `${l.validityDays} Days` : 'Standard'} ({l.maxSeats === 999 ? '∞ Seats' : `${l.maxSeats} Seats`})</div>
                                   <div className="text-[9px] text-slate-400 font-normal">
-                                    Expires: {l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : (l.endDate || 'Active')}
+                                    Expires: {l.expiresAt ? formatDateTime12h(l.expiresAt) : (l.endDate || 'Active')}
                                   </div>
                                 </td>
                                 <td className="p-3 text-center">
@@ -1130,386 +1159,302 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                                       ) : (
                                         (() => {
                                           const act = licenseActivityData[l.id];
-                                          const stats = act?.totals || {
-                                            totalLogins: 0,
-                                            totalVisits: 0,
-                                            totalRoomsGenerated: 0,
-                                            totalUniqueTeams: 0,
-                                            totalUniqueParticipants: 0,
-                                            totalRuntimeMinutes: 0,
-                                            totalCompletedSessions: 0,
-                                            totalActiveSessions: 0
-                                          };
                                           const visits = act?.instructorLogins || [];
+                                          const allLicenseSessions = act?.allSessions || visits.flatMap((v: any) => v.rooms || []);
 
                                           return (
-                                            <>
-                                              {/* 1. License Creation & Lifecycle Overview */}
-                                              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs">
-                                                <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-slate-150 dark:border-slate-800">
-                                                  <Building2 className="w-4 h-4 text-indigo-500" />
-                                                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
-                                                    License Creation & Lifecycle Overview
-                                                  </h4>
-                                                  <span className="ml-auto text-[9px] font-mono text-slate-400">
-                                                    ID: <strong className="text-indigo-600 dark:text-indigo-400 select-all">{l.id}</strong>
+                                            <div className="space-y-4">
+                                              {/* Compact Header Summary Banner */}
+                                              <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-xs text-xs">
+                                                <div className="flex items-center gap-2">
+                                                  <Building2 className="w-4 h-4 text-indigo-500 shrink-0" />
+                                                  <span className="font-extrabold text-slate-900 dark:text-white">{l.customerName}</span>
+                                                  <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50 dark:bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-900 text-[10px] select-all">
+                                                    {l.id}
                                                   </span>
                                                 </div>
-
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+                                                <div className="flex flex-wrap items-center gap-4 text-slate-600 dark:text-slate-300 font-mono text-[11px]">
                                                   <div>
-                                                    <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Customer Name</span>
-                                                    <span className="font-extrabold text-slate-900 dark:text-white truncate block">{l.customerName}</span>
+                                                    <span className="text-slate-400 font-sans text-[10px] uppercase font-bold mr-1">Instructor:</span>
+                                                    <span className="text-slate-900 dark:text-white select-all font-semibold">{l.instructorEmail || 'N/A'}</span>
                                                   </div>
                                                   <div>
-                                                    <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Instructor Email / Username</span>
-                                                    <span className="font-mono text-slate-700 dark:text-slate-300 truncate block select-all">{l.instructorEmail || 'N/A'}</span>
+                                                    <span className="text-slate-400 font-sans text-[10px] uppercase font-bold mr-1">Created:</span>
+                                                    <span>{formatDateTime12h(l.createdAt)}</span>
                                                   </div>
                                                   <div>
-                                                    <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Admin-Created Timestamp</span>
-                                                    <span className="font-mono text-slate-700 dark:text-slate-300 block">{l.createdAt ? new Date(l.createdAt).toLocaleString() : 'N/A'}</span>
+                                                    <span className="text-slate-400 font-sans text-[10px] uppercase font-bold mr-1">Expires:</span>
+                                                    <span>{l.expiresAt ? formatDateTime12h(l.expiresAt) : (l.endDate || 'N/A')}</span>
                                                   </div>
                                                   <div>
-                                                    <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Expiration Timestamp</span>
-                                                    <span className="font-mono text-slate-700 dark:text-slate-300 block">{l.expiresAt ? new Date(l.expiresAt).toLocaleString() : (l.endDate || 'N/A')}</span>
-                                                  </div>
-                                                  <div>
-                                                    <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Validity Duration</span>
-                                                    <span className="font-mono font-bold text-slate-700 dark:text-slate-300 block">{l.validityDays ? `${l.validityDays} Days` : 'Standard'} ({l.maxSeats === 999 ? '∞ Unlimited' : `${l.maxSeats} Seats`})</span>
-                                                  </div>
-                                                  <div>
-                                                    <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Current Status</span>
-                                                    <span className="font-mono font-bold block text-slate-700 dark:text-slate-300">
-                                                      {isDeleted ? 'Deleted from Licenses (Past)' : (isExpired ? 'Expired (Past)' : 'Valid & Active (Existing)')}
+                                                    <span className="text-slate-400 font-sans text-[10px] uppercase font-bold mr-1">Status:</span>
+                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${
+                                                      isDeleted
+                                                        ? 'bg-rose-50 border-rose-300 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800'
+                                                        : isExpired
+                                                          ? 'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'
+                                                          : 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20'
+                                                    }`}>
+                                                      {isDeleted ? 'Deleted (Past)' : (isExpired ? 'Expired (Past)' : 'Active (Existing)')}
                                                     </span>
                                                   </div>
                                                 </div>
                                               </div>
 
-                                              {/* 2. Aggregate Statistics */}
+                                              {/* Table 1: Instructor Login History */}
                                               <div className="space-y-2">
-                                                <div className="flex items-center gap-2">
-                                                  <Activity className="w-4 h-4 text-emerald-500" />
-                                                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
-                                                    Aggregate Usage Statistics
-                                                  </h4>
-                                                </div>
-
-                                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-                                                    <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
-                                                      <span>Total Logins</span>
-                                                      <KeyRound className="w-3 h-3 text-indigo-500" />
-                                                    </div>
-                                                    <div className="text-lg font-black text-slate-900 dark:text-white font-mono mt-1">
-                                                      {stats.totalLogins}
-                                                    </div>
-                                                  </div>
-                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-                                                    <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
-                                                      <span>Distinct Visits</span>
-                                                      <History className="w-3 h-3 text-cyan-500" />
-                                                    </div>
-                                                    <div className="text-lg font-black text-slate-900 dark:text-white font-mono mt-1">
-                                                      {stats.totalVisits}
-                                                    </div>
-                                                  </div>
-                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-                                                    <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
-                                                      <span>Rooms Generated</span>
-                                                      <Gamepad2 className="w-3 h-3 text-violet-500" />
-                                                    </div>
-                                                    <div className="text-lg font-black text-slate-900 dark:text-white font-mono mt-1">
-                                                      {stats.totalRoomsGenerated}
-                                                    </div>
-                                                  </div>
-                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-                                                    <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
-                                                      <span>Unique Teams</span>
-                                                      <Users className="w-3 h-3 text-blue-500" />
-                                                    </div>
-                                                    <div className="text-lg font-black text-slate-900 dark:text-white font-mono mt-1">
-                                                      {stats.totalUniqueTeams}
-                                                    </div>
-                                                  </div>
-                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-                                                    <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
-                                                      <span>Unique Students</span>
-                                                      <UserCheck className="w-3 h-3 text-emerald-500" />
-                                                    </div>
-                                                    <div className="text-lg font-black text-slate-900 dark:text-white font-mono mt-1">
-                                                      {stats.totalUniqueParticipants}
-                                                    </div>
-                                                  </div>
-                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-                                                    <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
-                                                      <span>Actual Runtime</span>
-                                                      <Timer className="w-3 h-3 text-amber-500" />
-                                                    </div>
-                                                    <div className="text-lg font-black text-amber-600 dark:text-amber-400 font-mono mt-1">
-                                                      {stats.totalRuntimeMinutes} <span className="text-[10px] font-bold font-sans">mins</span>
-                                                    </div>
-                                                  </div>
-                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-                                                    <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
-                                                      <span>Completed Sessions</span>
-                                                      <CheckCircle2 className="w-3 h-3 text-teal-500" />
-                                                    </div>
-                                                    <div className="text-lg font-black text-teal-600 dark:text-teal-400 font-mono mt-1">
-                                                      {stats.totalCompletedSessions}
-                                                    </div>
-                                                  </div>
-                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
-                                                    <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
-                                                      <span>Active Sessions</span>
-                                                      <Flame className="w-3 h-3 text-orange-500" />
-                                                    </div>
-                                                    <div className="text-lg font-black text-orange-600 dark:text-orange-400 font-mono mt-1">
-                                                      {stats.totalActiveSessions}
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-
-                                              {/* 3. Instructor Login History Table */}
-                                              <div className="space-y-2.5">
                                                 <div className="flex items-center gap-2">
                                                   <History className="w-4 h-4 text-indigo-500" />
                                                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
-                                                    Instructor Login History
+                                                    Table 1: Instructor Login History
                                                   </h4>
                                                 </div>
 
                                                 {visits.length === 0 ? (
-                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 text-center">
-                                                    <Clock className="w-6 h-6 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
-                                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400">No instructor login visits recorded yet for this license.</p>
+                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-center text-xs font-medium text-slate-400">
+                                                    No instructor login visits recorded yet for this license.
                                                   </div>
                                                 ) : (
                                                   <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                                                    <table className="w-full text-left border-collapse font-sans text-xs">
+                                                    <table className="w-full text-left border-collapse text-xs">
                                                       <thead>
-                                                        <tr className="bg-slate-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 font-black uppercase border-b border-slate-200 dark:border-slate-800">
-                                                          <th className="p-3 w-16 text-center">Login #</th>
-                                                          <th className="p-3">Login Date</th>
-                                                          <th className="p-3">Login Time</th>
-                                                          <th className="p-3">Logout Time</th>
+                                                        <tr className="bg-slate-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 font-black uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                                                          <th className="p-3">Instructor</th>
+                                                          <th className="p-3">Login Date & Time</th>
                                                           <th className="p-3">Login Duration</th>
-                                                          <th className="p-3 text-center">Rooms Created</th>
-                                                          <th className="p-3 text-right pr-4">Sessions</th>
+                                                          <th className="p-3 text-right pr-4">Games / Sessions Played</th>
                                                         </tr>
                                                       </thead>
-                                                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-bold text-slate-700 dark:text-slate-300">
+                                                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-700 dark:text-slate-300">
                                                         {visits.map((visit: any, vIdx: number) => {
-                                                          const isLoginExp = !!expandedLoginIds[visit.id || `visit_${vIdx}`];
-                                                          const rooms = visit.rooms || [];
+                                                          const loginRooms = visit.rooms || [];
+                                                          const isOngoing = !visit.logoutAt;
+                                                          let durationText = '';
+                                                          if (isOngoing) {
+                                                            durationText = 'Active Session (Ongoing)';
+                                                          } else if (visit.durationSeconds) {
+                                                            const mins = Math.floor(visit.durationSeconds / 60);
+                                                            const secs = visit.durationSeconds % 60;
+                                                            if (mins >= 60) {
+                                                              const hrs = Math.floor(mins / 60);
+                                                              const remMins = mins % 60;
+                                                              durationText = `${hrs} hr ${remMins} min${remMins === 1 ? '' : 's'}`;
+                                                            } else if (mins > 0) {
+                                                              durationText = `${mins} min${mins === 1 ? '' : 's'}`;
+                                                            } else {
+                                                              durationText = `${secs} sec${secs === 1 ? '' : 's'}`;
+                                                            }
+                                                          } else {
+                                                            durationText = '< 1 min';
+                                                          }
 
                                                           return (
-                                                            <React.Fragment key={visit.id || vIdx}>
-                                                              <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
-                                                                <td className="p-3 text-center font-mono text-indigo-600 dark:text-indigo-400">
-                                                                  #{visits.length - vIdx}
+                                                            <tr key={visit.id || vIdx} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
+                                                              <td className="p-3">
+                                                                <div className="font-bold text-slate-900 dark:text-white">{visit.instructorName || l.customerName}</div>
+                                                                <div className="text-[10px] font-mono text-slate-400 select-all">{visit.instructorEmail || l.instructorEmail}</div>
+                                                              </td>
+                                                              <td className="p-3 font-mono text-[11px]">
+                                                                {formatDateTime12h(visit.loginAt)}
+                                                              </td>
+                                                              <td className="p-3 font-mono text-[11px]">
+                                                                {isOngoing ? (
+                                                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                                    {durationText}
+                                                                  </span>
+                                                                ) : (
+                                                                  <span className="text-slate-700 dark:text-slate-300 font-bold">{durationText}</span>
+                                                                )}
+                                                              </td>
+                                                              <td className="p-3 text-right pr-4 font-mono">
+                                                                <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900">
+                                                                  {loginRooms.length} {loginRooms.length === 1 ? 'Game' : 'Games'}
+                                                                </span>
+                                                              </td>
+                                                            </tr>
+                                                          );
+                                                        })}
+                                                      </tbody>
+                                                    </table>
+                                                  </div>
+                                                )}
+                                              </div>
+
+                                              {/* Table 2: Game Sessions / Scenarios Created */}
+                                              <div className="space-y-2">
+                                                <div className="flex items-center gap-2">
+                                                  <Gamepad2 className="w-4 h-4 text-violet-500" />
+                                                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                                                    Table 2: Game Sessions / Scenarios Created
+                                                  </h4>
+                                                </div>
+
+                                                {allLicenseSessions.length === 0 ? (
+                                                  <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 text-center text-xs font-medium text-slate-400">
+                                                    No game sessions created yet under this license.
+                                                  </div>
+                                                ) : (
+                                                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                                                    <table className="w-full text-left border-collapse text-xs">
+                                                      <thead>
+                                                        <tr className="bg-slate-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 font-black uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
+                                                          <th className="p-3">Scenario Type</th>
+                                                          <th className="p-3">Scenario Name</th>
+                                                          <th className="p-3">Created Date & Time</th>
+                                                          <th className="p-3">Actual Game Duration</th>
+                                                          <th className="p-3">Status</th>
+                                                          <th className="p-3 text-right pr-4">Teams Joined</th>
+                                                        </tr>
+                                                      </thead>
+                                                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
+                                                        {allLicenseSessions.map((rInfo: any) => {
+                                                          const room = rInfo.room;
+                                                          const isTeamsExp = !!expandedRoomTeamIds[room.id];
+                                                          
+                                                          let scenarioType = 'Custom';
+                                                          if (room.scenarioConfig?.id === 'scenario_beginner_preset' || room.difficulty === 'beginner') {
+                                                            scenarioType = 'Beginner';
+                                                          } else if (room.scenarioConfig?.id === 'scenario_intermediate_preset' || room.difficulty === 'intermediate') {
+                                                            scenarioType = 'Intermediate';
+                                                          } else if (room.scenarioConfig?.id === 'scenario_advanced_preset' || room.difficulty === 'advanced') {
+                                                            scenarioType = 'Advanced';
+                                                          } else if (room.difficulty) {
+                                                            scenarioType = room.difficulty.charAt(0).toUpperCase() + room.difficulty.slice(1);
+                                                          }
+                                                          const scenarioName = room.scenarioConfig?.title || room.name;
+
+                                                          let durationDisplay = '';
+                                                          if (room.status === 'active') {
+                                                            durationDisplay = `${rInfo.actualDurationMinutes || 0} mins (Active / Running)`;
+                                                          } else if (room.status === 'finished') {
+                                                            durationDisplay = `${rInfo.actualDurationMinutes || 0} mins`;
+                                                          } else if (room.status === 'paused') {
+                                                            durationDisplay = `${rInfo.actualDurationMinutes || 0} mins (Paused)`;
+                                                          } else {
+                                                            durationDisplay = `${rInfo.actualDurationMinutes || 0} mins (Configuring)`;
+                                                          }
+
+                                                          return (
+                                                            <React.Fragment key={room.id}>
+                                                              <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all font-medium">
+                                                                <td className="p-3">
+                                                                  <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold border ${
+                                                                    scenarioType === 'Beginner' ? 'bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-800' :
+                                                                    scenarioType === 'Intermediate' ? 'bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-800' :
+                                                                    scenarioType === 'Advanced' ? 'bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 dark:border-rose-800' :
+                                                                    'bg-purple-50 border-purple-200 text-purple-600 dark:bg-purple-950/50 dark:text-purple-400 dark:border-purple-800'
+                                                                  }`}>
+                                                                    {scenarioType}
+                                                                  </span>
                                                                 </td>
-                                                                <td className="p-3 font-mono">
-                                                                  {new Date(visit.loginAt).toLocaleDateString()}
+                                                                <td className="p-3">
+                                                                  <div className="font-bold text-slate-900 dark:text-white">{scenarioName}</div>
+                                                                  <div className="text-[10px] font-mono text-indigo-500 font-bold select-all">Code: {room.code}</div>
                                                                 </td>
-                                                                <td className="p-3 font-mono">
-                                                                  {new Date(visit.loginAt).toLocaleTimeString()}
+                                                                <td className="p-3 font-mono text-[11px] text-slate-600 dark:text-slate-300">
+                                                                  {formatDateTime12h(room.createdAt)}
                                                                 </td>
-                                                                <td className="p-3 font-mono text-slate-500">
-                                                                  {visit.logoutAt ? new Date(visit.logoutAt).toLocaleTimeString() : 'Not recorded / Active'}
+                                                                <td className="p-3 font-mono text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                                                                  {durationDisplay}
                                                                 </td>
-                                                                <td className="p-3 font-mono">
-                                                                  {visit.durationSeconds ? `${Math.round(visit.durationSeconds / 60)} mins` : 'Ongoing'}
-                                                                </td>
-                                                                <td className="p-3 text-center font-mono">
-                                                                  <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800">
-                                                                    {rooms.length} {rooms.length === 1 ? 'Room' : 'Rooms'}
+                                                                <td className="p-3">
+                                                                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
+                                                                    room.status === 'active' ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                                                                    room.status === 'finished' ? 'bg-slate-100 border-slate-300 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' :
+                                                                    room.status === 'paused' ? 'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
+                                                                    'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                                                                  }`}>
+                                                                    {room.status === 'finished' ? 'Completed' : (room.status || 'Configuring')}
                                                                   </span>
                                                                 </td>
                                                                 <td className="p-3 text-right pr-4">
                                                                   <button
                                                                     type="button"
-                                                                    onClick={() => toggleLoginExpansion(visit.id || `visit_${vIdx}`)}
-                                                                    disabled={rooms.length === 0}
-                                                                    className={`px-2.5 py-1 rounded text-xs font-bold transition-all border cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed ${
-                                                                      isLoginExp 
-                                                                        ? 'bg-indigo-600 text-white border-indigo-600'
-                                                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+                                                                    onClick={() => toggleRoomTeamExpansion(room.id)}
+                                                                    className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all border cursor-pointer active:scale-95 flex items-center gap-1 ml-auto ${
+                                                                      isTeamsExp
+                                                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                                                                        : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/60'
                                                                     }`}
                                                                   >
-                                                                    <span>{isLoginExp ? 'Hide Sessions ▴' : 'View Sessions ▾'}</span>
+                                                                    <span>{rInfo.teamCount || 0} {rInfo.teamCount === 1 ? 'Team Joined' : 'Teams Joined'}</span>
+                                                                    {isTeamsExp ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                                                                   </button>
                                                                 </td>
                                                               </tr>
 
-                                                              {/* 4. Room / Session History Table under this login */}
-                                                              {isLoginExp && rooms.length > 0 && (
+                                                              {/* Table 3: Team Participation Table */}
+                                                              {isTeamsExp && (
                                                                 <tr>
-                                                                  <td colSpan={7} className="p-3 bg-slate-100/60 dark:bg-slate-950/80">
-                                                                    <div className="space-y-2 border-l-2 border-indigo-400 pl-3">
-                                                                      <div className="text-[11px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider">
-                                                                        Rooms & Game Sessions created during Visit #{visits.length - vIdx}
+                                                                  <td colSpan={6} className="p-3 bg-slate-50 dark:bg-slate-950/90 border-t border-b border-slate-200 dark:border-slate-800">
+                                                                    <div className="space-y-2 pl-3 border-l-2 border-emerald-500">
+                                                                      <div className="flex items-center justify-between">
+                                                                        <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider">
+                                                                          Table 3: Team Participation ({rInfo.teamCount} Teams, {rInfo.participantCount} Total Members)
+                                                                        </span>
                                                                       </div>
-                                                                      <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                                                                        <table className="w-full text-left border-collapse font-sans text-xs">
-                                                                          <thead>
-                                                                            <tr className="bg-slate-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] border-b border-slate-200 dark:border-slate-800">
-                                                                              <th className="p-2.5">Room Code</th>
-                                                                              <th className="p-2.5">Scenario Type</th>
-                                                                              <th className="p-2.5">Scenario Name</th>
-                                                                              <th className="p-2.5">Created Date</th>
-                                                                              <th className="p-2.5">Created Time</th>
-                                                                              <th className="p-2.5">Game Started</th>
-                                                                              <th className="p-2.5">Game Ended</th>
-                                                                              <th className="p-2.5">Actual Runtime</th>
-                                                                              <th className="p-2.5">Status</th>
-                                                                              <th className="p-2.5 text-right pr-3">Teams Joined</th>
-                                                                            </tr>
-                                                                          </thead>
-                                                                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                                                                            {rooms.map((rInfo: any) => {
-                                                                              const room = rInfo.room;
-                                                                              const isTeamsExp = !!expandedRoomTeamIds[room.id];
-                                                                              const scenarioType = room.difficulty 
-                                                                                ? (room.difficulty.charAt(0).toUpperCase() + room.difficulty.slice(1))
-                                                                                : (room.scenarioConfig?.id ? 'Custom' : 'Standard');
-                                                                              const scenarioName = room.scenarioConfig?.title || room.name;
+                                                                      {(!rInfo.teams || rInfo.teams.length === 0) ? (
+                                                                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-[11px] text-slate-400 italic">
+                                                                          No teams have joined this simulation room yet.
+                                                                        </div>
+                                                                      ) : (
+                                                                        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                                                                          <table className="w-full text-left border-collapse text-xs">
+                                                                            <thead>
+                                                                              <tr className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[9px] uppercase font-bold border-b border-slate-200 dark:border-slate-700">
+                                                                                <th className="p-2.5 w-10 text-center">#</th>
+                                                                                <th className="p-2.5">Team Name</th>
+                                                                                <th className="p-2.5">Members</th>
+                                                                                <th className="p-2.5 text-right pr-3">First Joined</th>
+                                                                              </tr>
+                                                                            </thead>
+                                                                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px] font-medium">
+                                                                              {rInfo.teams.map((t: any, tIdx: number) => {
+                                                                                const memberNames = t.members && t.members.length > 0 
+                                                                                  ? t.members.map((m: any) => m.userName).join(', ')
+                                                                                  : 'No members';
+                                                                                const firstJoinedTimestamp = t.members?.[0]?.joinedAt || room.startedAt || room.createdAt;
 
-                                                                              return (
-                                                                                <React.Fragment key={room.id}>
-                                                                                  <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20">
-                                                                                    <td className="p-2.5 font-mono font-black text-indigo-600 dark:text-indigo-400 select-all">
-                                                                                      {room.code}
-                                                                                    </td>
+                                                                                return (
+                                                                                  <tr key={t.id || tIdx} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20">
+                                                                                    <td className="p-2.5 text-center font-mono text-slate-400">{tIdx + 1}</td>
+                                                                                    <td className="p-2.5 font-bold text-slate-900 dark:text-white">{t.name}</td>
                                                                                     <td className="p-2.5">
-                                                                                      <span className="px-2 py-0.5 rounded text-[9px] uppercase font-bold bg-slate-100 dark:bg-slate-800">
-                                                                                        {scenarioType}
-                                                                                      </span>
-                                                                                    </td>
-                                                                                    <td className="p-2.5 font-bold text-slate-800 dark:text-white">
-                                                                                      {scenarioName}
-                                                                                    </td>
-                                                                                    <td className="p-2.5 font-mono text-slate-600 dark:text-slate-300">
-                                                                                      {new Date(room.createdAt).toLocaleDateString()}
-                                                                                    </td>
-                                                                                    <td className="p-2.5 font-mono text-slate-600 dark:text-slate-300">
-                                                                                      {new Date(room.createdAt).toLocaleTimeString()}
-                                                                                    </td>
-                                                                                    <td className="p-2.5 font-mono text-slate-500">
-                                                                                      {room.startedAt ? new Date(room.startedAt).toLocaleTimeString() : 'Not started'}
-                                                                                    </td>
-                                                                                    <td className="p-2.5 font-mono text-slate-500">
-                                                                                      {room.endedAt ? new Date(room.endedAt).toLocaleTimeString() : (room.status === 'active' ? 'Running' : 'N/A')}
-                                                                                    </td>
-                                                                                    <td className="p-2.5 font-mono font-bold text-amber-600 dark:text-amber-400">
-                                                                                      {rInfo.actualDurationMinutes} mins
-                                                                                    </td>
-                                                                                    <td className="p-2.5">
-                                                                                      <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
-                                                                                        room.status === 'active' ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' :
-                                                                                        room.status === 'paused' ? 'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
-                                                                                        'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                                                                                      }`}>
-                                                                                        {room.status}
-                                                                                      </span>
-                                                                                    </td>
-                                                                                    <td className="p-2.5 text-right pr-3">
-                                                                                      <button
-                                                                                        type="button"
-                                                                                        onClick={() => toggleRoomTeamExpansion(room.id)}
-                                                                                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-200 dark:border-indigo-900 transition-all cursor-pointer"
-                                                                                      >
-                                                                                        <span>{rInfo.teamCount} Teams Joined {isTeamsExp ? '▴' : '▾'}</span>
-                                                                                      </button>
-                                                                                    </td>
-                                                                                  </tr>
-
-                                                                                  {/* 5. Team Participation Details Table under this room */}
-                                                                                  {isTeamsExp && (
-                                                                                    <tr>
-                                                                                      <td colSpan={10} className="p-3 bg-slate-50 dark:bg-slate-950/90 border-t border-slate-200 dark:border-slate-800">
-                                                                                        <div className="space-y-1.5 pl-3 border-l-2 border-emerald-500">
-                                                                                          <div className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">
-                                                                                            Team Participation Details ({rInfo.teamCount} Teams, {rInfo.participantCount} Total Members)
-                                                                                          </div>
-                                                                                          {(!rInfo.teams || rInfo.teams.length === 0) ? (
-                                                                                            <p className="text-[10px] text-slate-400 italic">No teams or members have joined this lobby.</p>
-                                                                                          ) : (
-                                                                                            <div className="overflow-x-auto rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-                                                                                              <table className="w-full text-left border-collapse text-[11px]">
-                                                                                                <thead>
-                                                                                                  <tr className="bg-slate-100 dark:bg-slate-800 text-slate-500 text-[9px] uppercase font-bold border-b border-slate-200 dark:border-slate-700">
-                                                                                                    <th className="p-2 w-8 text-center">#</th>
-                                                                                                    <th className="p-2">Team Name</th>
-                                                                                                    <th className="p-2">Members Joined</th>
-                                                                                                    <th className="p-2">First Join Date</th>
-                                                                                                    <th className="p-2">First Join Time</th>
-                                                                                                    <th className="p-2 text-right pr-3">Participation Status</th>
-                                                                                                  </tr>
-                                                                                                </thead>
-                                                                                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                                                                                  {rInfo.teams.map((t: any, tIdx: number) => (
-                                                                                                    <tr key={t.id || tIdx} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20">
-                                                                                                      <td className="p-2 text-center font-mono text-slate-400">{tIdx + 1}</td>
-                                                                                                      <td className="p-2 font-bold text-slate-800 dark:text-white">{t.name}</td>
-                                                                                                      <td className="p-2">
-                                                                                                        {t.members && t.members.length > 0 ? (
-                                                                                                          <div className="flex flex-wrap gap-1">
-                                                                                                            <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">({t.members.length})</span>
-                                                                                                            {t.members.map((m: any, mIdx: number) => (
-                                                                                                              <span key={m.userId || mIdx} className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded text-[10px] text-slate-700 dark:text-slate-300 font-mono">
-                                                                                                                {m.userName}
-                                                                                                              </span>
-                                                                                                            ))}
-                                                                                                          </div>
-                                                                                                        ) : (
-                                                                                                          <span className="text-slate-400 italic">0 registered members</span>
-                                                                                                        )}
-                                                                                                      </td>
-                                                                                                      <td className="p-2 font-mono text-slate-500">
-                                                                                                        {t.members?.[0]?.joinedAt ? new Date(t.members[0].joinedAt).toLocaleDateString() : new Date(room.createdAt).toLocaleDateString()}
-                                                                                                      </td>
-                                                                                                      <td className="p-2 font-mono text-slate-500">
-                                                                                                        {t.members?.[0]?.joinedAt ? new Date(t.members[0].joinedAt).toLocaleTimeString() : new Date(room.createdAt).toLocaleTimeString()}
-                                                                                                      </td>
-                                                                                                      <td className="p-2 text-right pr-3">
-                                                                                                        <span className="font-bold text-emerald-600 font-mono">₹{t.cash?.toLocaleString() || 0}</span>
-                                                                                                        <span className="ml-1 text-[9px] uppercase px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                                                                                                          {t.status || 'Active'}
-                                                                                                        </span>
-                                                                                                      </td>
-                                                                                                    </tr>
-                                                                                                  ))}
-                                                                                                </tbody>
-                                                                                            </table>
-                                                                                          </div>
-                                                                                        )}
+                                                                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                                                                        <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                                                                                          ({t.members?.length || 0})
+                                                                                        </span>
+                                                                                        <span className="text-slate-700 dark:text-slate-300 font-mono text-[10px]">
+                                                                                          {memberNames}
+                                                                                        </span>
                                                                                       </div>
                                                                                     </td>
+                                                                                    <td className="p-2.5 text-right pr-3 font-mono text-slate-500 text-[11px]">
+                                                                                      {formatDateTime12h(firstJoinedTimestamp)}
+                                                                                    </td>
                                                                                   </tr>
-                                                                                )}
-                                                                              </React.Fragment>
-                                                                            );
-                                                                          })}
-                                                                        </tbody>
-                                                                      </table>
+                                                                                );
+                                                                              })}
+                                                                            </tbody>
+                                                                          </table>
+                                                                        </div>
+                                                                      )}
                                                                     </div>
-                                                                  </div>
-                                                                </td>
-                                                              </tr>
-                                                            )}
-                                                          </React.Fragment>
-                                                        );
-                                                      })}
-                                                    </tbody>
-                                                  </table>
-                                                </div>
-                                              )}
+                                                                  </td>
+                                                                </tr>
+                                                              )}
+                                                            </React.Fragment>
+                                                          );
+                                                        })}
+                                                      </tbody>
+                                                    </table>
+                                                  </div>
+                                                )}
+                                              </div>
                                             </div>
-                                          </>
-                                        );
-                                      })()
+                                          );
+                                        })()
                                     )}
                                   </div>
                                 </td>

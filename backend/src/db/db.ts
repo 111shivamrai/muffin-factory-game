@@ -160,13 +160,16 @@ class DatabaseManager {
         );
       `);
 
-      // Add actual duration tracking columns to rooms if missing
+      // Add actual duration and license correlation columns to rooms if missing
       await client.query(`
         ALTER TABLE rooms ADD COLUMN IF NOT EXISTS started_at TIMESTAMP;
         ALTER TABLE rooms ADD COLUMN IF NOT EXISTS ended_at TIMESTAMP;
         ALTER TABLE rooms ADD COLUMN IF NOT EXISTS paused_at TIMESTAMP;
         ALTER TABLE rooms ADD COLUMN IF NOT EXISTS total_paused_ms BIGINT DEFAULT 0;
         ALTER TABLE rooms ADD COLUMN IF NOT EXISTS actual_duration_seconds INTEGER DEFAULT 0;
+        ALTER TABLE rooms ADD COLUMN IF NOT EXISTS license_id VARCHAR(255);
+        ALTER TABLE rooms ADD COLUMN IF NOT EXISTS creator_email VARCHAR(255);
+        ALTER TABLE rooms ADD COLUMN IF NOT EXISTS login_event_id VARCHAR(255);
         ALTER TABLE licenses ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
       `);
 
@@ -187,6 +190,7 @@ class DatabaseManager {
         );
         CREATE INDEX IF NOT EXISTS idx_inst_logins_lic ON instructor_logins(license_id);
         CREATE INDEX IF NOT EXISTS idx_inst_logins_inst ON instructor_logins(instructor_id);
+        CREATE INDEX IF NOT EXISTS idx_inst_logins_email ON instructor_logins(instructor_email);
       `);
 
       console.log('PostgreSQL database tables initialized successfully.');
@@ -499,9 +503,9 @@ class DatabaseManager {
   async createRoom(room: Room): Promise<Room> {
     if (this.isPostgres && this.pool) {
       await this.pool.query(
-        `INSERT INTO rooms (id, code, name, status, difficulty, tick_rate, current_day, max_days, scenario_id, created_by, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-        [room.id, room.code, room.name, room.status, room.difficulty, room.tickRate, room.currentDay, room.maxDays, room.scenarioId, room.createdBy, room.createdAt]
+        `INSERT INTO rooms (id, code, name, status, difficulty, tick_rate, current_day, max_days, scenario_id, created_by, created_at, license_id, creator_email, login_event_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+        [room.id, room.code, room.name, room.status, room.difficulty, room.tickRate, room.currentDay, room.maxDays, room.scenarioId, room.createdBy, room.createdAt, room.licenseId || null, room.creatorEmail || null, room.loginEventId || null]
       );
     } else {
       const db = this.readJsonDb();
@@ -532,7 +536,10 @@ class DatabaseManager {
         endedAt: row.ended_at ? new Date(row.ended_at).toISOString() : undefined,
         pausedAt: row.paused_at ? new Date(row.paused_at).toISOString() : undefined,
         totalPausedMs: row.total_paused_ms ? Number(row.total_paused_ms) : 0,
-        actualDurationSeconds: row.actual_duration_seconds ? Number(row.actual_duration_seconds) : 0
+        actualDurationSeconds: row.actual_duration_seconds ? Number(row.actual_duration_seconds) : 0,
+        licenseId: row.license_id || undefined,
+        creatorEmail: row.creator_email || undefined,
+        loginEventId: row.login_event_id || undefined
       };
       if (room.scenarioId) {
         room.scenarioConfig = await this.getScenarioById(room.scenarioId) || undefined;
@@ -620,7 +627,10 @@ class DatabaseManager {
         endedAt: row.ended_at ? new Date(row.ended_at).toISOString() : undefined,
         pausedAt: row.paused_at ? new Date(row.paused_at).toISOString() : undefined,
         totalPausedMs: row.total_paused_ms ? Number(row.total_paused_ms) : 0,
-        actualDurationSeconds: row.actual_duration_seconds ? Number(row.actual_duration_seconds) : 0
+        actualDurationSeconds: row.actual_duration_seconds ? Number(row.actual_duration_seconds) : 0,
+        licenseId: row.license_id || undefined,
+        creatorEmail: row.creator_email || undefined,
+        loginEventId: row.login_event_id || undefined
       }));
     } else {
       const db = this.readJsonDb();
@@ -1025,7 +1035,14 @@ class DatabaseManager {
   async getLicenseByInstructorEmail(email: string): Promise<LicenseRecord | null> {
     const cleanEmail = (email || '').trim().toLowerCase();
     const all = await this.getLicenses();
-    return all.find(l => !l.deletedAt && (l.instructorEmail || '').trim().toLowerCase() === cleanEmail) || null;
+    // 1. Prefer active non-deleted license
+    const active = all.find(l => !l.deletedAt && !this.isLicenseExpired(l) && (l.instructorEmail || '').trim().toLowerCase() === cleanEmail);
+    if (active) return active;
+    // 2. Non-deleted license
+    const nonDeleted = all.find(l => !l.deletedAt && (l.instructorEmail || '').trim().toLowerCase() === cleanEmail);
+    if (nonDeleted) return nonDeleted;
+    // 3. Fallback to any matching license
+    return all.find(l => (l.instructorEmail || '').trim().toLowerCase() === cleanEmail) || null;
   }
 
   async saveLicense(lic: LicenseRecord): Promise<void> {
@@ -1109,11 +1126,46 @@ class DatabaseManager {
     }
   }
 
-  async getInstructorLoginsByLicense(licenseId: string): Promise<InstructorLoginEvent[]> {
+  async recordInstructorLogoutByUserId(userId: string, email?: string): Promise<void> {
+    const now = new Date();
+    const cleanEmail = (email || '').trim().toLowerCase();
     if (this.isPostgres && this.pool) {
       const res = await this.pool.query(
-        'SELECT * FROM instructor_logins WHERE license_id = $1 ORDER BY login_at DESC',
-        [licenseId]
+        `SELECT id, login_at FROM instructor_logins 
+         WHERE (instructor_id = $1 OR ($2 != '' AND LOWER(TRIM(instructor_email)) = $2)) AND logout_at IS NULL 
+         ORDER BY login_at DESC LIMIT 1`,
+        [userId, cleanEmail]
+      );
+      if (res.rows.length > 0) {
+        const row = res.rows[0];
+        const loginAt = new Date(row.login_at);
+        const durationSec = Math.max(0, Math.floor((now.getTime() - loginAt.getTime()) / 1000));
+        await this.pool.query(
+          'UPDATE instructor_logins SET logout_at = $1, duration_seconds = $2 WHERE id = $3',
+          [now, durationSec, row.id]
+        );
+      }
+    } else {
+      const db = this.readJsonDb();
+      if (!db.instructorLogins) db.instructorLogins = [];
+      const item = db.instructorLogins.find(l => 
+        (l.instructorId === userId || (cleanEmail && (l.instructorEmail || '').trim().toLowerCase() === cleanEmail)) && !l.logoutAt
+      );
+      if (item) {
+        item.logoutAt = now.toISOString();
+        const start = new Date(item.loginAt).getTime();
+        item.durationSeconds = Math.max(0, Math.floor((now.getTime() - start) / 1000));
+        this.writeJsonDb(db);
+      }
+    }
+  }
+
+  async getInstructorLoginsByLicense(licenseId: string, instructorEmail?: string): Promise<InstructorLoginEvent[]> {
+    const cleanEmail = (instructorEmail || '').trim().toLowerCase();
+    if (this.isPostgres && this.pool) {
+      const res = await this.pool.query(
+        'SELECT * FROM instructor_logins WHERE license_id = $1 OR ($2 != \'\' AND LOWER(TRIM(instructor_email)) = $2) ORDER BY login_at DESC',
+        [licenseId, cleanEmail]
       );
       return res.rows.map(row => ({
         id: row.id,
@@ -1131,7 +1183,9 @@ class DatabaseManager {
     } else {
       const db = this.readJsonDb();
       if (!db.instructorLogins) db.instructorLogins = [];
-      return db.instructorLogins.filter(l => l.licenseId === licenseId);
+      return db.instructorLogins.filter(l => 
+        l.licenseId === licenseId || (cleanEmail && (l.instructorEmail || '').trim().toLowerCase() === cleanEmail)
+      );
     }
   }
 
@@ -1140,9 +1194,9 @@ class DatabaseManager {
     if (!license) return null;
 
     const isExpired = this.isLicenseExpired(license);
-    const logins = await this.getInstructorLoginsByLicense(licenseId);
-    const allRooms = await this.getRooms();
     const instEmail = (license.instructorEmail || '').trim().toLowerCase();
+    const logins = await this.getInstructorLoginsByLicense(licenseId, instEmail);
+    const allRooms = await this.getRooms();
 
     // Find all instructor users associated with this license email
     const users = this.isPostgres && this.pool 
@@ -1152,8 +1206,14 @@ class DatabaseManager {
     const userIdsFromLogins = logins.map(l => l.instructorId).filter(Boolean);
     const allMatchingUserIds = Array.from(new Set([...users, ...userIdsFromLogins]));
 
-    // Filter rooms created by this instructor
-    const licenseRooms = allRooms.filter(r => allMatchingUserIds.includes(r.createdBy) || r.createdBy === license.id);
+    // Filter rooms created by this instructor or for this license
+    const licenseRooms = allRooms.filter(r => 
+      r.licenseId === license.id ||
+      (r.creatorEmail && r.creatorEmail.trim().toLowerCase() === instEmail) ||
+      allMatchingUserIds.includes(r.createdBy) ||
+      r.createdBy === license.id ||
+      (r.createdBy && r.createdBy.trim().toLowerCase() === instEmail)
+    );
 
     // Fetch team and member details per room
     const roomDetailsMap: Record<string, {
@@ -1267,10 +1327,14 @@ class DatabaseManager {
     // Sort logins descending (newest first) for UI display
     loginsWithRooms.sort((a, b) => new Date(b.loginAt).getTime() - new Date(a.loginAt).getTime());
 
+    const allSessionList = licenseRooms.map(r => roomDetailsMap[r.id]).filter(Boolean);
+    allSessionList.sort((a, b) => new Date(b.room.createdAt).getTime() - new Date(a.room.createdAt).getTime());
+
     return {
       license,
       isExpired,
       instructorLogins: loginsWithRooms,
+      allSessions: allSessionList,
       totals: {
         totalLogins: logins.length || (unassignedRooms.length > 0 ? 1 : 0),
         totalVisits: logins.length || (unassignedRooms.length > 0 ? 1 : 0),

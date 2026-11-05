@@ -131,6 +131,15 @@ router.post('/', authenticateJWT, authorizeRoles(['admin', 'instructor']), async
 
     const roomId = `room_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     const creatorId = req.user!.id;
+    const user = await db.getUserById(creatorId);
+    const creatorEmail = (user?.email || req.user?.email || '').trim().toLowerCase();
+    let instructorLicense = await db.getLicenseByInstructorEmail(creatorEmail);
+    if (!instructorLicense) {
+      const allLics = await db.getLicenses();
+      instructorLicense = allLics.find(l => (l.instructorEmail || '').trim().toLowerCase() === creatorEmail) || null;
+    }
+    const licenseId = (req.user as any)?.licenseId || instructorLicense?.id || undefined;
+    const loginEventId = (req.user as any)?.loginEventId || undefined;
 
     const scenario = scenarioId 
       ? await db.getScenarioById(scenarioId) 
@@ -148,7 +157,10 @@ router.post('/', authenticateJWT, authorizeRoles(['admin', 'instructor']), async
       scenarioId: scenarioId || undefined,
       scenarioConfig: scenario || undefined,
       createdBy: creatorId,
-      createdAt: new Date()
+      createdAt: new Date(),
+      licenseId,
+      creatorEmail,
+      loginEventId
     };
 
     const room = await db.createRoom(newRoom);
