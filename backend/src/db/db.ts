@@ -167,6 +167,7 @@ class DatabaseManager {
         ALTER TABLE rooms ADD COLUMN IF NOT EXISTS paused_at TIMESTAMP;
         ALTER TABLE rooms ADD COLUMN IF NOT EXISTS total_paused_ms BIGINT DEFAULT 0;
         ALTER TABLE rooms ADD COLUMN IF NOT EXISTS actual_duration_seconds INTEGER DEFAULT 0;
+        ALTER TABLE licenses ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP;
       `);
 
       // Create instructor_logins table for permanent activity history
@@ -959,7 +960,8 @@ class DatabaseManager {
 
   // LICENSES CRUD & EXPIRATION
   isLicenseExpired(lic: LicenseRecord): boolean {
-    if (lic.status === 'expired') return true;
+    if (lic.deletedAt) return true;
+    if (lic.status === 'expired' || lic.status === 'deleted') return true;
     const now = Date.now();
     if (lic.expiresAt) {
       return now >= new Date(lic.expiresAt).getTime();
@@ -985,10 +987,11 @@ class DatabaseManager {
         startDate: row.start_date,
         endDate: row.end_date,
         instructorEmail: row.instructor_email,
-        instructorPassword: row.instructor_password
+        instructorPassword: row.instructor_password,
+        deletedAt: row.deleted_at ? new Date(row.deleted_at).toISOString() : undefined
       }));
       for (const lic of list) {
-        if (lic.status !== 'expired' && this.isLicenseExpired(lic)) {
+        if (!lic.deletedAt && lic.status !== 'expired' && this.isLicenseExpired(lic)) {
           lic.status = 'expired';
           await this.pool.query('UPDATE licenses SET status = $1 WHERE id = $2', ['expired', lic.id]);
         }
@@ -998,7 +1001,7 @@ class DatabaseManager {
       const db = this.readJsonDb();
       let changed = false;
       for (const lic of db.licenses) {
-        if (lic.status !== 'expired' && this.isLicenseExpired(lic)) {
+        if (!lic.deletedAt && lic.status !== 'expired' && this.isLicenseExpired(lic)) {
           lic.status = 'expired';
           changed = true;
         }
@@ -1010,7 +1013,7 @@ class DatabaseManager {
 
   async getActiveLicenses(): Promise<LicenseRecord[]> {
     const all = await this.getLicenses();
-    return all.filter(lic => lic.status === 'active' && !this.isLicenseExpired(lic));
+    return all.filter(lic => lic.status === 'active' && !lic.deletedAt && !this.isLicenseExpired(lic));
   }
 
   async getLicenseById(id: string): Promise<LicenseRecord | null> {
@@ -1022,17 +1025,17 @@ class DatabaseManager {
   async getLicenseByInstructorEmail(email: string): Promise<LicenseRecord | null> {
     const cleanEmail = (email || '').trim().toLowerCase();
     const all = await this.getLicenses();
-    return all.find(l => (l.instructorEmail || '').trim().toLowerCase() === cleanEmail) || null;
+    return all.find(l => !l.deletedAt && (l.instructorEmail || '').trim().toLowerCase() === cleanEmail) || null;
   }
 
   async saveLicense(lic: LicenseRecord): Promise<void> {
     if (this.isPostgres && this.pool) {
       await this.pool.query(
-        `INSERT INTO licenses (id, customer_name, email, max_seats, validity_days, status, created_at, expires_at, start_date, end_date, instructor_email, instructor_password)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        `INSERT INTO licenses (id, customer_name, email, max_seats, validity_days, status, created_at, expires_at, start_date, end_date, instructor_email, instructor_password, deleted_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          ON CONFLICT (id) DO UPDATE
-         SET customer_name = $2, email = $3, max_seats = $4, validity_days = $5, status = $6, expires_at = $8, start_date = $9, end_date = $10, instructor_email = $11, instructor_password = $12`,
-        [lic.id, lic.customerName, lic.email, lic.maxSeats, lic.validityDays, lic.status, new Date(lic.createdAt), new Date(lic.expiresAt), lic.startDate, lic.endDate, lic.instructorEmail, lic.instructorPassword]
+         SET customer_name = $2, email = $3, max_seats = $4, validity_days = $5, status = $6, expires_at = $8, start_date = $9, end_date = $10, instructor_email = $11, instructor_password = $12, deleted_at = $13`,
+        [lic.id, lic.customerName, lic.email, lic.maxSeats, lic.validityDays, lic.status, new Date(lic.createdAt), new Date(lic.expiresAt), lic.startDate, lic.endDate, lic.instructorEmail, lic.instructorPassword, lic.deletedAt ? new Date(lic.deletedAt) : null]
       );
     } else {
       const db = this.readJsonDb();
@@ -1047,12 +1050,17 @@ class DatabaseManager {
   }
 
   async deleteLicense(id: string): Promise<void> {
+    const now = new Date();
     if (this.isPostgres && this.pool) {
-      await this.pool.query('DELETE FROM licenses WHERE id = $1', [id]);
+      await this.pool.query('UPDATE licenses SET deleted_at = $1, status = $2 WHERE id = $3', [now, 'deleted', id]);
     } else {
       const db = this.readJsonDb();
-      db.licenses = db.licenses.filter(l => l.id !== id);
-      this.writeJsonDb(db);
+      const lic = db.licenses.find(l => l.id === id);
+      if (lic) {
+        lic.deletedAt = now.toISOString();
+        lic.status = 'deleted';
+        this.writeJsonDb(db);
+      }
     }
   }
 

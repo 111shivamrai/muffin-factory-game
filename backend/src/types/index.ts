@@ -187,13 +187,14 @@ export interface LicenseRecord {
   email: string;
   maxSeats: number;
   validityDays: number;
-  status: 'active' | 'suspended' | 'expired';
+  status: 'active' | 'suspended' | 'expired' | 'deleted';
   createdAt: string; // ISO string
   expiresAt: string; // ISO string
   startDate?: string;
   endDate?: string;
   instructorEmail: string;
   instructorPassword?: string;
+  deletedAt?: string;
 }
 
 export interface Room {
