@@ -156,23 +156,46 @@ router.post('/login', async (req, res) => {
     }
 
     // Enforce license validity if instructor
+    let instructorLicense = null;
     if (user.role === 'instructor') {
-      const license = await db.getLicenseByInstructorEmail(cleanEmail);
-      if (license && db.isLicenseExpired(license)) {
+      instructorLicense = await db.getLicenseByInstructorEmail(cleanEmail);
+      if (instructorLicense && db.isLicenseExpired(instructorLicense)) {
         res.status(403).json({ error: 'Your institution license has expired. Access is disabled. Please contact your administrator.' });
         return;
       }
-      if (license && license.status === 'suspended') {
+      if (instructorLicense && instructorLicense.status === 'suspended') {
         res.status(403).json({ error: 'Your institution license is currently suspended.' });
         return;
       }
     }
 
+    // Record login event for instructors associated with a license
+    let loginEventId = undefined;
+    if (user.role === 'instructor' && instructorLicense) {
+      try {
+        loginEventId = `login_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+        await db.recordInstructorLogin({
+          id: loginEventId,
+          licenseId: instructorLicense.id,
+          instructorId: user.id,
+          instructorEmail: user.email,
+          instructorName: user.name,
+          loginAt: new Date().toISOString(),
+          success: true,
+          ipAddress: req.ip || (req.headers['x-forwarded-for'] as string) || undefined,
+          userAgent: req.headers['user-agent'] as string || undefined
+        });
+      } catch (logErr) {
+        console.error('Failed to record instructor login event:', logErr);
+      }
+    }
+
     // Sign JWT
-    const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '365d' });
+    const token = jwt.sign({ id: user.id, name: user.name, email: user.email, role: user.role, loginEventId }, JWT_SECRET, { expiresIn: '365d' });
 
     res.json({
       token,
+      loginEventId,
       user: { id: user.id, name: user.name, email: user.email, role: user.role }
     });
   } catch (err) {
@@ -279,6 +302,19 @@ router.get('/me', authenticateJWT, async (req: AuthenticatedRequest, res: Respon
     console.error('Error fetching profile:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// Logout endpoint to record session duration accurately
+router.post('/logout', authenticateJWT, async (req: AuthenticatedRequest, res: Response) => {
+  const { loginEventId } = req.body;
+  if (loginEventId) {
+    try {
+      await db.recordInstructorLogout(loginEventId);
+    } catch (err) {
+      console.error('Error recording logout event:', err);
+    }
+  }
+  res.json({ success: true });
 });
 
 export default router;

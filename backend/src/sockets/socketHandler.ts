@@ -535,29 +535,45 @@ export function registerSocketHandler(io: Server) {
         }
 
         switch (payload.controlType) {
-          case 'start':
+          case 'start': {
             if (room.status === 'active') {
               return callback({ error: 'Simulation is already running' });
             }
+            const now = new Date();
+            const startedAt = room.startedAt || now.toISOString();
             room.status = 'active';
-            await db.updateRoom(room.id, { status: 'active' });
+            room.startedAt = startedAt;
+            await db.updateRoom(room.id, { status: 'active', startedAt });
             startRoomTick(io, room.id);
             break;
+          }
 
-          case 'pause':
+          case 'pause': {
+            const now = new Date();
             room.status = 'paused';
-            await db.updateRoom(room.id, { status: 'paused' });
+            room.pausedAt = now.toISOString();
+            await db.updateRoom(room.id, { status: 'paused', pausedAt: now.toISOString() });
             stopRoomTick(room.id);
             break;
+          }
 
-          case 'resume':
+          case 'resume': {
             if (room.status === 'active') {
               return callback({ error: 'Simulation is already running' });
             }
+            const now = new Date();
+            let totalPaused = room.totalPausedMs || 0;
+            if (room.pausedAt) {
+              const pausedMs = Math.max(0, now.getTime() - new Date(room.pausedAt).getTime());
+              totalPaused += pausedMs;
+            }
             room.status = 'active';
-            await db.updateRoom(room.id, { status: 'active' });
+            room.totalPausedMs = totalPaused;
+            room.pausedAt = undefined;
+            await db.updateRoom(room.id, { status: 'active', totalPausedMs: totalPaused, pausedAt: undefined });
             startRoomTick(io, room.id);
             break;
+          }
 
           case 'step':
             // Step manually by 1 day
@@ -707,11 +723,25 @@ export function registerSocketHandler(io: Server) {
             break;
           }
 
-          case 'end':
+          case 'end': {
+            const now = new Date();
+            let durationSec = room.actualDurationSeconds || 0;
+            if (room.startedAt) {
+              const start = new Date(room.startedAt).getTime();
+              const totalPaused = room.totalPausedMs || 0;
+              durationSec = Math.max(0, Math.floor((now.getTime() - start - totalPaused) / 1000));
+            }
             room.status = 'finished';
-            await db.updateRoom(room.id, { status: 'finished' });
+            room.endedAt = now.toISOString();
+            room.actualDurationSeconds = durationSec;
+            await db.updateRoom(room.id, {
+              status: 'finished',
+              endedAt: now.toISOString(),
+              actualDurationSeconds: durationSec
+            });
             stopRoomTick(room.id);
             break;
+          }
 
           default:
             return callback({ error: 'Unknown control type' });
@@ -805,8 +835,21 @@ async function executeDayTick(io: Server, roomId: string) {
   if (!room) return;
 
   if (room.currentDay >= room.maxDays) {
+    const now = new Date();
+    let durationSec = room.actualDurationSeconds || 0;
+    if (room.startedAt) {
+      const start = new Date(room.startedAt).getTime();
+      const totalPaused = room.totalPausedMs || 0;
+      durationSec = Math.max(0, Math.floor((now.getTime() - start - totalPaused) / 1000));
+    }
     room.status = 'finished';
-    await db.updateRoom(room.id, { status: 'finished' });
+    room.endedAt = now.toISOString();
+    room.actualDurationSeconds = durationSec;
+    await db.updateRoom(room.id, {
+      status: 'finished',
+      endedAt: now.toISOString(),
+      actualDurationSeconds: durationSec
+    });
     stopRoomTick(room.id);
     io.to(`room_${room.id}`).emit('room_updated', room);
     return;

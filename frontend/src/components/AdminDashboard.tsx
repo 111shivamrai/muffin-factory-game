@@ -19,7 +19,18 @@ import {
   UserMinus, 
   AlertTriangle,
   RefreshCw,
-  X
+  X,
+  ChevronDown,
+  ChevronUp,
+  Users,
+  Gamepad2,
+  CheckCircle2,
+  History,
+  Timer,
+  Building2,
+  UserCheck,
+  Flame,
+  Check
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && !window.location.hostname.includes('localhost') ? 'https://muffin-factory-game.onrender.com' : 'http://localhost:5001');
@@ -42,6 +53,10 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
   const [licenses, setLicenses] = useState<any[]>([]);
   const [cloudSyncStatus, setCloudSyncStatus] = useState<'synced' | 'local_only' | 'checking'>('checking');
   const [isSyncingLicenses, setIsSyncingLicenses] = useState(false);
+  const [licenseSectionTab, setLicenseSectionTab] = useState<'existing' | 'past'>('existing');
+  const [expandedLicenseIds, setExpandedLicenseIds] = useState<Record<string, boolean>>({});
+  const [licenseActivityData, setLicenseActivityData] = useState<Record<string, any>>({});
+  const [loadingActivity, setLoadingActivity] = useState<Record<string, boolean>>({});
 
   const [newLicCustomer, setNewLicCustomer] = useState('');
   const [newLicEmail, setNewLicEmail] = useState('');
@@ -385,6 +400,32 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
     }
   };
 
+  const fetchLicenseActivity = async (licenseId: string) => {
+    setLoadingActivity(prev => ({ ...prev, [licenseId]: true }));
+    try {
+      const tkn = useGameStore.getState().token || (typeof window !== 'undefined' ? (sessionStorage.getItem('muffin_token') || localStorage.getItem('muffin_token')) : null);
+      const res = await fetch(`${API_URL}/api/licenses/${licenseId}/activity`, {
+        headers: tkn ? { 'Authorization': `Bearer ${tkn}` } : {}
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLicenseActivityData(prev => ({ ...prev, [licenseId]: data }));
+      }
+    } catch (err) {
+      console.warn(`Could not load activity for license ${licenseId}:`, err);
+    } finally {
+      setLoadingActivity(prev => ({ ...prev, [licenseId]: false }));
+    }
+  };
+
+  const toggleLicenseExpansion = (licenseId: string) => {
+    const isExpanded = !!expandedLicenseIds[licenseId];
+    setExpandedLicenseIds(prev => ({ ...prev, [licenseId]: !isExpanded }));
+    if (!isExpanded && !licenseActivityData[licenseId]) {
+      fetchLicenseActivity(licenseId);
+    }
+  };
+
   // Memoized Search & Filter lists
   const filteredRooms = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -392,13 +433,33 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
     return roomsList.filter(r => r.name.toLowerCase().includes(q) || r.code.toLowerCase().includes(q));
   }, [roomsList, searchQuery]);
 
-  const filteredLicenses = useMemo(() => {
+  const { existingLicenses, pastLicenses } = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    // Automatically remove expired licenses from active registry archive
-    const activeArchive = licenses.filter(l => !isLicenseExpired(l));
-    if (!q) return activeArchive;
-    return activeArchive.filter(l => l.id.toLowerCase().includes(q) || l.customerName.toLowerCase().includes(q) || l.email.toLowerCase().includes(q));
+    const existing: any[] = [];
+    const past: any[] = [];
+
+    licenses.forEach((l: any) => {
+      const matchesSearch = !q || 
+        l.id?.toLowerCase().includes(q) || 
+        l.customerName?.toLowerCase().includes(q) || 
+        l.email?.toLowerCase().includes(q) ||
+        l.instructorEmail?.toLowerCase().includes(q);
+
+      if (matchesSearch) {
+        if (isLicenseExpired(l)) {
+          past.push(l);
+        } else {
+          existing.push(l);
+        }
+      }
+    });
+
+    return { existingLicenses: existing, pastLicenses: past };
   }, [licenses, searchQuery, currentTime]);
+
+  const filteredLicenses = useMemo(() => {
+    return licenseSectionTab === 'existing' ? existingLicenses : pastLicenses;
+  }, [licenseSectionTab, existingLicenses, pastLicenses]);
 
   const filteredLogs = useMemo(() => {
     if (logFilter === 'all') return logs;
@@ -1008,101 +1069,474 @@ export default function AdminDashboard({ navigate }: { navigate?: (to: string) =
                 )}
               </div>
 
-              {/* Active Licenses List */}
+              {/* Licenses Registry & Permanent History */}
               <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm">
+                
+                {/* Header & Sub-Tabs */}
                 <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 flex-wrap gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
-                      License Registry Archive
-                    </h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setLicenseSectionTab('existing')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-all ${
+                        licenseSectionTab === 'existing'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      <span>Existing Licenses</span>
+                      <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded-full ${
+                        licenseSectionTab === 'existing' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {existingLicenses.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setLicenseSectionTab('past')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider flex items-center gap-2 cursor-pointer transition-all ${
+                        licenseSectionTab === 'past'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      <span>Past Licenses</span>
+                      <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded-full ${
+                        licenseSectionTab === 'past' ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                      }`}>
+                        {pastLicenses.length}
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
                     {cloudSyncStatus === 'synced' ? (
                       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" title="Connected to centralized PostgreSQL cloud database">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         Cloud Synced
                       </span>
                     ) : cloudSyncStatus === 'local_only' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="Licenses are stored only in this laptop's local browser memory because Render /api/licenses returned 404. Redeploy Render backend to sync across all laptops.">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200 dark:border-amber-800" title="Licenses stored in local browser storage fallback.">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                        Local Browser Storage
+                        Local Fallback
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-mono text-slate-400">
                         Checking sync...
                       </span>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={loadLicenses}
+                      disabled={isSyncingLicenses}
+                      className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold uppercase transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                      title="Reload and sync licenses from central database"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isSyncingLicenses ? 'animate-spin' : ''}`} />
+                      <span>Sync</span>
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={loadLicenses}
-                    disabled={isSyncingLicenses}
-                    className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold uppercase transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-                    title="Reload and sync licenses from central database"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${isSyncingLicenses ? 'animate-spin' : ''}`} />
-                    <span>Sync</span>
-                  </button>
                 </div>
 
+                {/* Sub-tab description */}
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-sans">
+                  {licenseSectionTab === 'existing' 
+                    ? 'Showing currently valid and active licenses. When a license reaches expiration, it moves automatically to Past Licenses with full history preserved.'
+                    : 'Showing expired licenses and archived institutional accounts. All historical records, instructor visits, game rooms, teams, and runtimes are permanently preserved.'
+                  }
+                </p>
+
+                {/* Licenses List Cards */}
                 {filteredLicenses.length === 0 ? (
-                  <p className="text-center py-8 text-slate-400 italic text-xs">No licenses registered.</p>
+                  <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl p-10 text-center">
+                    <KeyRound className="w-8 h-8 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                      {searchQuery ? 'No licenses matching your search query.' : (
+                        licenseSectionTab === 'existing' 
+                          ? 'No active licenses registered. Create a license using the form.' 
+                          : 'No expired or past licenses in registry.'
+                      )}
+                    </p>
+                  </div>
                 ) : (
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-                    <table className="w-full text-left border-collapse font-sans text-xs">
-                      <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 font-black uppercase border-b border-slate-200 dark:border-slate-800">
-                          <th className="p-3">Client</th>
-                          <th className="p-3">License Key</th>
-                          <th className="p-3 w-16 text-center">Seats</th>
-                          <th className="p-3 w-20 text-center">Status</th>
-                          <th className="p-3 text-right pr-4">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-bold text-slate-700 dark:text-slate-300">
-                        {filteredLicenses.map(l => (
-                          <tr key={l.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
-                            <td className="p-3">
-                              <div className="font-extrabold text-slate-800 dark:text-white">{l.customerName}</div>
-                              <div className="text-[10px] text-slate-400 font-mono mt-0.5 leading-none">{l.email}</div>
-                            </td>
-                            <td className="p-3 font-mono text-[11px] tracking-wide text-indigo-600 dark:text-indigo-400 uppercase select-all">
-                              {l.id}
-                              <div className="text-[9px] text-slate-400 font-sans font-normal mt-0.5">
-                                Expires: {l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : (l.endDate || 'Active')}
+                  <div className="space-y-3">
+                    {filteredLicenses.map((l: any) => {
+                      const isExpanded = !!expandedLicenseIds[l.id];
+                      const isExpired = isLicenseExpired(l);
+
+                      return (
+                        <div 
+                          key={l.id} 
+                          className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 rounded-xl shadow-xs overflow-hidden transition-all duration-200 hover:border-indigo-300 dark:hover:border-indigo-800"
+                        >
+                          {/* Top Row / Collapsed Card */}
+                          <div className="p-4 flex items-center justify-between flex-wrap gap-3">
+                            <div className="flex items-center gap-3 min-w-[200px]">
+                              <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-900/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                                <KeyRound className="w-4 h-4" />
                               </div>
-                            </td>
-                            <td className="p-3 text-center font-mono">{l.maxSeats === 999 ? "∞" : l.maxSeats}</td>
-                            <td className="p-3 text-center">
-                              <button
-                                onClick={() => handleToggleLicenseStatus(l.id)}
-                                className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border cursor-pointer select-none transition-all ${
-                                  l.status === 'active' 
-                                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' 
-                                    : 'bg-red-50 border-red-200 text-red-600 dark:text-red-400 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
-                                }`}
-                              >
-                                {l.status}
-                              </button>
-                            </td>
-                            <td className="p-3 text-right pr-4 flex items-center justify-end gap-1.5">
-                              <button
-                                onClick={() => setSelectedLicenseForCreds(l)}
-                                className="p-1.5 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 hover:text-white hover:bg-indigo-600 border border-indigo-100 dark:border-indigo-950 rounded-lg cursor-pointer transition-all active:scale-95"
-                                title="View Credentials Vault"
-                              >
-                                <KeyRound className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteLicense(l.id)}
-                                className="p-1.5 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 hover:text-white hover:bg-red-600 border border-red-100 dark:border-red-950 rounded-lg cursor-pointer transition-all active:scale-95"
-                                title="Revoke Key"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              <div>
+                                <div className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                  <span>{l.customerName}</span>
+                                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border select-none ${
+                                    isExpired 
+                                      ? 'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800'
+                                      : l.status === 'active' 
+                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20' 
+                                        : 'bg-red-50 border-red-200 text-red-600 dark:text-red-400 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
+                                  }`}>
+                                    {isExpired ? 'EXPIRED' : (l.status || 'ACTIVE')}
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center gap-2 flex-wrap">
+                                  <span className="text-indigo-600 dark:text-indigo-400 font-bold select-all">{l.id}</span>
+                                  <span>•</span>
+                                  <span>Instructor: <strong className="text-slate-600 dark:text-slate-300 select-all">{l.instructorEmail || 'N/A'}</strong></span>
+                                  <span>•</span>
+                                  <span>Billing: {l.email}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              {/* Dates & Seats pill */}
+                              <div className="text-right text-[10px] font-mono hidden sm:block">
+                                <div className="text-slate-600 dark:text-slate-300 font-bold">
+                                  {isExpired ? 'Expired' : 'Expires'}: {l.expiresAt ? new Date(l.expiresAt).toLocaleDateString() : (l.endDate || 'Active')}
+                                </div>
+                                <div className="text-slate-400 text-[9px]">
+                                  {l.maxSeats === 999 ? "Unlimited Seats" : `${l.maxSeats} Student Seats`} • {l.validityDays ? `${l.validityDays}d validity` : ''}
+                                </div>
+                              </div>
+
+                              {/* Controls */}
+                              <div className="flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedLicenseForCreds(l)}
+                                  className="p-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:text-white hover:bg-indigo-600 border border-indigo-200 dark:border-indigo-900/60 rounded-lg cursor-pointer transition-all active:scale-95"
+                                  title="View Credentials Vault"
+                                >
+                                  <KeyRound className="w-3.5 h-3.5" />
+                                </button>
+
+                                {!isExpired && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleLicenseStatus(l.id)}
+                                    className={`px-2 py-1.5 rounded-lg text-[9px] font-mono font-bold uppercase border cursor-pointer select-none transition-all ${
+                                      l.status === 'active' 
+                                        ? 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300' 
+                                        : 'bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                    }`}
+                                    title={l.status === 'active' ? "Suspend License" : "Re-activate License"}
+                                  >
+                                    {l.status === 'active' ? 'Suspend' : 'Activate'}
+                                  </button>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => toggleLicenseExpansion(l.id)}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all border ${
+                                    isExpanded 
+                                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                  }`}
+                                  title={isExpanded ? "Collapse Activity History" : "Expand Instructor Activity & History"}
+                                >
+                                  <History className="w-3.5 h-3.5" />
+                                  <span className="text-[10px] font-mono uppercase tracking-wider">{isExpanded ? 'Collapse' : 'Activity'}</span>
+                                  {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Expanded Card Content */}
+                          {isExpanded && (
+                            <div className="border-t border-slate-200 dark:border-slate-800 p-5 bg-slate-50/60 dark:bg-slate-950/40 space-y-5 animate-fade-in">
+                              {loadingActivity[l.id] ? (
+                                <div className="flex items-center justify-center py-10 gap-3 text-slate-400 font-mono text-xs">
+                                  <RefreshCw className="w-4 h-4 animate-spin text-indigo-500" />
+                                  <span>Loading verified instructor activity, rooms, and participants...</span>
+                                </div>
+                              ) : (
+                                (() => {
+                                  const activity = licenseActivityData[l.id];
+                                  const totals = activity?.totals || {
+                                    totalLogins: 0,
+                                    totalVisits: 0,
+                                    totalRoomsGenerated: 0,
+                                    totalUniqueTeams: 0,
+                                    totalUniqueParticipants: 0,
+                                    totalRuntimeMinutes: 0,
+                                    totalCompletedSessions: 0,
+                                    totalActiveSessions: 0
+                                  };
+                                  const visits = activity?.instructorLogins || [];
+
+                                  return (
+                                    <>
+                                      {/* 1. License Overview */}
+                                      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs">
+                                        <div className="flex items-center gap-2 pb-2.5 mb-3 border-b border-slate-150 dark:border-slate-800">
+                                          <Building2 className="w-4 h-4 text-indigo-500" />
+                                          <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                                            License Overview
+                                          </h4>
+                                          <span className={`ml-auto text-[9px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                                            isExpired 
+                                              ? 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800'
+                                              : 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
+                                          }`}>
+                                            {isExpired ? 'Past / Expired' : 'Existing / Valid'}
+                                          </span>
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs">
+                                          <div>
+                                            <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">License / Customer</span>
+                                            <span className="font-extrabold text-slate-900 dark:text-white truncate block">{l.customerName}</span>
+                                          </div>
+                                          <div>
+                                            <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Instructor Username</span>
+                                            <span className="font-mono text-slate-700 dark:text-slate-300 truncate block select-all">{l.instructorEmail || 'N/A'}</span>
+                                          </div>
+                                          <div>
+                                            <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Created Date & Time</span>
+                                            <span className="font-mono text-slate-700 dark:text-slate-300 block">{l.createdAt ? new Date(l.createdAt).toLocaleString() : 'N/A'}</span>
+                                          </div>
+                                          <div>
+                                            <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Expiration Date & Time</span>
+                                            <span className="font-mono text-slate-700 dark:text-slate-300 block">{l.expiresAt ? new Date(l.expiresAt).toLocaleString() : (l.endDate || 'N/A')}</span>
+                                          </div>
+                                          <div>
+                                            <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Total Permitted Duration</span>
+                                            <span className="font-mono font-bold text-slate-700 dark:text-slate-300 block">{l.validityDays ? `${l.validityDays} Days` : 'Standard'}</span>
+                                          </div>
+                                          <div>
+                                            <span className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Permitted Student Seats</span>
+                                            <span className="font-mono font-bold text-slate-700 dark:text-slate-300 block">{l.maxSeats === 999 ? '∞ Unlimited' : `${l.maxSeats} Seats`}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* 2. Instructor Usage Summary */}
+                                      <div className="space-y-2.5">
+                                        <div className="flex items-center gap-2">
+                                          <Activity className="w-4 h-4 text-emerald-500" />
+                                          <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                                            Instructor Usage Summary
+                                          </h4>
+                                        </div>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
+                                            <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
+                                              <span>Total Logins</span>
+                                              <KeyRound className="w-3 h-3 text-indigo-500" />
+                                            </div>
+                                            <div className="text-lg font-black text-slate-900 dark:text-white font-mono mt-1">
+                                              {totals.totalLogins}
+                                            </div>
+                                          </div>
+                                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
+                                            <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
+                                              <span>Distinct Visits</span>
+                                              <History className="w-3 h-3 text-cyan-500" />
+                                            </div>
+                                            <div className="text-lg font-black text-slate-900 dark:text-white font-mono mt-1">
+                                              {totals.totalVisits}
+                                            </div>
+                                          </div>
+                                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
+                                            <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
+                                              <span>Rooms Generated</span>
+                                              <Gamepad2 className="w-3 h-3 text-violet-500" />
+                                            </div>
+                                            <div className="text-lg font-black text-slate-900 dark:text-white font-mono mt-1">
+                                              {totals.totalRoomsGenerated}
+                                            </div>
+                                          </div>
+                                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
+                                            <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
+                                              <span>Unique Teams</span>
+                                              <Users className="w-3 h-3 text-blue-500" />
+                                            </div>
+                                            <div className="text-lg font-black text-slate-900 dark:text-white font-mono mt-1">
+                                              {totals.totalUniqueTeams}
+                                            </div>
+                                          </div>
+                                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
+                                            <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
+                                              <span>Unique Students</span>
+                                              <UserCheck className="w-3 h-3 text-emerald-500" />
+                                            </div>
+                                            <div className="text-lg font-black text-slate-900 dark:text-white font-mono mt-1">
+                                              {totals.totalUniqueParticipants}
+                                            </div>
+                                          </div>
+                                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
+                                            <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
+                                              <span>Actual Runtime</span>
+                                              <Timer className="w-3 h-3 text-amber-500" />
+                                            </div>
+                                            <div className="text-lg font-black text-amber-600 dark:text-amber-400 font-mono mt-1">
+                                              {totals.totalRuntimeMinutes} <span className="text-[10px] font-bold font-sans">mins</span>
+                                            </div>
+                                          </div>
+                                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
+                                            <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
+                                              <span>Completed Sessions</span>
+                                              <CheckCircle2 className="w-3 h-3 text-teal-500" />
+                                            </div>
+                                            <div className="text-lg font-black text-teal-600 dark:text-teal-400 font-mono mt-1">
+                                              {totals.totalCompletedSessions}
+                                            </div>
+                                          </div>
+                                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
+                                            <div className="text-[9px] font-bold uppercase text-slate-400 flex items-center justify-between">
+                                              <span>Active Sessions</span>
+                                              <Flame className="w-3 h-3 text-orange-500" />
+                                            </div>
+                                            <div className="text-lg font-black text-orange-600 dark:text-orange-400 font-mono mt-1">
+                                              {totals.totalActiveSessions}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* 3. Chronological Activity History */}
+                                      <div className="space-y-3">
+                                        <div className="flex items-center gap-2">
+                                          <History className="w-4 h-4 text-indigo-500" />
+                                          <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-white">
+                                            Chronological Activity History (Visits → Rooms → Teams → Runtime)
+                                          </h4>
+                                        </div>
+
+                                        {visits.length === 0 ? (
+                                          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center">
+                                            <Clock className="w-6 h-6 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">No instructor login visits recorded yet for this license.</p>
+                                          </div>
+                                        ) : (
+                                          <div className="space-y-4">
+                                            {visits.map((visit: any, vIdx: number) => (
+                                              <div key={visit.id || vIdx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 shadow-xs space-y-3">
+                                                {/* Visit Header */}
+                                                <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-150 dark:border-slate-800">
+                                                  <div className="flex items-center gap-2.5">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                    <span className="text-xs font-mono font-black text-slate-800 dark:text-white">
+                                                      Visit #{visits.length - vIdx} — {new Date(visit.loginAt).toLocaleString()}
+                                                    </span>
+                                                    <span className="text-[9px] font-mono px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                                                      {visit.durationSeconds ? `${Math.round(visit.durationSeconds / 60)} mins visit` : 'Ongoing / Active'}
+                                                    </span>
+                                                  </div>
+                                                  <div className="text-[10px] font-mono text-slate-400">
+                                                    {visit.instructorEmail} {visit.ipAddress ? `• IP: ${visit.ipAddress}` : ''}
+                                                  </div>
+                                                </div>
+
+                                                {/* Rooms in this Visit */}
+                                                {(!visit.rooms || visit.rooms.length === 0) ? (
+                                                  <p className="text-[11px] text-slate-400 italic pl-2">No rooms created during this visit.</p>
+                                                ) : (
+                                                  <div className="space-y-3 pl-2 border-l-2 border-indigo-100 dark:border-indigo-950">
+                                                    {visit.rooms.map((rInfo: any) => {
+                                                      const room = rInfo.room;
+                                                      return (
+                                                        <div key={room.id} className="bg-slate-50 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800 rounded-lg p-3 space-y-2.5">
+                                                          <div className="flex items-center justify-between flex-wrap gap-2">
+                                                            <div className="flex items-center gap-2">
+                                                              <span className="font-mono font-black text-xs px-2 py-0.5 rounded bg-indigo-600 text-white tracking-wider select-all">
+                                                                {room.code}
+                                                              </span>
+                                                              <span className="font-bold text-xs text-slate-800 dark:text-white">
+                                                                {room.name}
+                                                              </span>
+                                                              <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase">
+                                                                {room.scenarioConfig?.title || room.difficulty || 'Custom'}
+                                                              </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                              <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${
+                                                                room.status === 'active' ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' :
+                                                                room.status === 'paused' ? 'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
+                                                                'bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                                                              }`}>
+                                                                {room.status}
+                                                              </span>
+                                                              <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400">
+                                                                ⏱ Actual Runtime: {rInfo.actualDurationMinutes} mins
+                                                              </span>
+                                                            </div>
+                                                          </div>
+
+                                                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] font-mono text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/40 dark:border-slate-800/60">
+                                                            <div>Created: {new Date(room.createdAt).toLocaleTimeString()}</div>
+                                                            <div>Started: {room.startedAt ? new Date(room.startedAt).toLocaleTimeString() : 'Not started'}</div>
+                                                            <div>Ended: {room.endedAt ? new Date(room.endedAt).toLocaleTimeString() : (room.status === 'active' ? 'Running' : 'N/A')}</div>
+                                                            <div>Progress: Day {room.currentDay} / {room.maxDays}</div>
+                                                          </div>
+
+                                                          {/* Teams & Members */}
+                                                          <div className="pt-2">
+                                                            <div className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1.5">
+                                                              <Users className="w-3 h-3 text-indigo-500" />
+                                                              <span>Joined Teams ({rInfo.teamCount}) & Students ({rInfo.participantCount})</span>
+                                                            </div>
+
+                                                            {(!rInfo.teams || rInfo.teams.length === 0) ? (
+                                                              <p className="text-[10px] text-slate-400 italic">No teams or participants joined this lobby.</p>
+                                                            ) : (
+                                                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
+                                                                {rInfo.teams.map((t: any) => (
+                                                                  <div key={t.id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-2 text-[10px]">
+                                                                    <div className="flex items-center justify-between font-bold text-slate-800 dark:text-white mb-1">
+                                                                      <span>{t.name}</span>
+                                                                      <span className="text-emerald-600 font-mono">₹{t.cash?.toLocaleString() || 0}</span>
+                                                                    </div>
+                                                                    <div className="text-[9px] text-slate-400">
+                                                                      {t.members && t.members.length > 0 ? (
+                                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                                          {t.members.map((m: any, mIdx: number) => (
+                                                                            <span key={m.userId || mIdx} className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-300 font-mono">
+                                                                              {m.userName}
+                                                                            </span>
+                                                                          ))}
+                                                                        </div>
+                                                                      ) : (
+                                                                        <span className="italic">No registered members</span>
+                                                                      )}
+                                                                    </div>
+                                                                  </div>
+                                                                ))}
+                                                              </div>
+                                                            )}
+                                                          </div>
+                                                        </div>
+                                                      );
+                                                    })}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </>
+                                  );
+                                })()
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

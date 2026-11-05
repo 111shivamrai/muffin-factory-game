@@ -133,7 +133,23 @@ router.patch('/:id/toggle', authenticateJWT, authorizeRoles(['admin']), async (r
   }
 });
 
-// 4. Delete license
+// 4. Get comprehensive activity summary for a license (Admin only)
+router.get('/:id/activity', authenticateJWT, authorizeRoles(['admin']), async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const summary = await db.getLicenseActivitySummary(id);
+    if (!summary) {
+      res.status(404).json({ error: 'License not found' });
+      return;
+    }
+    res.json(summary);
+  } catch (err) {
+    console.error('Error fetching license activity:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 5. Delete license (Preserves historical activity references; administrative action)
 router.delete('/:id', authenticateJWT, authorizeRoles(['admin']), async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
   try {

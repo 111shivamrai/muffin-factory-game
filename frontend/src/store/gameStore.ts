@@ -108,6 +108,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   logout: () => {
+    const token = get().token;
+    const loginEventId = (get().user as any)?.loginEventId;
+    if (token) {
+      try {
+        fetch(`${API_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ loginEventId })
+        }).catch(() => {});
+      } catch (e) {}
+    }
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('muffin_token');
       sessionStorage.removeItem('muffin_user');

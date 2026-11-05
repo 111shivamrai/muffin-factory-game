@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Pool } from 'pg';
-import { User, Room, TeamState, SavedScenario, UserRole, LicenseRecord } from '../types/index.js';
+import { User, Room, TeamState, SavedScenario, UserRole, LicenseRecord, InstructorLoginEvent, LicenseActivitySummary } from '../types/index.js';
 
 // Setup file paths for the JSON fallback database
 const DATA_DIR = path.resolve(process.cwd(), 'data');
@@ -20,6 +20,7 @@ interface Schema {
   roomMembers: { id: string; roomId: string; teamId: string; userId: string; joinedAt: string }[];
   scenarios: SavedScenario[];
   licenses: LicenseRecord[];
+  instructorLogins: InstructorLoginEvent[];
 }
 
 const initialSchema: Schema = {
@@ -28,7 +29,8 @@ const initialSchema: Schema = {
   teams: [],
   roomMembers: [],
   scenarios: [],
-  licenses: []
+  licenses: [],
+  instructorLogins: []
 };
 
 // If JSON file doesn't exist, create it
@@ -156,6 +158,34 @@ class DatabaseManager {
           instructor_email VARCHAR(255) NOT NULL,
           instructor_password VARCHAR(255)
         );
+      `);
+
+      // Add actual duration tracking columns to rooms if missing
+      await client.query(`
+        ALTER TABLE rooms ADD COLUMN IF NOT EXISTS started_at TIMESTAMP;
+        ALTER TABLE rooms ADD COLUMN IF NOT EXISTS ended_at TIMESTAMP;
+        ALTER TABLE rooms ADD COLUMN IF NOT EXISTS paused_at TIMESTAMP;
+        ALTER TABLE rooms ADD COLUMN IF NOT EXISTS total_paused_ms BIGINT DEFAULT 0;
+        ALTER TABLE rooms ADD COLUMN IF NOT EXISTS actual_duration_seconds INTEGER DEFAULT 0;
+      `);
+
+      // Create instructor_logins table for permanent activity history
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS instructor_logins (
+          id VARCHAR(255) PRIMARY KEY,
+          license_id VARCHAR(255) NOT NULL,
+          instructor_id VARCHAR(255) NOT NULL,
+          instructor_email VARCHAR(255) NOT NULL,
+          instructor_name VARCHAR(255),
+          login_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          logout_at TIMESTAMP,
+          duration_seconds INTEGER DEFAULT 0,
+          success BOOLEAN DEFAULT TRUE,
+          ip_address VARCHAR(100),
+          user_agent TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_inst_logins_lic ON instructor_logins(license_id);
+        CREATE INDEX IF NOT EXISTS idx_inst_logins_inst ON instructor_logins(instructor_id);
       `);
 
       console.log('PostgreSQL database tables initialized successfully.');
@@ -388,6 +418,7 @@ class DatabaseManager {
       const content = fs.readFileSync(JSON_DB_PATH, 'utf-8');
       const parsed = JSON.parse(content);
       if (!parsed.licenses) parsed.licenses = [];
+      if (!parsed.instructorLogins) parsed.instructorLogins = [];
       return parsed;
     } catch {
       return initialSchema;
@@ -495,7 +526,12 @@ class DatabaseManager {
         maxDays: row.max_days,
         scenarioId: row.scenario_id,
         createdAt: new Date(row.created_at),
-        createdBy: row.created_by
+        createdBy: row.created_by,
+        startedAt: row.started_at ? new Date(row.started_at).toISOString() : undefined,
+        endedAt: row.ended_at ? new Date(row.ended_at).toISOString() : undefined,
+        pausedAt: row.paused_at ? new Date(row.paused_at).toISOString() : undefined,
+        totalPausedMs: row.total_paused_ms ? Number(row.total_paused_ms) : 0,
+        actualDurationSeconds: row.actual_duration_seconds ? Number(row.actual_duration_seconds) : 0
       };
       if (room.scenarioId) {
         room.scenarioConfig = await this.getScenarioById(room.scenarioId) || undefined;
@@ -535,7 +571,12 @@ class DatabaseManager {
         maxDays: row.max_days,
         scenarioId: row.scenario_id,
         createdAt: new Date(row.created_at),
-        createdBy: row.created_by
+        createdBy: row.created_by,
+        startedAt: row.started_at ? new Date(row.started_at).toISOString() : undefined,
+        endedAt: row.ended_at ? new Date(row.ended_at).toISOString() : undefined,
+        pausedAt: row.paused_at ? new Date(row.paused_at).toISOString() : undefined,
+        totalPausedMs: row.total_paused_ms ? Number(row.total_paused_ms) : 0,
+        actualDurationSeconds: row.actual_duration_seconds ? Number(row.actual_duration_seconds) : 0
       };
       if (room.scenarioId) {
         room.scenarioConfig = await this.getScenarioById(room.scenarioId) || undefined;
@@ -573,7 +614,12 @@ class DatabaseManager {
         maxDays: row.max_days,
         scenarioId: row.scenario_id,
         createdAt: new Date(row.created_at),
-        createdBy: row.created_by
+        createdBy: row.created_by,
+        startedAt: row.started_at ? new Date(row.started_at).toISOString() : undefined,
+        endedAt: row.ended_at ? new Date(row.ended_at).toISOString() : undefined,
+        pausedAt: row.paused_at ? new Date(row.paused_at).toISOString() : undefined,
+        totalPausedMs: row.total_paused_ms ? Number(row.total_paused_ms) : 0,
+        actualDurationSeconds: row.actual_duration_seconds ? Number(row.actual_duration_seconds) : 0
       }));
     } else {
       const db = this.readJsonDb();
@@ -1008,6 +1054,227 @@ class DatabaseManager {
       db.licenses = db.licenses.filter(l => l.id !== id);
       this.writeJsonDb(db);
     }
+  }
+
+  // INSTRUCTOR LOGINS & ACTIVITY TRACKING
+  async recordInstructorLogin(event: InstructorLoginEvent): Promise<void> {
+    if (this.isPostgres && this.pool) {
+      await this.pool.query(
+        `INSERT INTO instructor_logins (id, license_id, instructor_id, instructor_email, instructor_name, login_at, logout_at, duration_seconds, success, ip_address, user_agent)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         ON CONFLICT (id) DO NOTHING`,
+        [event.id, event.licenseId, event.instructorId, event.instructorEmail, event.instructorName, new Date(event.loginAt), event.logoutAt ? new Date(event.logoutAt) : null, event.durationSeconds || 0, event.success, event.ipAddress || null, event.userAgent || null]
+      );
+    } else {
+      const db = this.readJsonDb();
+      if (!db.instructorLogins) db.instructorLogins = [];
+      const exists = db.instructorLogins.some(l => l.id === event.id);
+      if (!exists) {
+        db.instructorLogins.unshift(event);
+        this.writeJsonDb(db);
+      }
+    }
+  }
+
+  async recordInstructorLogout(loginId: string): Promise<void> {
+    const now = new Date();
+    if (this.isPostgres && this.pool) {
+      const res = await this.pool.query('SELECT login_at FROM instructor_logins WHERE id = $1', [loginId]);
+      if (res.rows.length > 0) {
+        const loginAt = new Date(res.rows[0].login_at);
+        const durationSec = Math.max(0, Math.floor((now.getTime() - loginAt.getTime()) / 1000));
+        await this.pool.query(
+          `UPDATE instructor_logins SET logout_at = $1, duration_seconds = $2 WHERE id = $3`,
+          [now, durationSec, loginId]
+        );
+      }
+    } else {
+      const db = this.readJsonDb();
+      if (!db.instructorLogins) db.instructorLogins = [];
+      const item = db.instructorLogins.find(l => l.id === loginId);
+      if (item) {
+        item.logoutAt = now.toISOString();
+        const start = new Date(item.loginAt).getTime();
+        item.durationSeconds = Math.max(0, Math.floor((now.getTime() - start) / 1000));
+        this.writeJsonDb(db);
+      }
+    }
+  }
+
+  async getInstructorLoginsByLicense(licenseId: string): Promise<InstructorLoginEvent[]> {
+    if (this.isPostgres && this.pool) {
+      const res = await this.pool.query(
+        'SELECT * FROM instructor_logins WHERE license_id = $1 ORDER BY login_at DESC',
+        [licenseId]
+      );
+      return res.rows.map(row => ({
+        id: row.id,
+        licenseId: row.license_id,
+        instructorId: row.instructor_id,
+        instructorEmail: row.instructor_email,
+        instructorName: row.instructor_name,
+        loginAt: new Date(row.login_at).toISOString(),
+        logoutAt: row.logout_at ? new Date(row.logout_at).toISOString() : undefined,
+        durationSeconds: row.duration_seconds || 0,
+        success: row.success,
+        ipAddress: row.ip_address,
+        userAgent: row.user_agent
+      }));
+    } else {
+      const db = this.readJsonDb();
+      if (!db.instructorLogins) db.instructorLogins = [];
+      return db.instructorLogins.filter(l => l.licenseId === licenseId);
+    }
+  }
+
+  async getLicenseActivitySummary(licenseId: string): Promise<LicenseActivitySummary | null> {
+    const license = await this.getLicenseById(licenseId);
+    if (!license) return null;
+
+    const isExpired = this.isLicenseExpired(license);
+    const logins = await this.getInstructorLoginsByLicense(licenseId);
+    const allRooms = await this.getRooms();
+    const instEmail = (license.instructorEmail || '').trim().toLowerCase();
+
+    // Find all instructor users associated with this license email
+    const users = this.isPostgres && this.pool 
+      ? (await this.pool.query('SELECT id FROM users WHERE LOWER(TRIM(email)) = $1', [instEmail])).rows.map(r => r.id)
+      : this.readJsonDb().users.filter(u => (u.email || '').trim().toLowerCase() === instEmail).map(u => u.id);
+
+    const userIdsFromLogins = logins.map(l => l.instructorId).filter(Boolean);
+    const allMatchingUserIds = Array.from(new Set([...users, ...userIdsFromLogins]));
+
+    // Filter rooms created by this instructor
+    const licenseRooms = allRooms.filter(r => allMatchingUserIds.includes(r.createdBy) || r.createdBy === license.id);
+
+    // Fetch team and member details per room
+    const roomDetailsMap: Record<string, {
+      room: Room;
+      teamCount: number;
+      participantCount: number;
+      actualDurationMinutes: number;
+      teams: {
+        id: string;
+        name: string;
+        status: string;
+        cash: number;
+        members: { userId: string; userName: string; joinedAt?: string }[];
+      }[];
+    }> = {};
+
+    const allUniqueTeamIds = new Set<string>();
+    const allUniqueParticipantIds = new Set<string>();
+    let totalRuntimeSecs = 0;
+    let completedSessions = 0;
+    let activeSessions = 0;
+
+    for (const room of licenseRooms) {
+      const teams = await this.getTeamsInRoom(room.id);
+      const members = await this.getRoomMembers(room.id);
+
+      // Compute actual running duration in seconds
+      let runtimeSec = room.actualDurationSeconds || 0;
+      if (room.status === 'active' && room.startedAt) {
+        const start = new Date(room.startedAt).getTime();
+        const now = Date.now();
+        const totalPaused = room.totalPausedMs || 0;
+        runtimeSec = Math.max(0, Math.floor((now - start - totalPaused) / 1000));
+      }
+
+      totalRuntimeSecs += runtimeSec;
+      if (room.status === 'finished') completedSessions++;
+      if (room.status === 'active') activeSessions++;
+
+      const roomTeamDetails = teams.map(t => {
+        allUniqueTeamIds.add(t.id);
+        const teamMembers = members.filter(m => m.teamId === t.id);
+        teamMembers.forEach(m => allUniqueParticipantIds.add(m.userId));
+        return {
+          id: t.id,
+          name: t.name,
+          status: t.status,
+          cash: t.cash,
+          members: teamMembers.map(m => ({
+            userId: m.userId,
+            userName: m.userName
+          }))
+        };
+      });
+
+      // Members not associated with a specific team or all members in room
+      members.forEach(m => allUniqueParticipantIds.add(m.userId));
+
+      roomDetailsMap[room.id] = {
+        room: {
+          ...room,
+          actualDurationSeconds: runtimeSec
+        },
+        teamCount: teams.length,
+        participantCount: members.length,
+        actualDurationMinutes: Math.round((runtimeSec / 60) * 10) / 10,
+        teams: roomTeamDetails
+      };
+    }
+
+    // Correlate rooms with instructor login visits chronologically
+    // If a room was created between loginAt and logoutAt (or next login), associate with that login
+    const sortedLogins = [...logins].sort((a, b) => new Date(a.loginAt).getTime() - new Date(b.loginAt).getTime());
+    const assignedRoomIds = new Set<string>();
+
+    const loginsWithRooms = sortedLogins.map((login, idx) => {
+      const loginTime = new Date(login.loginAt).getTime();
+      const nextLoginTime = idx < sortedLogins.length - 1 ? new Date(sortedLogins[idx + 1].loginAt).getTime() : Infinity;
+      const logoutTime = login.logoutAt ? new Date(login.logoutAt).getTime() : nextLoginTime;
+
+      const matchingRooms = licenseRooms.filter(r => {
+        const roomTime = new Date(r.createdAt).getTime();
+        // Give 2 minutes grace before login timestamp for clock drift
+        return roomTime >= (loginTime - 120000) && roomTime <= (logoutTime + 60000);
+      });
+
+      matchingRooms.forEach(r => assignedRoomIds.add(r.id));
+
+      return {
+        ...login,
+        rooms: matchingRooms.map(r => roomDetailsMap[r.id]).filter(Boolean)
+      };
+    });
+
+    // Handle any older or unassigned rooms by creating an initial historical session bucket if needed
+    const unassignedRooms = licenseRooms.filter(r => !assignedRoomIds.has(r.id));
+    if (unassignedRooms.length > 0) {
+      loginsWithRooms.unshift({
+        id: `login_historical_${license.id}`,
+        licenseId: license.id,
+        instructorId: users[0] || 'historical',
+        instructorEmail: license.instructorEmail,
+        instructorName: `${license.customerName} (Historical Session)`,
+        loginAt: unassignedRooms[0]?.createdAt ? new Date(unassignedRooms[0].createdAt).toISOString() : license.createdAt,
+        durationSeconds: 0,
+        success: true,
+        rooms: unassignedRooms.map(r => roomDetailsMap[r.id]).filter(Boolean)
+      });
+    }
+
+    // Sort logins descending (newest first) for UI display
+    loginsWithRooms.sort((a, b) => new Date(b.loginAt).getTime() - new Date(a.loginAt).getTime());
+
+    return {
+      license,
+      isExpired,
+      instructorLogins: loginsWithRooms,
+      totals: {
+        totalLogins: logins.length || (unassignedRooms.length > 0 ? 1 : 0),
+        totalVisits: logins.length || (unassignedRooms.length > 0 ? 1 : 0),
+        totalRoomsGenerated: licenseRooms.length,
+        totalUniqueTeams: allUniqueTeamIds.size,
+        totalUniqueParticipants: allUniqueParticipantIds.size,
+        totalRuntimeSeconds: totalRuntimeSecs,
+        totalRuntimeMinutes: Math.round((totalRuntimeSecs / 60) * 10) / 10,
+        totalCompletedSessions: completedSessions,
+        totalActiveSessions: activeSessions
+      }
+    };
   }
 }
 

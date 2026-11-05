@@ -209,6 +209,56 @@ export interface Room {
   scenarioConfig?: SavedScenario;
   createdAt: Date;
   createdBy: string;
+  startedAt?: string;
+  endedAt?: string;
+  pausedAt?: string;
+  totalPausedMs?: number;
+  actualDurationSeconds?: number;
+}
+
+export interface InstructorLoginEvent {
+  id: string;
+  licenseId: string;
+  instructorId: string;
+  instructorEmail: string;
+  instructorName?: string;
+  loginAt: string; // ISO
+  logoutAt?: string; // ISO
+  durationSeconds?: number;
+  success: boolean;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+export interface LicenseActivitySummary {
+  license: LicenseRecord;
+  isExpired: boolean;
+  instructorLogins: (InstructorLoginEvent & {
+    rooms: {
+      room: Room;
+      teamCount: number;
+      participantCount: number;
+      actualDurationMinutes: number;
+      teams: {
+        id: string;
+        name: string;
+        status: string;
+        cash: number;
+        members: { userId: string; userName: string; joinedAt?: string }[];
+      }[];
+    }[];
+  })[];
+  totals: {
+    totalLogins: number;
+    totalVisits: number;
+    totalRoomsGenerated: number;
+    totalUniqueTeams: number;
+    totalUniqueParticipants: number;
+    totalRuntimeSeconds: number;
+    totalRuntimeMinutes: number;
+    totalCompletedSessions: number;
+    totalActiveSessions: number;
+  };
 }
 
 export interface SavedScenario {
